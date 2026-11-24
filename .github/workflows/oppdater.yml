@@ -25,9 +25,8 @@ jobs:
   bygg:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    outputs:
+      hopp: ${{ steps.tid.outputs.hopp }}
     steps:
       - name: Sjekk tidspunkt for morgenbrief
         id: tid
@@ -85,6 +84,13 @@ jobs:
         with:
           path: site
 
+  publiser:
+    needs: bygg
+    if: needs.bygg.outputs.hopp == '0'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
-        if: steps.tid.outputs.hopp == '0'
         uses: actions/deploy-pages@v4
