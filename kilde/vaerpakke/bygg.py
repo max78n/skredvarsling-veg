@@ -19,9 +19,9 @@ ARK_INN, ARK_UT, JSON_UT = opt('--arkiv-inn'), opt('--arkiv-ut'), opt('--json')
 UA = 'SVV-vaerpakke-veg/0.9 (stedsspesifikk skredvarsling)'
 cfg = json.load(open(CFG, encoding='utf-8'))
 # hemmeligheter fra miljøet (GitHub Secrets)
-if os.environ.get('FROST_CLIENT_ID'): cfg['frost_client_id'] = os.environ['FROST_CLIENT_ID']
-if os.environ.get('SKREDAS_TOKEN'): cfg.setdefault('skredas', {})['token'] = os.environ['SKREDAS_TOKEN']
-if os.environ.get('WYSSEN_KEY'): cfg.setdefault('wyssen', {})['key'] = os.environ['WYSSEN_KEY']
+if os.environ.get('FROST_CLIENT_ID'): cfg['frost_client_id'] = os.environ['FROST_CLIENT_ID'].strip()
+if os.environ.get('SKREDAS_TOKEN'): cfg.setdefault('skredas', {})['token'] = os.environ['SKREDAS_TOKEN'].strip()
+if os.environ.get('WYSSEN_KEY'): cfg.setdefault('wyssen', {})['key'] = os.environ['WYSSEN_KEY'].strip()
 NOW = dt.datetime.now(dt.timezone.utc)
 now = NOW.replace(minute=0, second=0, microsecond=0)
 iso = lambda t: t.strftime('%Y-%m-%dT%H:%M:%SZ')
