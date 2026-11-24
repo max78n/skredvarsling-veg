@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snøstabilitet – Skredvarsling veg</title>
+<style>
+:root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--acc:#ed9300;--acct:#fff4e0}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+main{padding:14px 20px 50px;max-width:1500px;margin:auto}
+h1{font-size:19px;margin:0 0 4px}h2{font-size:16px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px}
+.note{color:var(--muted);font-size:12px}
+.faner{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:10px 0 14px}
+.faner button{font:inherit;border:0;background:none;padding:8px 14px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.faner button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--acc)}
+.del{display:none}.del.on{display:block}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;align-items:start}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:12px}
+.rad{display:grid;grid-template-columns:230px 1fr;gap:6px 12px;align-items:center;padding:6px 0;border-top:1px solid #eef0f1}
+.rad:first-of-type{border-top:0}
+.rad label.t{font-weight:600;font-size:13px}.rad label.t span{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.valg{display:flex;flex-wrap:wrap;gap:4px}
+.valg button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:#fff;border-radius:14px;padding:3px 10px;cursor:pointer}
+.valg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+input[type=number]{font:inherit;width:70px;padding:3px 6px;border:1px solid var(--line);border-radius:4px}
+select{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:#fff}
+.stemmer{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0}
+.stemmer div{border-radius:4px;padding:6px 4px;text-align:center;font-size:12px}
+.stemmer b{display:block;font-size:18px}
+.res{font-size:15px;margin:8px 0}
+.sum{display:grid;grid-template-columns:1fr auto 1fr auto 1.2fr;gap:6px;align-items:stretch;margin:4px 0 12px}
+.sum .k{border:1px solid var(--line);border-radius:6px;padding:8px;text-align:center}
+.sum .k small{display:block;color:var(--muted);font-size:11.5px;margin-bottom:4px}
+.sum .k .b{display:block;font-size:15px;padding:6px 4px;border-radius:4px}
+.sum .op{align-self:center;font-size:18px;color:var(--muted)}
+.mmx{border-collapse:separate;border-spacing:2px;font-size:11px;width:auto;margin:6px 0}
+.mmx td,.mmx th{border:0;padding:4px 6px;text-align:center}
+.mmx th{font-weight:600}.mmx th:not(.b){background:none}
+.mmx td.hit{outline:3px solid #1f2a30;outline-offset:-2px}
+.spor{font-size:12.5px;margin:6px 0 0;padding-left:18px}
+.spor li{margin:2px 0}
+.bar{height:8px;border-radius:4px;background:#e5e8ea;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--acc)}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+th{background:#eef0f1;font-weight:600}
+td.c,th.c{text-align:center}
+.funn li{margin:4px 0}
+.warn{color:#9a5b00}
+.b{font-weight:700;text-align:center;white-space:nowrap}
+.b-K0{background:#FFCC66;color:#000}.b-K1{background:#FF9933;color:#000}.b-K2{background:#FF6600;color:#000}.b-K3{background:#C00000;color:#fff}
+.b-D1{background:#E2EFDA;color:#000}.b-D2{background:#C6E0B4;color:#000}.b-D3{background:#A9D08E;color:#000}.b-D4{background:#548235;color:#fff}.b-D5{background:#375623;color:#fff}
+.b-OV{background:#002060;color:#fff}.b-NV{background:#104861;color:#fff}.b-SNV{background:#104861;color:#fff}.b-NIV{background:#538DD5;color:#fff}.b-UL{background:#C5D9F1;color:#000}
+.b-L{background:#6600FF;color:#fff}.b-M{background:#9966FF;color:#000}.b-K{background:#CC99FF;color:#000}
+span.b{display:inline-block;padding:0 6px;border-radius:3px}
+
+.b-st0{background:#008000;color:#fff}.b-st1{background:#33CC33;color:#000}.b-st2{background:#66FF66;color:#000}.b-st3{background:#99FF99;color:#000}
+.b-ub0{background:#CC9900;color:#000}.b-ub1{background:#996633;color:#fff}.b-ub2{background:#663300;color:#fff}
+.b-S1{background:#FF99FF;color:#000}.b-S2{background:#FF66FF;color:#000}.b-S3{background:#FF00FF;color:#000}.b-S4{background:#CC00CC;color:#fff}.b-S5{background:#7030A0;color:#fff}
+.ovf{background:#fff4e0;border:1px solid #f0d9a8;border-radius:4px;padding:8px 10px;margin:10px 0;font-size:13px}.ovf button{font:inherit;padding:3px 10px;background:#ed9300;border:1px solid #ed9300;border-radius:3px;font-weight:600;cursor:pointer}.ovf select{font:inherit;padding:2px 4px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Utløsbarhet og utbredelse – hjelpeverktøy</h1>
+  <p class="note">Foreslår snødekkestabilitet (utløsbarhet) og utbredelse av utløsbarhet per skredproblem ut fra tilgjengelige data. Forslaget er et beslutningsstøtte, ikke en fasit – varsleren gjør vurderingen. Kriteriene følger hjelpetabellene i «Stedsspesifikk skredfarevurdering – logikk» og EAWS (Müller, Techel &amp; Mitterer 2025; Techel mfl. 2020).</p>
+  <div class="faner" id="faner"><button class="on" data-d="verktoy">Vurdering</button><button data-d="metode">Metode</button></div>
+
+  <section class="del on" id="verktoy">
+    <div class="grid">
+      <div>
+        <div class="card"><h2>1 Skredproblem og område</h2>
+          <div class="rad"><label class="t">Skredproblem</label><div class="valg" data-k="prob"></div></div>
+          <div class="rad"><label class="t">Strekning og delområde<span>fyller inn antall løsneområder</span></label><div><select id="dStr"></select> <select id="dDel"></select></div></div>
+          <div class="rad"><label class="t">Løsneområder i vurderingen<span>hentes fra delområdet; kan overstyres</span></label><div><input type="number" id="N" min="1" value="4"> <span class="note" id="Nmin"></span></div></div>
+        </div>
+        <div class="card"><h2>2 Observasjoner <span class="note">(velg det som er observert; «ikke observert» = ingen informasjon)</span></h2><div id="obs"></div></div>
+        <div class="card"><h2>3 Utbredelse i løsneområdet <span class="note">(potensielle utløsningspunkter og fordelingen av dem)</span></h2><div id="utb"></div>
+          <div id="utbHint" class="note" style="margin-top:6px"></div></div>
+        <div class="card"><h2>4 Skredkontroll <span class="note">(sprengning siste døgn)</span></h2>
+          <div class="rad"><label class="t">Ladninger avfyrt<span>antall løsneområder/tårn</span></label><div><input type="number" id="kN" min="0" value="0"></div></div>
+          <div class="rad"><label class="t">Løsneområder med skred</label><div><input type="number" id="kS" min="0" value="0"></div></div>
+          <div class="rad"><label class="t">Ladning</label><div class="valg" data-k="ladning"></div></div>
+        </div>
+        <div class="card"><h2>5 Vær siste 72 t <span class="note">(drivere – lav vekt, hentes fra Værpakken)</span></h2><div id="vaer"></div></div>
+      </div>
+      <div>
+        <div class="card" id="utRes" style="position:sticky;top:10px"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="del" id="metode">
+    <div class="card" style="max-width:1000px">
+      <h2>Slik regner verktøyet</h2>
+      <h3>Utløsbarhet (snødekkestabilitet)</h3>
+      <p>Hver observasjon gir stemmer til én eller flere stabilitetsklasser, med vekt etter hvor direkte den viser ustabilitet (kolonnene i hjelpetabellen for utløsbarhet). Observasjonene vektes i den rekkefølgen de står: naturlige skred 4, drønn/skytende sprekker 3, stabilitetstest 2, utløser 1 (våt snø: naturlige skred 3, kunstig utløste 2, snødekket 1). «Sjekket – ingen» gir ett trinn lavere vekt for naturlige skred og drønn. Skredkontroll har vekt 3, værdrivere vekt 1.</p>
+      <p><b>Logikk per skredproblem.</b> Skredproblem må velges først. Nysnø: vindtransport brukes ikke. Våt løssnø og glideskred: flak, svakt lag og stabilitetstester brukes ikke; utbredelsen bestemmes av våt overflate eller glidesprekker. Våte flakskred: stabilitetstester teller halvt. Vedvarende svakt lag: negative funn (ECTN/ECTX, «sjekket – ingen», sprengning uten skred) teller halvt. Glideskred: skredkontroll har vekt 1. Våte problemer: temperatur/regn har vekt 2. «Utløser: naturlig» kan ikke velges når naturlige skred er registrert (dobbelttelling). Mange naturlige skred gir minst «noen» utbredelse. Motstridende observasjoner gir en «Sjekk»-melding. Klassen med flest vektede stemmer foreslås. Sikkerheten øker med summen av vekter og synker når stemmene sprikes.</p>
+      <h3>Utbredelse – fordeling av potensielle utløsningspunkter</h3>
+      <p>Utbredelse vurderes som hvor stor del av løsneområdet som har potensielle utløsningspunkter, dvs. flak over et svakt lag med den aktuelle stabiliteten. Hovedkriteriet er hvor flaket ligger: i hele løsneområdet (2), i store deler (1,6), i spesifikke terrengformer som le-heng, renner og under kammer (1) eller flekkvis, f.eks. bak én rygg (0). Skåren justeres for kontinuiteten i det svake laget (+0,3 til −0,5), hvor mange stabilitetstester som viser ustabilitet (+0,5 til −0,5) og hvor lette faretegnene er å finne (Tabell 12, +0,4 til −0,4). Nedjusteringer gjelder fullt, men samlet oppjustering er begrenset til +0,4, fordi tester og faretegn sier hvor ustabilt flaket er – ikke at det er større enn observert. Skår ≥ 1,5 gir mange, 0,5–1,5 noen og &lt; 0,5 få.</p>
+      <p>Eksempel: svakt lag under flak i hele løsneområdet og stabilitetstester som viser høy ustabilitet → mange. Fokksnøflak bak én rygg → få.</p>
+      <p>Andelen løsneområder med skred ved sprengning eller naturlig vises som en kontroll. Den måler noe annet (antall løsneområder, ikke punkter innenfor ett løsneområde) og brukes bare til å flagge store avvik.</p>
+      <h3>Begrensninger</h3>
+      <ul><li>Vektene er satt faglig, ikke kalibrert.</li>
+      <li>Et lite utvalg (få løsneområder, én sprengning) gir stor usikkerhet – verktøyet viser antall punkter.</li>
+      <li>Negativt sprengningsresultat på våt snø betyr ikke nødvendigvis god stabilitet; ladning i våt snø har dårligere effekt.</li></ul>
+    </div>
+  </section>
+</main>
+<script>
+/* SKRED – felles klient for arbeidsprosjekt og overføring mellom faner (snakker med menysiden) */
+(function(){
+  const R=window.SKRED={id:null,laas:false,liste:[],cb:[],mottak:{},vent:{}};
+  R.on=f=>{R.cb.push(f);if(R.id!==null)try{f(R.id,R.laas)}catch(e){console.error(e)}};
+  R.paMottak=(k,f)=>{R.mottak[k]=f;if(R.vent[k]){const d=R.vent[k];delete R.vent[k];f(d)}};
+  R.send=(til,data)=>{try{parent.postMessage({type:'skred-overfor',til,data},'*')}catch(e){}};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  R.prosj=id=>R.liste.find(p=>p.id===id)||null;
+  /* finn <option> i en nedtrekksliste som svarer til prosjektet (verdi = id, eller tekst/verdi som starter med vegkoden) */
+  R.finn=(sel,id)=>{const p=R.prosj(id);if(!sel||!p)return null;const o=[...sel.options].find(o=>o.value===id)||[...sel.options].find(o=>o.text===p.navn||o.value===p.navn)
+      ||[...sel.options].find(o=>(o.text+' ').startsWith(p.kode+' ')||(o.value+' ').startsWith(p.kode+' '));return o||null};
+  addEventListener('message',e=>{const d=e.data||{};
+    if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.liste=d.liste||R.liste;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){console.error(x)}})}
+    if(d.type==='skred-overfor'){if(R.mottak[d.til])R.mottak[d.til](d.data);else R.vent[d.til]=d.data}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}
+})();
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const ST=['Svært dårlig','Dårlig','Moderat','God'],UTB=['Få','Noen','Mange'],SANN=['Høyst usannsynlig','Lite sannsynlig','Mulig','Sannsynlig','Veldig sannsynlig'];
+const SMAT=[[2,3,4],[1,2,3],[0,1,1],[0,0,0]];
+const PROB=[['ns','Nysnø'],['fs','Fokksnø'],['vsl','Vedvarende svakt lag'],['vls','Våt løssnø'],['vfs','Våte flakskred'],['gl','Glideskred']];
+const VAAT=p=>['vls','vfs','gl'].includes(p);
+// observasjoner: [nøkkel, tittel, hjelp, valg: [tekst, stemmer [SD,D,M,G], vekt, ustabilt punkt? (true/false/null)]]
+const OBS_TORR=[
+ ['nat','Naturlige skred siste 48 t','i løsneområdene / tilsvarende terreng',[['ikke observert',null],['mange',[1,0,0,0],4,true],['noen',[.3,.7,0,0],4,true],['få',[0,.6,.4,0],4,true],['sjekket – ingen',[0,0,.5,.5],3,false]]],
+ ['dron','Drønn / skytende sprekker','observert i felt',[['ikke observert',null],['kraftig drønn med forplantning',[.5,.5,0,0],3,true],['skytende sprekker',[.4,.6,0,0],3,true],['lite drønn med forplantning',[0,.4,.6,0],3,true],['sjekket – ingen',[0,0,.4,.6],2,false]]],
+ ['ect','Stabilitetstest (ECT)','svakeste resultat i relevant lag',[['ikke tatt',null],['ECTPV / ECTP',[.4,.6,0,0],2,true],['ECTN',[0,0,.7,.3],2,false],['ECTX',[0,0,0,1],2,false]]],
+ ['utl','Utløser som gir skred','fra observasjoner/erfaring',[['ukjent',null],['naturlig',[1,0,0,0],1,true],['lite tilleggsbelastning',[0,1,0,0],1,true],['stor tilleggsbelastning / skavlbrudd',[0,0,1,0],1,true],['ingen',[0,0,0,1],1,false]]]];
+const OBS_VAAT=[
+ ['wnat','Naturlige våte skred siste 24 t','',[['ikke observert',null],['flere',[1,0,0,0],3,true],['enkelte',[.6,.4,0,0],3,true],['sjekket – ingen',[0,0,.5,.5],2,false]]],
+ ['wkun','Kunstig utløste våte skred','skiløper/brøyting/sprengning',[['ikke observert',null],['ja',[.3,.7,0,0],2,true],['nei',[0,0,.5,.5],1,false]]],
+ ['wsno','Snødekket','tilstand',[['ukjent',null],['første fukting / første gang isotermt',[.6,.4,0,0],1,true],['vått vedvarende svakt lag',[.4,.6,0,0],1,true],['smeltekanaler i overflaten',[0,.2,.8,0],1,false],['gjenfrysing / avtagende fritt vann',[0,0,.3,.7],1,false]]]];
+const VAER=[
+ ['nys','Nysnø 72 t (cm)','',[['ukjent',null],['> 50',[.6,.4,0,0],1],['20–50',[.2,.6,.2,0],1],['5–20',[0,.3,.6,.1],1],['< 5',[0,0,.4,.6],1]],'torr'],
+ ['vind','Vind (snøtransport)','middelvind i løsneområdet',[['ukjent',null],['kraftig (> 15 m/s)',[.3,.6,.1,0],1],['moderat (8–15 m/s)',[.1,.5,.4,0],1],['svak (< 8 m/s)',[0,0,.5,.5],1]],'torr'],
+ ['temp','Temperatur / regn','',[['ukjent',null],['regn på snø / kraftig oppvarming',[.6,.4,0,0],1],['rundt 0 °C, sol',[.2,.5,.3,0],1],['kaldt og stabilt',[0,0,.4,.6],1]],'alle']];
+// utbredelse: [nøkkel, tittel, hjelp, [[tekst, verdi]]] – grunnlag (0 få … 2 mange) og justeringer
+const UTBR=[
+ ['flak','Hvor ligger flak over svakt lag?','hovedkriterium',[['ukjent',null],['i hele løsneområdet',2],['i store deler / mange terrengformer',1.6],['i spesifikke terrengformer (le-heng, renner, under kammer)',1],['flekkvis – f.eks. bak én rygg',0]],'b'],
+ ['lag','Svakt lag','kontinuitet',[['ukjent',null],['sammenhengende',0.3],['varierende',0],['flekkvis / brutt',-0.5]],'j'],
+ ['test','Stabilitetstester','hvor mange viser ustabilitet',[['ingen tester',null],['de fleste',0.5],['noen',0],['få / bare én',-0.5]],'j'],
+ ['tegn','Faretegn','Tabell 12',[['ikke vurdert',null],['overalt og lette å finne',0.4],['finnes, men ikke alltid åpenbare',0],['sjeldne og vanskelige å finne',-0.4]],'j']];
+const UTB_HINT={ns:'Nysnø: flaket ligger ofte i store deler av løsneområdet, mest i le.',fs:'Fokksnø: flaket ligger typisk i le-heng, renner og bak rygger – ofte spesifikke terrengformer eller flekkvis.',
+ vsl:'Vedvarende svakt lag: kan være sammenhengende over hele løsneområdet; stabilitetstester avgjør hvor utbredt ustabiliteten er.',
+ vls:'Våt løssnø: avhenger av innstråling – hele solutsatte løsneområder eller bare bratte partier.',vfs:'Våte flakskred: avhenger av vanninfiltrasjon til svakt lag – ofte flekkvis i starten.',gl:'Glideskred: knyttet til glidesprekker og glatt underlag (berg, gress). Sprengning gir sjelden glideskred og teller lite.'};
+const UTBR_VLS=['vflate','Hvor er snøoverflaten våt og ubunden?','hovedkriterium for våt løssnø',[['ukjent',null],['i hele løsneområdet',2],['i store deler / alle solutsatte heng',1.6],['bare i bratte eller solutsatte partier',1],['flekkvis',0]],'b'];
+/* logikk per skredproblem: hvilke felt som gjelder */
+const UTBR_GL=['gsp','Glidesprekker / glatt underlag','hovedkriterium for glideskred',[['ukjent',null],['utbredt i løsneområdet',2],['flere steder',1.4],['enkelte steder',0.8],['ingen',0]],'b'];
+const utbRader=()=>valg.prob==='vls'?[UTBR_VLS,UTBR[3]]:valg.prob==='gl'?[UTBR_GL,UTBR[3]]:UTBR;  // våt løssnø og glideskred: ikke flak, svakt lag eller stabilitetstester
+const NATTORR=()=>[1,2,3].includes(valg.nat);   // naturlige skred observert (tørre problemer)              // våt løssnø: ikke flak, svakt lag eller stabilitetstester
+const vaerRader=()=>VAER.filter(v=>(v[4]==='alle'||!VAAT(valg.prob))&&!(v[0]==='vind'&&valg.prob==='ns')); // nysnø: ikke vindtransport
+const testFaktor=()=>valg.prob==='vfs'?0.5:1;                                 // våte flakskred: stabilitetstester er lite pålitelige
+const LADN=[['ukjent',null],['én håndladning',[0,1,0,0]],['flere/store detonasjoner',[0,0,.6,.4]]];
+const valg={prob:null,ladning:0};let LAST=null;
+const PTYPE={ns:'Nysnø (flakskred)',fs:'Fokksnø (flakskred)',vsl:'Vedvarende svakt lag (flakskred)',vls:'Våt snø (løssnøskred)',vfs:'Våt snø (flakskred)',gl:'Glideskred'};
+document.addEventListener('click',e=>{if(e.target.id!=='ovfBtn'||!LAST)return;
+  SKRED.send('solver',{kilde:'stab',sp:+$('ovfSp').value,type:PTYPE[valg.prob],utl:[1,2,3,4][LAST.best],utb:LAST.u,prosjekt:SKRED.id||undefined})});
+/* strekning/delområde -> antall løsneområder (fra tabell 4 i skredvarslingsplanene) */
+const DELO=[{"id":"e134","navn":"E134 Haukelifjell","del":{"Austmannalia":4,"Bergsstølen – Midtlæger":10,"Pepparstein":2}},{"id":"rv13","navn":"Rv13 Vikafjellet","del":{"Kvassdalen":14,"Skjelingavatnet – Ygnisdalshamrane":9,"Skredene":4}},{"id":"rv15","navn":"Rv15 Strynefjellet","del":{"Skoresvingane":6,"Skjeringsdalen":2,"Grasdalen":19,"Breidalen":2}},{"id":"tyin","navn":"Fv53 Tyin","del":{"Mellvike–Gamle Varden":3,"Ved Langøddin–Sør for Tyinsstølen":4}},{"id":"rv85","navn":"Rv85 Gullesfjord","del":{"Gullesfjord":4}},{"id":"beisfjord","navn":"Fv7570 Beisfjorden","del":{"Beisfjord I–II":2,"Blomlia":4}},{"id":"rv94","navn":"Rv94 Hammerfest","del":{"Klinkastupet":1,"Leirvikfloget":3,"Stallogargo":4}},{"id":"e69","navn":"E69 Nordkapp","del":{"Bibelberget – Cielkavárri":2,"Nova":6,"Vesterpollen":4,"Skipsfjorden – Seibukta":7}}]||[];
+DELO.forEach(x=>$('dStr').add(new Option(x.navn,x.id)));
+function fyllDel(){const x=DELO.find(y=>y.id===$('dStr').value);$('dDel').innerHTML='';if(!x)return;
+  $('dDel').add(new Option(`Hele strekningen (${Object.values(x.del).reduce((a,b)=>a+b,0)})`,'*'));
+  Object.entries(x.del).forEach(([d,n])=>$('dDel').add(new Option(`${d} (${n})`,d)));settN()}
+function settN(){const x=DELO.find(y=>y.id===$('dStr').value);if(!x)return;const d=$('dDel').value;
+  $('N').value=d==='*'?Object.values(x.del).reduce((a,b)=>a+b,0):x.del[d];try{beregn()}catch(e){}}
+$('dStr').onchange=fyllDel;$('dDel').onchange=settN;
+if(DELO.length){$('dStr').value=DELO[0].id;fyllDel()}
+SKRED.on((id,laas)=>{const s=$('dStr');if(laas&&DELO.some(x=>x.id===id)&&s.value!==id){s.value=id;fyllDel()}
+  s.disabled=laas;s.title=laas?'Låst til arbeidsprosjektet (velges i menyen øverst)':'';try{beregn()}catch(e){}});
+function knapper(el,k,liste){el.innerHTML=liste.map((x,i)=>`<button data-i="${i}" class="${valg[k]===(Array.isArray(x)?i:x)?'on':''}">${Array.isArray(x)?x[0]:x}</button>`).join('');}
+function tegnSkjema(){
+  document.querySelector('[data-k=prob]').innerHTML=PROB.map(([k,t])=>`<button data-v="${k}" class="${valg.prob===k?'on':''}">${t}</button>`).join('');
+  const tom='<p class="note">Velg skredproblem først.</p>';
+  if(!valg.prob){['obs','utb','vaer'].forEach(id=>$(id).innerHTML=tom);$('utbHint').textContent='';document.querySelector('[data-k=ladning]').innerHTML='';return}
+  const obs=VAAT(valg.prob)?OBS_VAAT:OBS_TORR;
+  if(!VAAT(valg.prob)&&NATTORR()&&valg.utl===1)valg.utl=0;
+  $('obs').innerHTML=obs.map(([k,t,h,l])=>{valg[k]??=0;return`<div class="rad"><label class="t">${t}<span>${h}</span></label><div class="valg" data-k="${k}">${l.map((x,i)=>{const av=k==='utl'&&i===1&&NATTORR();return`<button data-i="${i}" class="${valg[k]===i?'on':''}"${av?' disabled title="Telles allerede under «Naturlige skred»" style="opacity:.35;cursor:not-allowed"':''}>${x[0]}</button>`}).join('')}</div></div>`}).join('');
+  $('utb').innerHTML=utbRader().map(([k,t,h,l])=>{valg[k]??=0;return`<div class="rad"><label class="t">${t}<span>${h}</span></label><div class="valg" data-k="${k}">${l.map((x,i)=>`<button data-i="${i}" class="${valg[k]===i?'on':''}">${x[0]}</button>`).join('')}</div></div>`}).join('');
+  $('utbHint').textContent=(UTB_HINT[valg.prob]||'')+(valg.prob==='vfs'?' Stabilitetstester teller halvt for våte flakskred.':'');
+  $('vaer').innerHTML=vaerRader().map(([k,t,h,l])=>{valg[k]??=0;return`<div class="rad"><label class="t">${t}<span>${h}</span></label><div class="valg" data-k="${k}">${l.map((x,i)=>`<button data-i="${i}" class="${valg[k]===i?'on':''}">${x[0]}</button>`).join('')}</div></div>`}).join('');
+  document.querySelector('[data-k=ladning]').innerHTML=LADN.map((x,i)=>`<button data-i="${i}" class="${valg.ladning===i?'on':''}">${x[0]}</button>`).join('');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.valg button');if(!b)return;const k=b.parentElement.dataset.k;
+  if(k==='prob')valg.prob=b.dataset.v;else valg[k]=+b.dataset.i;tegnSkjema();beregn()});
+['N','kN','kS'].forEach(id=>$(id).addEventListener('input',beregn));
+function beregn(){
+  const N=Math.max(1,+$('N').value||1),kN=Math.max(0,+$('kN').value||0),kS=Math.min(kN,Math.max(0,+$('kS').value||0));
+  $('Nmin').textContent=`(ett løsneområde = ${Math.round(100/N)} %)`;
+  if(!valg.prob){$('utRes').innerHTML='<h2>Resultat</h2><p class="warn" style="font-size:13px">Velg skredproblem først. Hvilke observasjoner og kriterier som gjelder, avhenger av skredproblemet.</p>';LAST=null;return}
+  const st=[0,0,0,0],spor=[];let punkt=0,ustab=0,vekt=0;
+  const legg=(navn,s,w,u,n=1)=>{if(!s)return;s.forEach((v,i)=>st[i]+=v*w);vekt+=w;spor.push(`${navn} <span class="note">(vekt ${w})</span>`);if(u!=null){punkt+=n;if(u)ustab+=n}};
+  const obs=VAAT(valg.prob)?OBS_VAAT:OBS_TORR;
+  obs.forEach(([k,t,,l])=>{const x=l[valg[k]];if(!x[1])return;const halv=valg.prob==='vsl'&&x[3]===false;legg(`${t}: ${x[0]}${halv?' – negativt funn, halv vekt ved vedvarende svakt lag':''}`,x[1],halv?x[2]/2:x[2],x[3])});
+  // skredkontroll
+  if(kN>0){const a=kS/kN,lad=LADN[valg.ladning][1];
+    let s=kS===0?[0,0,.5,.5]:a>=.5?[.5,.5,0,0]:[.1,.6,.3,0];
+    if(lad&&kS>0)s=s.map((v,i)=>(v+lad[i])/2);
+    if(VAAT(valg.prob)&&kS===0)s=[0,.2,.5,.3];
+    if(valg.prob==='gl'&&kS===0)s=[0,.3,.4,.3];
+    const wK=valg.prob==='gl'?1:(valg.prob==='vsl'&&kS===0)?1.5:3;
+    legg(`Skredkontroll: ${kS}/${kN} med skred${valg.ladning?' ('+LADN[valg.ladning][0]+')':''}${valg.prob==='gl'?' – glideskred lar seg sjelden utløse kunstig':valg.prob==='vsl'&&kS===0?' – negativt resultat, halv vekt ved vedvarende svakt lag':''}`,s,wK,null);
+    punkt+=kN;ustab+=kS}
+  vaerRader().forEach(([k,t,,l])=>{const x=l[valg[k]];if(x[1])legg(`${t}: ${x[0]}`,x[1],k==='temp'&&VAAT(valg.prob)?2:1,null)});
+  const sum=st.reduce((a,b)=>a+b,0);let html='<h2>Resultat</h2>';
+  if(!sum){$('utRes').innerHTML=html+'<p class="note">Velg observasjoner, skredkontroll eller vær for å få et forslag.</p>';return}
+  const best=st.indexOf(Math.max(...st)),andel=st.map(v=>v/sum),topp=andel[best];
+  const sik=Math.min(1,vekt/8)*(0.4+0.6*topp),sikT=sik>.6?'høy':sik>.35?'middels':'lav';
+  // utbredelse: fordeling av potensielle utløsningspunkter i løsneområdet
+  const RU=utbRader(),B0=RU[0],g=B0[3][valg[B0[0]]??0][1];let uScore=null;const uSpor=[];
+  if(g!=null){uScore=g;uSpor.push((valg.prob==='vls'?'Våt overflate: ':'Flak: ')+B0[3][valg[B0[0]]][0]);
+    let opp=0,ned=0;
+    RU.slice(1).forEach(([k,t,,l])=>{const x=l[valg[k]??0];if(x[1]!=null){const f=k==='test'?testFaktor():1,v=+(x[1]*f).toFixed(2);v>0?opp+=v:ned+=v;uSpor.push(`${t}: ${x[0]} (${v>0?'+':''}${v}${f<1?', halv vekt – våt snø':''})`)}});
+    // tester og faretegn sier noe om hvor ustabilt flaket er, ikke hvor stort det er: maks +0,4 over flakets utstrekning
+    if(opp>0.4)uSpor.push('Oppjustering begrenset til +0,4 – utbredelsen kan ikke bli større enn flakets utstrekning tilsier');
+    uScore=Math.max(0,Math.min(2,g+Math.min(opp,0.4)+ned))}
+  const mangeNat=VAAT(valg.prob)?valg.wnat===1:valg.nat===1;
+  if(uScore!=null&&mangeNat&&uScore<0.5){uScore=0.5;uSpor.push('Hevet til «noen» fordi mange/flere naturlige skred er observert')}
+  const u=uScore==null?null:uScore>=1.5?2:uScore>=0.5?1:0;
+  // 3 og 5: motstrid og tvil om skredproblemet
+  const mot=[];
+  if(!VAAT(valg.prob)&&[1,2].includes(valg.nat)&&(valg.ect===3||valg.dron===4))mot.push(`Naturlige skred er observert, men ${valg.ect===3?'ECTX':'ingen drønn'} – sjekk at observasjonene gjelder samme lag og terreng.`);
+  if(valg.prob==='ns'&&valg.nys===4)mot.push('Skredproblem nysnø, men under 5 cm nysnø siste 72 t.');
+  if(valg.prob==='fs'&&valg.vind===3&&![1,2].includes(valg.nys))mot.push('Svak vind og lite eller ukjent nysnø – vurder om fokksnø er riktig skredproblem.');
+  if(VAAT(valg.prob)&&[1,2].includes(valg.wnat)&&valg.wsno===4)mot.push('Naturlige våte skred, men snødekket er beskrevet som gjenfrosset – sjekk tidspunkt og høyde.');
+  if(VAAT(valg.prob)&&valg.temp===3)mot.push('Kaldt og stabilt vær passer dårlig med et vått skredproblem.');
+  // kontroll mot skredkontroll / naturlige skred (andel løsneområder)
+  const natN=(()=>{const k=VAAT(valg.prob)?'wnat':'nat';const i=valg[k];return VAAT(valg.prob)?(i===1?2:i===2?1:0):(i===1?Math.max(2,Math.ceil(N*.25)):i===2?1:i===3?1:0)})();
+  const harA=kN>0||natN>0,fA=Math.min(1,(kS+natN)/N),uA=harA?(fA>.2?2:fA>=.04?1:0):null;
+  const S=u!=null?SMAT[best][u]:null;
+  const tile=(t,inner)=>`<div class="k"><small>${t}</small>${inner}</div>`;
+  html+=`<div class="sum">${tile('Utløsbarhet',`<span class="b b-st${best}">${ST[best]}</span>`)}<div class="op">×</div>
+   ${tile('Utbredelse',u!=null?`<span class="b b-ub${u}">${UTB[u]}</span>`:'<span class="b" style="background:#eef0f1;color:#9aa4a9">velg utbredelse</span>')}<div class="op">=</div>
+   ${tile('Sannsynlighet',S!=null?`<span class="b b-S${S+1}">S${S+1} ${SANN[S]}</span>`:'<span class="b" style="background:#eef0f1;color:#9aa4a9">–</span>')}</div>
+   <table class="mmx"><tr><th></th>${UTB.map((x,j)=>`<th class="b b-ub${j}">${x}</th>`).join('')}</tr>${ST.map((x,i)=>`<tr><th class="b b-st${i}" style="text-align:left">${x}</th>${SMAT[i].map((v,j)=>`<td class="b b-S${v+1}${i===best&&j===u?' hit':''}">S${v+1}</td>`).join('')}</tr>`).join('')}</table>
+   <h3>Utløsbarhet</h3><div class="stemmer">${ST.map((s,i)=>`<div class="b b-st${i}" style="opacity:${i===best?1:.45}">${s}<b>${Math.round(andel[i]*100)} %</b></div>`).join('')}</div>
+   <div class="res">Utløsbarhet: <span class="b b-st${best}">${ST[best]}</span> <span class="note">sikkerhet ${sikT}</span></div><div class="bar"><i style="width:${Math.round(sik*100)}%"></i></div>
+   <h3>Utbredelse</h3>
+   ${u!=null?`<div class="res">Utbredelse: <span class="b b-ub${u}">${UTB[u]}</span> <span class="note">(skår ${uScore.toFixed(1)} av 2)</span></div>${skisse(uScore)}<ul class="spor">${uSpor.map(x=>`<li>${x}</li>`).join('')}</ul>`:`<p class="note">${valg.prob==='vls'?'Velg hvor snøoverflaten er våt og ubunden.':'Velg hvor flaket over svakt lag ligger i løsneområdet.'}</p>`}
+   ${harA?`<p class="note">Kontroll: ${kS} av ${kN} sprengninger ga skred${natN?` og ${natN} naturlige`:''} i ${N} løsneområder (${Math.round(fA*100)} %${uA!=null?', tilsvarer '+UTB[uA].toLowerCase():''}).${u!=null&&uA!=null&&Math.abs(u-uA)>=2?' <span class="warn">Stor forskjell mot fordelingsvurderingen – vurder på nytt.</span>':''}</p>`:''}
+   ${u!=null?`<div class="ovf"><b>Overfør</b> utløsbarhet og utbredelse til <select id="ovfSp"><option value="0">SP1</option><option value="1">SP2</option><option value="2">SP3</option></select> i SP-solver${SKRED.laas?` for <b>${(SKRED.prosj(SKRED.id)||{}).navn}</b>`:''} <button id="ovfBtn">Overfør →</button></div>`:'<p class="note">Velg utbredelse for å kunne overføre til SP-solver.</p>'}
+   ${mot.length?`<div class="warn" style="font-size:12.5px;margin:6px 0"><b>Sjekk:</b><ul style="margin:2px 0 0 18px;padding:0">${mot.map(m=>`<li>${m}</li>`).join('')}</ul></div>`:''}
+   <h3>Grunnlag</h3><ul class="spor">${spor.map(s=>`<li>${s}</li>`).join('')}</ul>
+   ${VAAT(valg.prob)&&kN>0&&kS===0?'<p class="warn" style="font-size:12.5px">Negativt sprengningsresultat i våt snø er svakt bevis for god stabilitet.</p>':''}`;
+  $('utRes').innerHTML=html;
+  LAST=u!=null?{best,u}:null;
+}
+function skisse(sc){ // løsneområde med potensielle utløsningspunkter
+  let x=7;const pts=[];const n=sc>=1.5?26:sc>=1?14:sc>=0.5?7:2;
+  const rnd=()=>{x=(x*9301+49297)%233280;return x/233280};
+  while(pts.length<60){const px=12+rnd()*236,py=10+rnd()*70;if(((px-130)/118)**2+((py-80)/70)**2<0.92)pts.push([px,py])}
+  const valgt=sc<0.5?pts.filter(p=>p[0]>170&&p[1]<45).slice(0,n):sc<1.2?pts.filter(p=>p[0]>120).slice(0,n):pts.slice(0,n);
+  return`<svg viewBox="0 0 260 90" style="width:100%;max-width:360px;display:block;margin:4px 0" role="img" aria-label="Skisse av utløsningspunkter">
+   <path d="M12 80 A118 72 0 0 1 248 80 Z" fill="#eef0f1" stroke="#9aa4a9"/>
+   ${pts.map(p=>`<circle cx="${p[0].toFixed(0)}" cy="${p[1].toFixed(0)}" r="2.2" fill="#c9d1d5"/>`).join('')}
+   ${valgt.map(p=>`<circle cx="${p[0].toFixed(0)}" cy="${p[1].toFixed(0)}" r="3.6" fill="#b0302a"/>`).join('')}
+   <text x="130" y="88" font-size="8" text-anchor="middle" fill="#5d6b73">røde punkt = potensielle utløsningspunkter (illustrasjon)</text></svg>`}
+$('faner').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;[...$('faner').children].forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.del').forEach(s=>s.classList.toggle('on',s.id===b.dataset.d))});
+tegnSkjema();beregn();
+</script>
+</body>
+</html>

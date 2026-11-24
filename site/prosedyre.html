@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prosedyre – Skredvarsling veg</title>
+<style>
+:root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--acc:#ed9300;--acct:#fff4e0;
+--G:#58ae4a;--Y:#f3d23a;--O:#ef8a22;--R:#d42a2f;--Gt:#e6f3e2;--Yt:#fdf6d3;--Ot:#fde8d2;--Rt:#f8dcdc}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.45}
+.wrap{display:grid;grid-template-columns:210px 1fr;max-width:1500px;margin:auto}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}nav.toc{position:static!important;height:auto!important}}
+nav.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:16px 10px 16px 20px;border-right:1px solid var(--line)}
+nav.toc a{display:block;padding:5px 8px;border-radius:4px;color:var(--ink);text-decoration:none;font-size:13px}
+nav.toc a:hover{background:#ebedef}nav.toc a.on{background:var(--acct);box-shadow:inset 3px 0 0 var(--acc);font-weight:600}
+nav.toc .meta{font-size:11.5px;color:var(--muted);margin:14px 8px 0}
+main{padding:16px 22px 60px;min-width:0}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:17px;margin:0 0 10px;padding-top:6px}h3{font-size:14px;margin:14px 0 6px}
+section{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-top:14px;scroll-margin-top:10px}
+.note{color:var(--muted);font-size:12px}
+p{margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#f0f2f3;font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.kort{border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:#fafbfb}
+.kort h3{margin:0 0 4px}
+.nr{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;margin-right:6px}
+.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:4px;padding:6px 11px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}.btn.on{background:var(--acct);border-color:var(--acc);font-weight:600}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.lv{display:inline-block;padding:2px 9px;border-radius:3px;font-weight:600}
+.lv.G{background:var(--G);color:#fff}.lv.Y{background:var(--Y)}.lv.O{background:var(--O);color:#fff}.lv.R{background:var(--R);color:#fff}
+td.cG{background:var(--G)}td.cY{background:var(--Y)}td.cO{background:var(--O)}td.cR{background:var(--R)}
+.mx td{text-align:center;font-weight:600;min-width:44px}
+.mx td.hit{outline:3px solid var(--ink);outline-offset:-3px}
+.mx tr.hrow th,.mx th.hcol{background:var(--acct)}
+.ok{color:#2e7d32;font-weight:700;text-align:center}.nei{color:#b5bdc1;text-align:center}
+tr.lvrow{cursor:pointer}tr.lvrow:hover td{filter:brightness(.97)}
+tr.lvrow.on td{box-shadow:inset 0 2px 0 var(--ink),inset 0 -2px 0 var(--ink)}
+/* modellvelger */
+/* flyt */
+.flyt{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:1000px){.flyt{grid-template-columns:1fr}}
+.spor{border:1px solid var(--line);border-radius:4px;padding:10px}
+.spor h3{margin:0 0 8px}
+.node{border:1px solid var(--line);border-radius:4px;padding:6px 9px;margin:0 0 4px;background:#fff;font-size:13px}
+.node.q{border-style:dashed}
+.node.cur{border:2px solid var(--acc);background:var(--acct)}
+.node.vis{background:#f0f4f1}
+.pil{text-align:center;color:var(--muted);font-size:11px;margin:-2px 0 2px}
+.sim{border:2px solid var(--acc);border-radius:4px;padding:10px 12px;background:var(--acct);margin-bottom:12px}
+.sim .tittel{font-weight:700;font-size:15px}
+.logg{font-size:12px;color:var(--muted);margin-top:6px}
+.terskel{display:inline-block;padding:1px 7px;border-radius:3px;font-size:12px;font-weight:600}
+.terskel.n{background:#e7eef4}.terskel.s{background:var(--Ot)}
+/* kalkulator */
+.kalk{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px}
+@media(max-width:1100px){.kalk{grid-template-columns:1fr}}
+select{font:inherit;padding:5px;border:1px solid var(--line);border-radius:4px;width:100%}
+.res{font-size:16px;margin-top:8px}
+/* lag */
+.lag{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.lag{grid-template-columns:1fr}}
+.lag .kort ol{margin:4px 0 0 18px;padding:0}
+/* gyldighet */
+.tl{display:grid;grid-template-columns:repeat(17,1fr);gap:2px;margin-top:8px;font-size:11px;text-align:center}
+.tl div{padding:5px 2px;border-radius:2px;background:#e8ebed}
+.tl .d{font-weight:600;background:none}
+.tl .a{background:#cfe1ee}.tl .a.h24{background:#a9c8de}
+.tl .ut{background:#f4f5f6;color:#c3c9cc}
+.ks{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;font-size:12px;text-align:center}
+.ks div{border:1px solid var(--line);border-radius:4px;padding:6px 3px}
+.ks div.idag{border:2px solid var(--acc);background:var(--acct);font-weight:600}
+/* Farger fra Max' Excel (logikk/konsekvensmatriser) */
+.b{font-weight:700;text-align:center;white-space:nowrap}
+.b-K0{background:#FFCC66;color:#000}.b-K1{background:#FF9933;color:#000}.b-K2{background:#FF6600;color:#000}.b-K3{background:#C00000;color:#fff}
+.b-D1{background:#E2EFDA;color:#000}.b-D2{background:#C6E0B4;color:#000}.b-D3{background:#A9D08E;color:#000}.b-D4{background:#548235;color:#fff}.b-D5{background:#375623;color:#fff}
+.b-OV{background:#002060;color:#fff}.b-NV{background:#104861;color:#fff}.b-SNV{background:#104861;color:#fff}.b-NIV{background:#538DD5;color:#fff}.b-UL{background:#C5D9F1;color:#000}
+.b-L{background:#6600FF;color:#fff}.b-M{background:#9966FF;color:#000}.b-K{background:#CC99FF;color:#000}
+.b-S1{background:#FF99FF;color:#000}.b-S2{background:#FF66FF;color:#000}.b-S3{background:#FF00FF;color:#000}.b-S4{background:#CC00CC;color:#fff}.b-S5{background:#7030A0;color:#fff}
+.b-st0{background:#008000;color:#fff}.b-st1{background:#33CC33;color:#000}.b-st2{background:#66FF66;color:#000}.b-st3{background:#99FF99;color:#000}
+.b-ub0{background:#CC9900;color:#000}.b-ub1{background:#996633;color:#fff}.b-ub2{background:#663300;color:#fff}
+.mx .sel{outline:3px solid var(--ink);outline-offset:-3px}
+span.b{display:inline-block;padding:0 6px;border-radius:3px}
+#m2{position:relative}
+.hq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);background:#fff;color:var(--ink);font-size:11px;font-weight:700;cursor:pointer;padding:0;vertical-align:1px;margin-left:4px}
+.hjelp:hover .hq,.hq:focus{background:var(--acc);border-color:var(--acc);color:#fff}
+.pop{position:absolute;z-index:20;background:#fff;border:1px solid var(--muted);border-radius:4px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:6px 14px 12px;max-height:70vh;overflow:auto}
+.pop .lukk{position:sticky;top:0;float:right;border:0;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.ht{font-size:12.5px;margin-bottom:6px}.ht td.g{background:#eef1f2}
+.akwrap{--ok:#eef0f2;--okt:#1f2a30;--be:#d5d9dd;--bet:#1f2a30;--un:#353c42;--unt:#fff;--hd:#2f383d;--hdt:#fff;--lab:#f4f5f6;--labt:#1f2a30;--bg:#fff;--ln:#fff;
+  background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:12px;max-width:980px}
+.akwrap.mork{--ok:#2b3136;--okt:#c9d1d5;--be:#4a535b;--bet:#fff;--un:#e6e9eb;--unt:#1f2a30;--hd:#3d464d;--hdt:#fff;--lab:#2b3136;--labt:#e6e9eb;--bg:#1d2226;--ln:#1d2226;border-color:#1d2226}
+table.ak{border-collapse:separate;border-spacing:2px;width:100%;font-size:13px}
+table.ak th,table.ak td{border:0;padding:7px 8px}
+table.ak th.akh{background:var(--hd);color:var(--hdt);text-align:left;width:32%}
+table.ak th.lvh{text-align:center;font-size:15px;cursor:pointer;width:17%}
+th.lvh.G{background:var(--G);color:#1f2a30}th.lvh.Y{background:var(--Y);color:#1f2a30}th.lvh.O{background:var(--O);color:#1f2a30}th.lvh.R{background:var(--R);color:#fff}
+table.ak td.hr{background:var(--lab);color:var(--labt);text-align:center;font-weight:600;font-size:12.5px}
+table.ak td.akl{background:var(--lab);color:var(--labt)}table.ak td.akl span{font-size:11.5px;opacity:.75}
+table.ak td.akg{background:var(--hd);color:var(--hdt);font-weight:700;font-size:14px}
+table.ak td.cell{text-align:center;vertical-align:middle;font-size:12px;line-height:1.3}
+table.ak td.cell .sym{display:block;font-size:17px;line-height:1.1}
+td.c-ok{background:var(--ok);color:var(--okt)}td.c-be{background:var(--be);color:var(--bet)}td.c-un{background:var(--un);color:var(--unt)}
+table.ak .sel{box-shadow:inset 0 0 0 3px var(--acc)}
+.akleg{display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--labt)}.akleg span{display:flex;align-items:center;gap:7px}
+.akleg i{font-style:normal;display:inline-grid;place-items:center;width:30px;height:28px;border-radius:4px;font-weight:700;border:1px solid var(--line)}
+.akleg i.c-ok{background:var(--ok);color:var(--okt)}.akleg i.c-be{background:var(--be);color:var(--bet)}.akleg i.c-un{background:var(--un);color:var(--unt)}
+a{color:#1f5f8b}
+.mangler{color:#9aa4a9;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="toc" id="toc">
+  <div style="font-weight:700;margin:0 8px 8px">Prosedyre V2</div>
+  <a href="#modeller">Varslingsmodeller</a>
+  <a href="#velger">Velg modell</a>
+  <a href="#m1">Modell 1 – flyt</a>
+  <a href="#m2">Modell 2 – vurdering</a>
+  <a href="#tiltak">Tiltak og matriser</a>
+  <a href="#vakt">Sesong og vakt</a>
+  <a href="#gyldighet">Publisering og gyldighet</a>
+  <a href="#konsekvens">Konsekvens</a>
+  <a href="#roller">Roller og kompetanse</a>
+  <a href="#komm">Kommunikasjon og avvik</a>
+  <a href="#vedlegg">Maler og lenker</a>
+  <div class="meta">Kilde: «Prosedyre for stedsspesifikk skredvarsling for veg», V2, 10.9.2026 (Geofag DoV, M. Eckerstorfer).<br><br>Word-dokumentet er master. Ved avvik gjelder Word-versjonen.<br><span id="lnkProsedyre"></span></div>
+</nav>
+<main>
+  <h1>Prosedyre for stedsspesifikk skredvarsling for veg</h1>
+  <div class="note">Fjernvarsling basert på sensordata, modeller og feltobservasjoner, med vekt på konsekvens for veg. Utarbeidet etter <a href="https://veiledere.nve.no/veileder-stedsspesifikk-snoskredvarsling/" target="_blank" rel="noopener">NVE-veileder for stedsspesifikk snøskredvarsling</a>.</div>
+
+  <section id="modeller">
+    <h2>Varslingsmodeller (Tabell 1)</h2>
+    <p>Felles for alle: konsekvensmatrise per skredpunkt i planleggingsfasen, som grunnlag for tiltaks-/aktsomhetsnivå eller stoppkriterier. Modell velges av Geofag DoV og risikoeier, og fastsettes i skredvarslingsplanen.</p>
+    <div class="cols">
+      <div class="kort"><h3><span class="nr">0</span>Rådgivning</h3>
+        <p><b>Passer:</b> lav risiko, enkle målbare stoppkriterier (f.eks. terskel for nedbør, snødybde) som risikoeier følger opp selv. Dimensjonerende skred ≤ K1, eller større skred svært sjeldne.</p>
+        <p><b>Leveranse:</b> skredvarslingsplan med autonome stoppkriterier, sjekkliste for driftsentreprenør, bistand på forespørsel. Ingen løpende varsling.</p>
+        <p class="note">Eksempel: steng ved nysnø &gt; X cm/24 t og vind fra kritisk retning; steng ved observert skredaktivitet.</p></div>
+      <div class="kort"><h3><span class="nr">1</span>Terskelbasert varsling</h3>
+        <p><b>Passer:</b> etablerte sikringstiltak, eller bare sjeldne store–svært store skred når veg. Grønt er default de fleste dager. Krever mulighet for aktiv skredkontroll og klar D-terskel fra konsekvensmatrisen.</p>
+        <p><b>Leveranse:</b> ved behov – binært (Rødt/Grønt) eller gradert varsel (fire nivåer). To spor: A kontrolltrigger og B sikkerhetsnett.</p>
+        <p class="note">Binært: restrisiko minimal, ≤ K1 eller svært sjeldne. Gradert: behov for differensierte tiltak.</p></div>
+      <div class="kort"><h3><span class="nr">2</span>Full varsling</h3>
+        <p><b>Passer:</b> risikoeier trenger fullt daglig beslutningsgrunnlag; konsekvensmatrisen gir bredt spekter av utfall gjennom sesongen.</p>
+        <p><b>Leveranse:</b> daglig vurdering med aktsomhetsnivå per skredpunkt/delområde, gyldighet 1–7 døgn, 6-timers oppløsning.</p></div>
+    </div>
+    <h3>Prosess for valg</h3>
+    <p>1 Egnethetsvurdering (risiko, instrumentering, ressurser) → 2 Anbefaling til risikoeier, som aksepterer modell og forutsetninger → 3 Skredvarslingsplan (skredbaneanalyser, konsekvensmatriser, tiltaksplan) → 4 Sesonggjennomgang (er modellen fortsatt egnet?).</p>
+  </section>
+
+  <section id="velger">
+    <h2>Egnethetsvurdering (Tabell 2)</h2>
+    <p class="note">Valg av modell gjøres sammen med risikoeier og fastsettes i skredvarslingsplanen.</p>
+    <div id="tab2"></div>
+  </section>
+
+  <section id="m1">
+    <h2>Modell 1 – arbeidsflyt (Figur 9)</h2>
+    <p>To spor kjøres parallelt under passiv overvåking. Sporene møtes bare ett sted: når A mister kontrollmuligheten, går punktet til eskalert overvåking og terskelen for B senkes. Overvåking skjer som automatiske datatriggere (daglig) eller periodisk faglig vurdering.</p>
+    <div class="sim" id="sim"></div>
+    <div class="flyt" id="flyt"></div>
+  </section>
+
+  <section id="m2">
+    <h2>Modell 2 – daglig vurdering (Figur 10–13)</h2>
+    <p>Per EAWS-skredproblem: utløsbarhet × utbredelse → sannsynlighet (S1–S5). Dagens D-størrelse og relativ utløpslengde slås opp i skredbanens konsekvensmatrise → K0–K3. Sannsynlighet × konsekvens i risikomatrisen → aktsomhetsnivå. Ingen skredproblem → Grønt direkte. Flere problemer → problemet med høyest sannsynlighetsklasse styrer.</p>
+    <div class="kalk">
+      <div>
+        <h3>1 Sannsynlighet</h3>
+        <label class="note">Utløsbarhet / snødekkestabilitet <span class="hjelp" data-h="hU"><button type="button" class="hq" aria-label="Hjelpetabell utløsbarhet">?</button></span></label>
+        <select id="selU"></select>
+        <label class="note" style="display:block;margin-top:6px">Utbredelse av utløsbarhet <span class="hjelp" data-h="hB"><button type="button" class="hq" aria-label="Hjelpetabell utbredelse">?</button></span></label>
+        <select id="selB"></select>
+        <label style="display:flex;gap:6px;margin-top:8px;font-size:13px"><input type="checkbox" id="ingen"> Ingen skredproblem</label>
+        <h3>2 Konsekvens</h3>
+        <label class="note">Konsekvensklasse fra skredbanens konsekvensmatrise <span class="hjelp" data-h="hK"><button type="button" class="hq" aria-label="Forklaring K-klasser">?</button></span></label>
+        <select id="selK"></select>
+        <p class="note">Skredbanespesifikk K (D × K/M/L): bruk <a href="#" onclick="parent.location.hash='solver';return false">Skredproblem-solveren</a>.</p>
+        <h3>Risikomatrise</h3>
+        <div class="btns" id="modBtns"></div>
+        <div class="res" id="res"></div>
+      </div>
+      <div><h3>Sannsynlighetsmatrise (Figur 11) <span class="hjelp" data-h="hS"><button type="button" class="hq" aria-label="Verbale sannsynlighetsbegrep">?</button></span></h3><table class="mx" id="smx"></table></div>
+      <div><h3>Risikomatrise (Figur 12) <span class="hjelp" data-h="hK"><button type="button" class="hq" aria-label="Forklaring K-klasser">?</button></span></h3><table class="mx" id="rmx"></table>
+        <p class="note">Modell 1: den ordinære matrisen kollapses til ønsket antall nivåer.</p></div>
+    </div>
+    <p class="note">? = hjelpetabell fra logikk-Excel. Hold musepekeren over for å vise, klikk for å feste (Esc lukker).</p>
+    <div id="pop" class="pop" hidden></div>
+  </section>
+
+  <section id="tiltak">
+    <h2>Tiltak og matriser</h2>
+    <p>Akutte tiltak knyttet til nivå: restriksjoner i <b>vegdrift</b> ved skredpunkt og i <b>trafikkavvikling</b>. Ikke knyttet til nivå: <b>aktiv skredkontroll</b> som forebyggende tiltak – lav terskel, mål å løse ut skred som ikke når veg, i normal arbeidstid, alltid avklart med risikoeier og driftsentreprenør. Anbefales i kommentarfeltet for tiltak i varslingsverktøyet. Resultater dokumenteres i Elrapp og vaktrapport.</p>
+    <h3>Aktsomhetsnivå og tiltak – eksponering i skredpunkt</h3>
+    <div class="btns" id="akModus"><button class="btn" data-m="lys">Lys modus</button><button class="btn" data-m="mork">Mørk modus</button><span class="note" style="align-self:center">Mørkere rute = strengere (lys modus). Klikk et nivå for å utheve kolonnen.</span></div>
+    <div id="akWrap" class="akwrap"><table class="ak" id="ak"></table>
+      <div class="akleg"><span><i class="c-ok">✓</i>Som normalt</span><span><i class="c-be">!</i>Med forbehold</span><span><i class="c-un">✕</i>Unngå</span></div></div>
+    <p class="note">*) Forberedelse til stenging omfatter også varsling via VTS om fare for stengt veg.<br>NB: Flere av oppgavene skal følge prosedyre ID9400a <i>Skredprosedyrer</i>: generelle driftsoppgaver (del A), stenging (del B) og rydding/gjenoppretting/åpning (del C). Risikoeier må kjenne og være enig i tiltakene; driftsentreprenør følger tiltaksplanen.</p>
+    <h3>Tiltaksmatrise – modell 1 (Tabell 3, eksempel)</h3>
+    <table>
+      <tr><th style="width:120px">Nivå</th><th>Situasjon</th><th>Tiltak (eksempel)</th></tr>
+      <tr><td><span class="lv G">Grønt</span></td><td>Naturlig utløsning ikke sannsynlig, eller skred når ikke veg.</td><td>Ingen tiltak, veg holdes åpen.</td></tr>
+      <tr><td><span class="lv R">Rødt</span></td><td>Naturlig utløsning sannsynlig OG dimensjonerende skredstørrelse kan nå veg (B-terskel).</td><td>Steng veg, dokumenter beslutning og resultat.</td></tr>
+      <tr><td><span class="lv" style="background:#5d6b73;color:#fff">Skredkontroll</span></td><td>Mulig naturlig utløsning opp til og med prosjektspesifikk nedre terskel (D-størrelse).</td><td>Kontrollert sprenging ved skredtårn igangsettes.</td></tr>
+    </table>
+    <h3>Prosedyrer for aktiv skredkontroll med skredtårn</h3>
+    <div class="btns" id="tarnLenker"></div>
+  </section>
+
+  <section id="vakt">
+    <h2>Varslingssesong og vaktordning</h2>
+    <div class="cols">
+      <div class="kort"><h3>Sesong</h3><p><b>1. desember – 17. mai.</b> Kan forsinkes eller avvikles etter avtale med risikoeier; oppsatte vakter godtgjøres som planlagt.</p><p><b>Skuldersesong:</b> varsel utenfor sesongen etter avtale.</p><p id="sesongStatus" class="note"></p></div>
+      <div class="kort"><h3>Vakter</h3><p>Ukentlig, <b>onsdag–onsdag, vaktskifte kl. 14.00</b>.</p><p>Maks 6 t (08.00–14.00) til varsel eller gyldighetsvurdering. 3–4 vakter per varsler per sesong; vaktlag ≥ 8 varslere for 27 uker.</p></div>
+      <div class="kort"><h3>Observatør</h3><p>1 observasjon (snøprofil) per uke i relevante løsneområder. NVE skredkursstige min. 4b, lokalkjent.</p></div>
+    </div>
+    <h3>Sidemannskontroll (KS)</h3>
+    <p>KS avtales mellom vaktlag nord og vaktlag sør.</p>
+  </section>
+
+  <section id="gyldighet">
+    <h2>Publisering, gyldighet og oppdatering (Tabell 5)</h2>
+    <div class="cols">
+      <div><p><b>Publisering:</b> senest kl. 14.00, i <a href="https://kart.vegvesen.no/respons" target="_blank" rel="noopener">varslingsverktøyet</a>. Sendes på e-postliste til risikoeier/byggherre og driftsentreprenør.</p>
+      <p><b>Gyldig</b> til kl. 23.59 siste dag i gyldighetsperioden. <b>Gyldighetsvurdering</b> daglig.</p>
+      <p><b>Oppdatering:</b> når gyldigheten går ut, eller når forholdene endrer seg.</p></div>
+      <div><p><b>Gyldighetsperiode 1–7 døgn.</b> Minimum ett døgn (til middag neste dag) anbefales ved oransje og rød. Inntil 7 døgn i skuldersesong, ved stabile forhold eller uendret vær.</p>
+      <p>6-timers bolker de første 2,5 døgn, deretter 24-timers bolker.</p></div>
+    </div>
+    <label class="note">Gyldighetsperiode: <b id="gylVerdi"></b></label>
+    <input type="range" id="gyl" min="1" max="7" value="3" style="width:260px;vertical-align:middle">
+    <div class="tl" id="tl"></div>
+  </section>
+
+  <section id="konsekvens">
+    <h2>Konsekvensbasert skredvarsling (Figur 5–8)</h2>
+    <div class="lag">
+      <div class="kort"><h3>Statisk lag – én gang per skredbane</h3><ol>
+        <li><b>Dimensjonerende skred:</b> for hver D1–D5 × K/M/L vurderes spesifikk utløpslengde (OV/NV/SNV/NIV/UL) → <b>Base-K</b>, uavhengig av terreng og trafikk (regelverk i Figur 7).</li>
+        <li><b>Terreng- og trafikkfaktorer:</b> terrengfelle (relevant ved Base-K ≥ K2), stoppemulighet (sikt, fartsgrense – relevant for alle størrelser som når veg), eksponering (ÅDT, skredpunktlengde) → én justeringsfaktor, inntil ±1 klasse. Foreløpig faglig skjønn, ikke poengmodell.</li>
+        <li><b>Endelig K</b> (K0–K3) per kombinasjon → ferdig konsekvensmatrise. Justeringsfaktoren er konstant for alle rader.</li></ol></div>
+      <div class="kort"><h3>Dynamisk lag – hver vurdering</h3><ol>
+        <li>Snødekkestabilitet per skredproblem → sannsynlighetsklasse <b>S1–S5</b>.</li>
+        <li>Dagens snøforhold i skredløpet → relativ utløpslengde <b>K/M/L</b>; sammen med D-størrelse slås dette opp i konsekvensmatrisen → dagens <b>K0–K3</b>.</li>
+        <li>Sannsynlighet × konsekvens i risikomatrisen → <b>aktsomhetsnivå</b>.</li></ol>
+        <p class="note">Eksempel (Figur 13): Dårlig stabilitet i noen utløsningspunkter → <span class="b b-S3">Mulig</span>. <span class="b b-D2">D2</span>, <span class="b b-M">M</span> → <span class="b b-NV">NV</span> → <span class="b b-K2">K2</span>. Mulig + K2 → <span class="lv Y">Gult</span>.</p></div>
+    </div>
+    <div class="cols" style="margin-top:12px">
+      <div><h3>Tabell 7 – Konsekvensklasser</h3><table>
+        <tr><th></th><th>Beskrivelse</th><th>Skadeomfang</th></tr>
+        <tr><td class="b b-K3">K3</td><td>Kjøretøy kan bli fullstendig begravet og/eller flyttet ut av vegbanen. Fare for liv, særlig langs fjord/elv eller i bratt terreng.</td><td>Alvorlig personskade eller død</td></tr>
+        <tr><td class="b b-K2">K2</td><td>Delvis begravet og/eller flyttet ut av vegbanen; typisk lav hastighet og/eller ingen terrengfeller.</td><td>Personskade</td></tr>
+        <tr><td class="b b-K1">K1</td><td>Kjøretøy kan bli stående fast; liten fare for alvorlig kollisjon pga. lav fart.</td><td>Ikke personskade</td></tr>
+        <tr><td class="b b-K0">K0</td><td>Normalt ikke påvirket.</td><td>Ingen skade</td></tr></table></div>
+      <div><h3>Tabell 8 – Destruktiv skredstørrelse</h3><table>
+        <tr><th></th><th>Størrelse</th><th>Volum</th><th>Utløp</th></tr>
+        <tr><td class="b b-D1">D1</td><td>små</td><td style="white-space:nowrap">&lt; 100 m³</td><td>Stopper i henget</td></tr>
+        <tr><td class="b b-D2">D2</td><td>middels</td><td style="white-space:nowrap">&lt; 1 000 m³</td><td>Stopper i bunnen av henget</td></tr>
+        <tr><td class="b b-D3">D3</td><td>store</td><td style="white-space:nowrap">&lt; 10 000 m³</td><td>Kan gå ut av henget og opptil 50 m inn i slakt terreng</td></tr>
+        <tr><td class="b b-D4">D4</td><td>svært store</td><td style="white-space:nowrap">&lt; 100 000 m³</td><td>Kan gå over slakere terreng &gt; 50 m</td></tr>
+        <tr><td class="b b-D5">D5</td><td>ekstremt store</td><td style="white-space:nowrap">&gt; 100 000 m³</td><td>Når fram til dalbunnen</td></tr></table></div>
+      <div><h3>Tabell 9 – Spesifikk utløpslengde</h3><table>
+        <tr><td class="b b-OV" style="width:52px">OV</td><td>Faste snømasser går over veg</td></tr>
+        <tr><td class="b b-NV" style="width:52px">NV</td><td>Faste snømasser når veg</td></tr>
+        <tr><td class="b b-SNV" style="width:52px">SNV</td><td>Snøsky når veg</td></tr>
+        <tr><td class="b b-NIV" style="width:52px">NIV</td><td>Når ikke veg (gir K0, unntatt D5-NIV-L → K1)</td></tr>
+        <tr><td class="b b-UL" style="width:52px">UL</td><td>Utelukket at skredløpet kan gi skred som når veg</td></tr></table>
+        <h3>Tabell 10 – Relativ utløpslengde</h3><table>
+        <tr><td class="b b-L" style="width:52px">L</td><td>Stor snømengde i skredløp, mye tørr myk/løs snø, kaldt; eller hard, glatt overflate</td></tr>
+        <tr><td class="b b-M" style="width:52px">M</td><td>Normal snømengde, stort sett tørr snø med varierende fasthet</td></tr>
+        <tr><td class="b b-K" style="width:52px">K</td><td>Lite/ingen snø i skredløp og/eller våt snø</td></tr></table></div>
+    </div>
+  </section>
+
+  <section id="roller">
+    <h2>Roller og ansvar (Tabell 6)</h2>
+    <table>
+      <tr><th>Rolle</th><th>Navn</th><th>Ansvarsområde</th></tr>
+      <tr><td>Vegeier</td><td>SVV / kontrollingeniør</td><td>Stenging, åpning og vedlikehold av veg (vegtrafikkloven § 7)</td></tr>
+      <tr><td>Risikoeier</td><td>SVV / kontrollingeniør</td><td>Risikoanalyse, risikoaksept; tiltaksplan og sikringstiltak med prosjektleder og faglig leder. Bestiller tjenesten, definerer beredskapsplan og tiltak per nivå.</td></tr>
+      <tr><td>Prosjektleder</td><td>Njål Farestveit</td><td>Prosjektansvar, utbygging av skredtårn, oppstart av varsling</td></tr>
+      <tr><td>Faglig leder</td><td>Markus Eckerstorfer</td><td>Skredvarslingsplan, tiltaksplan, risikomatriser, vaktlaget</td></tr>
+      <tr><td>Skredtekniker</td><td>Geofag DoV</td><td>Aktsomhetsområder, faresonering, sikringstiltak</td></tr>
+      <tr><td>Skredvarsler</td><td>Geofag DoV</td><td>Skredfarevurdering og publisering</td></tr>
+      <tr><td>Driftsentreprenør</td><td></td><td>Drift og brøyting, sperring av veg, kontakt med VTS</td></tr>
+      <tr><td>Observatør</td><td></td><td>1 snøprofil per uke i relevante løsneområder</td></tr>
+      <tr><td>Trafikkoperatør</td><td>VTS</td><td>Informasjon til publikum</td></tr>
+    </table>
+    <h3>Kompetanse skredvarsler</h3>
+    <p>Stedsspesifikk varsling 1–2 vintre siste 3–5 år. Minimum 10 fullstendige snøobservasjoner (norsk standard, regObs) per sesong siste 3–5 vintre. NVE observatørkursstige, CAA Level II eller tilsvarende, relevant geofagutdanning.</p>
+    <h3>Datadokumentasjon</h3>
+    <p><b>Vaktrapport:</b> avtroppende varsler, inkl. aktiv skredkontroll (skred/ikke skred, størrelse, type, skredproblem). <b>Skredvarsel og risikomatriser:</b> i varslingsverktøyet. <b>Sesongrapport:</b> snø og vær mot normal, skredaktivitet, skredkontroll, aktsomhetsnivåer.</p>
+  </section>
+
+  <section id="komm">
+    <h2>Kommunikasjon og avvik</h2>
+    <div class="cols">
+      <div class="kort"><h3>Kommunikasjonsplan</h3>
+        <p><b>Risikoeier/byggherre og driftsentreprenør:</b> varsel på e-postliste senest kl. 14.00.</p>
+        <p><b>Media:</b> skredfaglige spørsmål tas av prosjektansvarlig.</p>
+        <p><b>Publikum:</b> VTS.</p>
+        <p class="note">Til orientering: driftsentreprenør med UE, skred- og flomberedskapen i SVV, varsom.no.</p></div>
+      <div class="kort"><h3>Avvik og problemløsing</h3>
+        <p><b>Feil i varslingsverktøyet:</b> ring Emil Solbakken <span id="tlfEmil"></span></p>
+        <p><b>Varsler syk eller forhindret:</b> ring Markus Eckerstorfer <span id="tlfMarkus"></span></p></div>
+    </div>
+  </section>
+
+  <section id="vedlegg">
+    <h2>Maler og lenker</h2>
+    <div class="btns" id="vedleggLenker"></div>
+    <p class="note">Mal for skredvarsel (Figur 14) følger informasjonspyramiden i NVE-veilederen. Figurene 1–14 finnes i Word-dokumentet.</p>
+  </section>
+</main>
+</div>
+<script>
+// Lenker og telefon. Tom streng = vises som «mangler».
+// Telefonnummer fylles først når artefaktet er delt kun i organisasjonen.
+const LNK={
+  prosedyre:'https://vegvesen.sharepoint.com/sites/org-DoV-geofag/09%20Fagtema/Skred/04%20Overv%C3%A5kning%20varsling/03%20Stedspesifikk%20skredvarsling/01%20Prosedyre/01%20Prosedyre%20stedsspesifikk%20skredvarsling/Prosedyre%20for%20stedsspesifikk%20skredvarsling%20for%20veg%20V2.docx',
+  respons:'https://kart.vegvesen.no/respons',
+  nve:'https://veiledere.nve.no/veileder-stedsspesifikk-snoskredvarsling/',
+  mal_plan:'https://vegvesen.sharepoint.com/:w:/s/org-DoV-geofag/EdZT8kBijkhAv7JUL26l180BH6ie_pRRi2wplvWfIgyGMg?e=xmVj0v',
+  kompetanse:'https://vegvesen.sharepoint.com/:x:/s/org-DoV-geofag/ETLpBQAZl4JCmGna6UinUxUBOEh-qetV0tWsQv6EyGBsuA?e=MYmmg1',
+  mal_sesong:'', daisybell:'',
+  tarn:{'E134 Haukelifjell':'','Rv15 Strynefjellet':'','Rv13 Vikafjellet':'','Rv85 Gullesfjord':'','E69 Nordkapp':'','Rv94 Hammerfest':''}
+};
+const TLF={emil:'',markus:''};
+const $=id=>document.getElementById(id);
+const lenke=(navn,url)=>url?`<a class="btn" href="${url}" target="_blank" rel="noopener">${navn}</a>`:`<span class="btn mangler" title="Lenke mangler">${navn}</span>`;
+$('lnkProsedyre').innerHTML=LNK.prosedyre?`<a href="${LNK.prosedyre}" target="_blank" rel="noopener">Åpne Word-originalen</a>`:'<span class="mangler">Lenke til Word-original mangler</span>';
+$('tarnLenker').innerHTML=Object.entries(LNK.tarn).map(([k,v])=>lenke(k,v)).join('')+lenke('Daisybell',LNK.daisybell);
+$('vedleggLenker').innerHTML=[lenke('Varslingsverktøy (Respons)',LNK.respons),lenke('NVE-veileder',LNK.nve),lenke('Mal skredvarslingsplan',LNK.mal_plan),lenke('Mal sesongrapport',LNK.mal_sesong),lenke('Kompetanseliste',LNK.kompetanse)].join('');
+$('tlfEmil').innerHTML=TLF.emil?`<b>${TLF.emil}</b>`:'<span class="mangler">(nr. i Word-originalen)</span>';
+$('tlfMarkus').innerHTML=TLF.markus?`<b>${TLF.markus}</b>`:'<span class="mangler">(nr. i Word-originalen)</span>';
+
+// ---- Tabell 2 / modellvelger
+const T2=[['Lav og objektiv risikoprofil – entydige stoppkriterier',[1,0,0]],
+['Daglig krav om aktsomhetsnivå fra risikoeier',[0,0,1]],
+['Etablerte sikringstiltak (voller)',[1,1,0]],
+['Enkel tiltaksbeslutning tilstrekkelig',[1,1,0]],
+['Grønn default store deler av sesongen',[1,1,0]],
+['Driftsentreprenør kan håndtere tiltak autonomt',[1,.5,0]],
+['Begrenset varslerkapasitet',[1,1,0]],
+['Mange prosjekter i portefølje',[1,.5,0]]];
+const sym=v=>v===1?'<span class="ok">✓</span>':v===.5?'<span class="ok">(✓)</span>':'<span class="nei">x</span>';
+$('tab2').innerHTML='<table style="max-width:900px"><tr><th>Prosjektkjennetegn</th><th>0 Rådgivning</th><th>1 Terskelbasert</th><th>2 Full</th></tr>'+T2.map(r=>`<tr><td>${r[0]}</td>${r[1].map(v=>`<td style="text-align:center">${sym(v)}</td>`).join('')}</tr>`).join('')+'</table>';
+
+
+// ---- Modell 1 flytsimulator
+const N={
+ passiv:{t:'Passiv overvåking',d:'A og B kjøres i hver syklus. Ingen følger med daglig.',v:[['A: vær/snø tilsier skredproblem (f.eks. fokksnø i løsneområdene)','aTrig'],['B: kjør sikkerhetsnettet','bSjekk']]},
+ aTrig:{t:'A: Kontrolltrigger',s:'A',d:'Vær- og snøparametere tilsier at et skredproblem bygges opp.',v:[['Gå videre','vindu']]},
+ vindu:{t:'Kontrollvindu åpent?',s:'A',q:1,d:'Åpent når problemet er lett å utløse og forventet størrelse er liten nok til trygg kontroll, f.eks. ≤ D2.',v:[['Ja','kontroll'],['Nei, for sent','eskalert']]},
+ kontroll:{t:'Aktiv skredkontroll',s:'A',d:'Arbeidsordre til driftsentreprenør med tid og sted. Loggføres uten offentlig varsling.',v:[['Gå videre','vellykket']]},
+ vellykket:{t:'Kontroll vellykket?',s:'A',q:1,d:'Snødybde i løsneområdet redusert, eller flaket løsnet.',v:[['Ja','passiv'],['Nei','eskalert']]},
+ eskalert:{t:'Eskalert overvåking',s:'A',d:'Kontroll ikke lenger pålitelig, men problemet kan gi naturlige skred. Terskelen for B senkes.',sk:1,v:[['Ingen ny trigger → passiv','passiv'],['Håndterbart med kontroll igjen','kontroll'],['Kjør B med skjerpet terskel','bSjekk']]},
+ bSjekk:{t:'B: Skredstørrelse > terskel?',s:'B',q:1,d:'Varslet eller observert skredstørrelse sammenlignes med terskelen fra konsekvensmatrisen. B gjelder uavhengig av A.',v:[['Ja, overskridelse','vurdering'],['Nei','passiv']]},
+ vurdering:{t:'Skredfarevurdering',s:'B',d:'Utføres av varsler i Geofag DoV.',v:[['Ingen tiltak','passiv'],['Tiltak nødvendig','anbefaling']]},
+ anbefaling:{t:'Tiltaksanbefaling',s:'B',d:'Driftsentreprenør utfører: skredkontroll (førstevalg der mulig), restriksjoner eller stenging.',v:[['Varsler avgjør at tiltaket avsluttes','passiv']]}
+};
+const ORD={A:['aTrig','vindu','kontroll','vellykket','eskalert'],B:['bSjekk','vurdering','anbefaling']};
+let cur='passiv',skjerpet=false,besokt=new Set(['passiv']),logg=['Passiv overvåking'];
+function tegnFlyt(){
+  const n=N[cur];
+  $('sim').innerHTML=`<div class="note">Simulering – klikk deg gjennom flyten · B-terskel: <span class="terskel ${skjerpet?'s':'n'}">${skjerpet?'skjerpet (senket)':'normal'}</span></div>
+   <div class="tittel">${n.t}</div><p>${n.d}</p><div class="btns">${n.v.map((o,i)=>`<button class="btn" data-g="${i}">${o[0]}</button>`).join('')}<button class="btn" data-r="1" style="margin-left:auto">Start på nytt</button></div>
+   <div class="logg">${logg.slice(-8).join(' → ')}</div>`;
+  const nd=k=>`<div class="node ${N[k].q?'q':''} ${k===cur?'cur':besokt.has(k)?'vis':''}"><b>${N[k].t}</b><br><span class="note">${N[k].d}</span></div>`;
+  $('flyt').innerHTML=`<div class="spor"><h3>A – Kontrolltrigger</h3>${ORD.A.map(nd).join('<div class="pil">▼</div>')}</div>
+   <div class="spor"><h3>B – Sikkerhetsnett</h3>${ORD.B.map(nd).join('<div class="pil">▼</div>')}<p class="note" style="margin-top:8px">Sporene møtes i <i>Eskalert overvåking</i>: terskelen for B senkes. Når tiltak avsluttes eller ingen overskridelse: tilbake til passiv overvåking.</p></div>`;
+}
+$('sim').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.r){cur='passiv';skjerpet=false;besokt=new Set(['passiv']);logg=['Passiv overvåking'];return tegnFlyt()}
+  const nxt=N[cur].v[b.dataset.g][1];
+  if(nxt==='eskalert')skjerpet=true;
+  if(nxt==='passiv'&&cur!=='bSjekk'&&cur!=='eskalert'&&!skjerpet){}
+  if(nxt==='passiv'&&(cur==='eskalert'||cur==='vellykket'))skjerpet=false;
+  cur=nxt;besokt.add(cur);logg.push(N[cur].t);tegnFlyt();
+});
+tegnFlyt();
+
+// ---- Modell 2 kalkulator (samme matriser som solveren)
+const STAB=['Svært dårlig – naturlig / svært lett å løse ut','Dårlig – lett å løse ut','Moderat – vanskelig å løse ut','God – svært vanskelig å løse ut'];
+const STK=['Svært dårlig','Dårlig','Moderat','God'];
+const UTB=['Noen få (0–4 %) – isolert','Noen (4–20 %) – spesifikk','Mange (> 20 %) – utbredt'];const UTK=['Få','Noen','Mange'];
+const SANN=['Høyst usannsynlig','Lite sannsynlig','Mulig','Sannsynlig','Veldig sannsynlig'];
+const SMAT=[[2,3,4],[1,2,3],[0,1,1],[0,0,0]];
+const RMAT={2:[['G','G','G','G'],['G','G','G','Y'],['G','G','Y','O'],['G','Y','O','R'],['G','O','R','R']],
+            1:[['G','G','G','G'],['G','G','G','R'],['G','Y','Y','R'],['G','Y','R','R'],['G','R','R','R']]};
+const NIVN={G:'Grønt',Y:'Gult',O:'Oransje',R:'Rødt'};
+const opt=(a,v)=>a.map((t,i)=>`<option value="${i}" ${i===v?'selected':''}>${t}</option>`).join('');
+$('selU').innerHTML=opt(STAB,1);$('selB').innerHTML=opt(UTB,1);$('selK').innerHTML=opt(['K0 – ingen','K1 – mindre/moderat','K2 – vesentlig','K3 – stor/alvorlig'],2);
+let mod=2;
+$('modBtns').innerHTML=[2,1].map(m=>`<button class="btn" data-m="${m}">Modell ${m}</button>`).join('');
+$('modBtns').addEventListener('click',e=>{const b=e.target.closest('button');if(b){mod=+b.dataset.m;kalk()}});
+['selU','selB','selK','ingen'].forEach(id=>$(id).addEventListener('change',kalk));
+function kalk(){
+  const u=+$('selU').value,b=+$('selB').value,k=+$('selK').value,ingen=$('ingen').checked;
+  const si=SMAT[u][b],niv=ingen?'G':RMAT[mod][si][k];
+  [...$('modBtns').children].forEach(x=>x.classList.toggle('on',+x.dataset.m===mod));
+  const sl=(c)=>!ingen&&c?' sel':'';
+  $('smx').innerHTML='<tr><th></th>'+UTK.map((t,j)=>`<th class="b b-ub${j}${sl(j===b)}">${t}</th>`).join('')+'</tr>'+
+   SMAT.map((r,i)=>`<tr><th class="b b-st${i}${sl(i===u)}" style="text-align:left">${STK[i]}</th>${r.map((x,j)=>`<td class="b b-S${x+1}${sl(i===u&&j===b)}">${SANN[x]}</td>`).join('')}</tr>`).join('');
+  $('rmx').innerHTML=[4,3,2,1,0].map(i=>`<tr><th class="b b-S${i+1}${sl(i===si)}" style="text-align:left">${SANN[i]}</th>${RMAT[mod][i].map((c,j)=>`<td class="c${c}${sl(i===si&&j===k)}"></td>`).join('')}</tr>`).join('')+
+   '<tr><th></th>'+['K0','K1','K2','K3'].map((t,j)=>`<th class="b b-${t}${sl(j===k)}">${t}</th>`).join('')+'</tr>';
+  $('res').innerHTML=ingen?`Ingen skredproblem → <span class="lv G">Grønt</span> (risikomatrisen brukes ikke)`
+   :`<span class="b b-S${si+1}">${SANN[si]}</span> + <span class="b b-K${k}">K${k}</span> → <span class="lv ${niv}">${NIVN[niv]}</span>`;
+}
+kalk();
+
+
+// ---- hjelpetabeller (hover viser, klikk fester)
+const HJ={"hU": "<h3>Snødekkestabilitet – utløsbarhet</h3><table class=\"ht\">\n<tr><th></th><th colspan=\"2\" class=\"b b-st0\">Svært dårlig</th><th colspan=\"2\" class=\"b b-st1\">Dårlig</th><th colspan=\"2\" class=\"b b-st2\">Moderat</th><th class=\"b b-st3\">God</th></tr>\n<tr><th>Utløsbarhet (EAWS)</th><td colspan=\"2\">Naturlig / svært lett å løse ut</td><td colspan=\"2\">Lett å løse ut</td><td colspan=\"2\">Vanskelig å løse ut</td><td>Svært vanskelig å løse ut</td></tr>\n<tr><th>Sensitivity to triggers (CMAH)</th><td colspan=\"2\">Touchy (følsom)</td><td colspan=\"2\">Reactive (reaktiv)</td><td colspan=\"2\">Stubborn (sta)</td><td>Unreactive (ufølsom)</td></tr>\n<tr><th rowspan=\"3\">Tegn på instabilitet (tørr)</th><td colspan=\"2\" class=\"g\">Naturlig utløsning</td><td colspan=\"5\"></td></tr>\n<tr><td colspan=\"3\" class=\"g\">Kraftig drønn med forplantning</td><td colspan=\"2\" class=\"g\">Lite drønn med forplantning</td><td colspan=\"2\"></td></tr>\n<tr><td colspan=\"3\" class=\"g\">Skytende sprekker</td><td colspan=\"4\"></td></tr>\n<tr><th rowspan=\"3\">Utløser (tørr)</th><td colspan=\"2\" class=\"g\">Naturlig utløsning</td><td colspan=\"2\" class=\"g\">Lite tilleggsbelastning</td><td colspan=\"2\" class=\"g\">Stor tilleggsbelastning</td><td></td></tr>\n<tr><td colspan=\"4\"></td><td colspan=\"2\" class=\"g\">Skavlbrudd</td><td></td></tr>\n<tr><td colspan=\"4\"></td><td colspan=\"2\" class=\"g\">Sprenging</td><td></td></tr>\n<tr><th>ECT (tørr)</th><td colspan=\"3\" class=\"g\">ECTPV / ECTP</td><td colspan=\"3\" class=\"g\">ECTN</td><td class=\"g\">ECTX</td></tr>\n<tr><th rowspan=\"2\">Tegn på instabilitet (våt)</th><td class=\"g\">Naturlig utløsning</td><td colspan=\"6\"></td></tr>\n<tr><td></td><td colspan=\"2\" class=\"g\">Kunstig utløsning</td><td colspan=\"4\"></td></tr>\n<tr><th rowspan=\"3\">Snødekke (våt)</th><td colspan=\"3\" class=\"g\">Første fukting av snødekket</td><td></td><td colspan=\"3\" class=\"g\">Smeltekanaler i overflaten</td></tr>\n<tr><td colspan=\"3\" class=\"g\">Første gang isotermt snødekke</td><td></td><td colspan=\"3\" class=\"g\">Gjenfrysing av snødekket</td></tr>\n<tr><td colspan=\"3\" class=\"g\">Vått vedvarende svakt lag</td><td></td><td colspan=\"3\" class=\"g\">Avtagende mengde fritt vann</td></tr>\n</table>\n<h3>Skredkontroll og naturlig utløsning</h3><table class=\"ht\">\n<tr><th>Stabilitet</th><th>Naturlig utløsning</th><th>Skredkontroll: ladning</th><th>Resultat</th></tr>\n<tr><td class=\"b b-st0\" style=\"text-align:left\">Svært dårlig</td><td>Mange skred</td><td>Alle størrelser</td><td>Mange skred</td></tr>\n<tr><td class=\"b b-st1\" style=\"text-align:left\">Dårlig</td><td>Noen skred</td><td>Single hand charge</td><td>Noen skred</td></tr>\n<tr><td class=\"b b-st2\" style=\"text-align:left\">Moderat</td><td>Få skred</td><td>Flere detonasjoner mange steder</td><td>Få skred</td></tr>\n<tr><td class=\"b b-st3\" style=\"text-align:left\">God</td><td>Ingen skred</td><td>Flere store detonasjoner mange steder</td><td>Ingen skred</td></tr></table>", "hB": "<h3>Utbredelse av utløsbarhet</h3><table class=\"ht\">\n<tr><th>EAWS</th><th>CMAH</th><th>Romlig utbredelse</th><th>Faretegn og observasjoner</th></tr>\n<tr><td class=\"b b-ub2\" style=\"text-align:left\">Mange (&gt; 20 %)</td><td>Widespread (utbredt)</td><td>Skredproblemet finnes mange steder og i mange terrengformer</td><td>Skredproblemer er overalt og lette å finne</td></tr>\n<tr><td class=\"b b-ub1\" style=\"text-align:left\">Noen (4–20 %)</td><td>Specific (spesifikk)</td><td>Skredproblemet finnes i terrengformer som kan spesifiseres</td><td>Skredproblemer finnes, men er ikke alltid åpenbare</td></tr>\n<tr><td class=\"b b-ub0\" style=\"text-align:left\">Få (0–4 %)</td><td>Isolated (isolert)</td><td>Skredproblemet er flekkvis og finnes bare i noen få terrengformer</td><td>Bekreftelser er sjeldne og vanskelige å finne</td></tr></table>\n<p class=\"note\">Andel av mulige utløsningspunkter i løsneområdet med gitt stabilitetsklasse.</p>", "hS": "<h3>Verbale sannsynlighetsbegrep</h3><p class=\"note\">«Hvor sannsynlig er det at et snøskred løsner fra et gitt løsneområde i løpet av varslingsperioden?» – «På hvor mange dager med tilsvarende snø- og værforhold vil et skred løsne fra løsneområdet?»</p><table class=\"ht\">\n<tr><th>Klasse</th><th>Sannsynlighet</th><th>Frekvensbeskrivelse</th></tr>\n<tr><td class=\"b b-S5\" style=\"text-align:left\">S5 Veldig sannsynlig</td><td>&gt; 50 %</td><td>Løsneområdet vil gi skred i omtrent 50 av 100 dager</td></tr>\n<tr><td class=\"b b-S4\" style=\"text-align:left\">S4 Sannsynlig</td><td>25–50 %</td><td>Omtrent 25–50 av 100 dager</td></tr>\n<tr><td class=\"b b-S3\" style=\"text-align:left\">S3 Mulig</td><td>5–25 %</td><td>Omtrent 5–25 av 100 dager</td></tr>\n<tr><td class=\"b b-S2\" style=\"text-align:left\">S2 Lite sannsynlig</td><td>0,1–5 %</td><td>Omtrent 1–50 av 1000 dager</td></tr>\n<tr><td class=\"b b-S1\" style=\"text-align:left\">S1 Høyst usannsynlig</td><td>&lt; 0,1 %</td><td>Maks ett skred i omtrent 1000 dager</td></tr></table>", "hK": "<h3>Konsekvensklasser</h3><table class=\"ht\">\n<tr><th></th><th>Konsekvens</th><th>Beskrivelse</th><th>Typisk skadeomfang</th></tr>\n<tr><td class=\"b b-K3\">K3</td><td>Stor eller alvorlig</td><td>Kjøretøy kan bli fullstendig begravet og/eller flyttet ut av vegbanen. Fare for liv, særlig der vegen går langs fjord/elv eller i bratt terreng.</td><td>Alvorlig personskade eller død</td></tr>\n<tr><td class=\"b b-K2\">K2</td><td>Vesentlig</td><td>Kjøretøy kan bli delvis begravet og/eller flyttet ut av vegbanen, men skredhastigheten er typisk lav og/eller sideterrenget har ingen terrengfeller.</td><td>Personskade</td></tr>\n<tr><td class=\"b b-K1\">K1</td><td>Mindre eller moderat</td><td>Kjøretøy kan bli stående fast; liten fare for alvorlig kollisjon med annen trafikk pga. lav fart.</td><td>Ikke personskade</td></tr>\n<tr><td class=\"b b-K0\">K0</td><td>Ingen</td><td>Kjøretøy blir normalt ikke påvirket.</td><td>Ingen skade</td></tr></table>"};
+let festet=null;
+const pop=$('pop');
+function visHj(el){const r=el.getBoundingClientRect(),sec=$('m2').getBoundingClientRect();
+  pop.innerHTML='<button class="lukk" type="button" aria-label="Lukk">×</button>'+HJ[el.dataset.h];pop.hidden=false;
+  const w=Math.min(860,sec.width-30);pop.style.width=w+'px';
+  let x=r.left-sec.left;x=Math.max(10,Math.min(x,sec.width-w-10));pop.style.left=x+'px';pop.style.top=(r.bottom-sec.top+6)+'px';}
+document.querySelectorAll('.hjelp').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{if(!festet)visHj(el)});
+  el.addEventListener('mouseleave',()=>{if(!festet)setTimeout(()=>{if(!festet&&!pop.matches(':hover'))pop.hidden=true},120)});
+  el.querySelector('button').addEventListener('click',e=>{e.preventDefault();if(festet===el){festet=null;pop.hidden=true}else{festet=el;visHj(el)}});
+});
+pop.addEventListener('mouseleave',()=>{if(!festet)pop.hidden=true});
+pop.addEventListener('click',e=>{if(e.target.closest('.lukk')){festet=null;pop.hidden=true}});
+addEventListener('keydown',e=>{if(e.key==='Escape'){festet=null;pop.hidden=true}});
+
+// ---- Tabell 4
+// ---- Aktsomhetsnivå og tiltak (gråskala, lys/mørk)
+const AKN=[['G','Grønt','Normal drift og trafikkavvikling'],['Y','Gult','Økt oppmerksomhet'],['O','Oransje','Forberedelser og forebygging'],['R','Rødt','Evakuering og stenging']];
+const AKG=[['Driftsoppgaver',[
+  ['Arbeid utenfor kjøretøy','kosting av skilt, inspeksjon',['ok','un','un','un']],
+  ['Langvarig arbeid i kjøretøy','rydding etter skred',['ok','be','un','un']],
+  ['Kortvarig arbeid i kjøretøy','fresing av grøft',['ok','ok','be','un']],
+  ['Rask passering i kjøretøy','brøyting, nødvendig forflytning',['ok','ok','ok','be']]]],
+ ['Trafikkavvikling',[
+  ['Stans av trafikk','ved hindringer, lysregulering som danner kø',['ok','un','un','STENGT']],
+  ['Kolonnekjøring','ved uvær og vegarbeid',['ok','ok','be',null]],
+  ['Trafikk på veg','fri trafikk uten regulering',['ok','ok','fs',null]]]]];
+const AKC={ok:['c-ok','✓',''],be:['c-be','!','Begrens'],un:['c-un','✕','Unngå'],fs:['c-be','!','Forbered stenging*']};
+let akSel=null;
+function tegnAk(){
+  let h=`<tr><th class="akh">Eksponering i skredpunkt</th>${AKN.map((n,j)=>`<th class="lvh ${n[0]}${akSel===j?' sel':''}" data-j="${j}">${n[1]}</th>`).join('')}</tr>
+   <tr><td class="akl"><b>Hovedregel</b></td>${AKN.map((n,j)=>`<td class="hr${akSel===j?' sel':''}">${n[2]}</td>`).join('')}</tr>`;
+  AKG.forEach(([g,rader])=>{h+=`<tr><td class="akg" colspan="5">${g}</td></tr>`;
+    rader.forEach(([t,u,v])=>{h+=`<tr><td class="akl"><b>${t}</b><br><span>${u}</span></td>`+v.map((c,j)=>{if(c===null)return'';
+      if(c==='STENGT')return`<td class="cell c-un${akSel===j?' sel':''}" rowspan="3"><span class="sym">✕</span><b>Stengt veg</b><br><small>gjenåpning etter prosedyre</small></td>`;
+      const[k,sy,tx]=AKC[c];return`<td class="cell ${k}${akSel===j?' sel':''}"><span class="sym">${sy}</span>${tx?`<b>${tx}</b>`:''}</td>`}).join('')+'</tr>'})});
+  $('ak').innerHTML=h;}
+$('ak').addEventListener('click',e=>{const th=e.target.closest('th.lvh');if(!th)return;akSel=akSel===+th.dataset.j?null:+th.dataset.j;tegnAk()});
+let akModus=(()=>{try{return localStorage.getItem('akModus')}catch(e){return null}})()||(matchMedia('(prefers-color-scheme: dark)').matches?'mork':'lys');
+function settModus(m){akModus=m;$('akWrap').classList.toggle('mork',m==='mork');[...$('akModus').querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.m===m));try{localStorage.setItem('akModus',m)}catch(e){}}
+$('akModus').addEventListener('click',e=>{const b=e.target.closest('button');if(b)settModus(b.dataset.m)});
+tegnAk();settModus(akModus);
+
+// ---- Sesong og KS
+const oslo=()=>{const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Oslo',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(new Date());const g=t=>p.find(x=>x.type===t).value;return{y:+g('year'),m:+g('month'),d:+g('day'),wd:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(g('weekday'))}};
+const n=oslo();
+const iSesong=(n.m===12)||(n.m>=1&&n.m<=4)||(n.m===5&&n.d<=17);
+const idag=new Date(Date.UTC(n.y,n.m-1,n.d)),start=new Date(Date.UTC(iSesong&&n.m!==12?n.y-1:n.y,11,1));
+$('sesongStatus').innerHTML=iSesong?`I sesong: dag ${Math.round((idag-start)/864e5)+1} av ${Math.round((new Date(Date.UTC(start.getUTCFullYear()+1,4,17))-start)/864e5)+1}.`:`Utenfor sesong. ${Math.round((start-idag)/864e5)} dager til 1. desember.`;
+
+// ---- Gyldighet
+function tl(){
+  const g=+$('gyl').value;$('gylVerdi').textContent=g+' døgn'+' (dag 0 + '+g+')';
+  let h='<div class="d" style="grid-column:span 4">Dag 0</div><div class="d" style="grid-column:span 4">Dag 1</div><div class="d" style="grid-column:span 4">Dag 2</div>'+[3,4,5,6,7].map(d=>`<div class="d">Dag ${d}</div>`).join('');
+  for(let d=0;d<3;d++)for(let b=0;b<4;b++){const pub=d===0&&b<2;h+=`<div class="${d<=g?'a':'ut'}" title="${String(b*6).padStart(2,'0')}–${String(b*6+6).padStart(2,'0')}"${pub?' style="opacity:.45"':''}>${String(b*6).padStart(2,'0')}</div>`}
+  for(let d=3;d<=7;d++)h+=`<div class="${d<=g?'a h24':'ut'}">24 t</div>`;
+  $('tl').innerHTML=h+'<div class="note" style="grid-column:1/-1;text-align:left;background:none">Publisert senest 14.00 dag 0; gyldig til 23.59 siste dag. Blå = innenfor gyldighet. 6-t bolker dag 0–2, deretter 24-t.</div>';
+}
+$('gyl').addEventListener('input',tl);tl();
+
+// ---- innholdsfortegnelse
+const lenker=[...document.querySelectorAll('#toc a')];
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)lenker.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-10% 0px -80% 0px'});
+document.querySelectorAll('section').forEach(s=>obs.observe(s));
+lenker.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'})}));
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morgenbrief – Skredvarsling veg</title>
+<style>
+:root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--svv:#444f55;--acc:#ed9300;--acct:#fff4e0}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.4}
+main{padding:14px 20px 40px;max-width:1500px;margin:auto}
+h1{font-size:20px;margin:0}h2{font-size:17px;margin:22px 0 8px}h3{font-size:15px;margin:0}
+.note{color:var(--muted);font-size:12px}
+.topp{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
+.chip{font-size:12px;padding:2px 8px;border-radius:3px;background:#e6eaec}
+.chip.ok{background:#dff0e2}.chip.adv{background:#ffe1dd}
+.auto{background:var(--acct);border-left:4px solid var(--acc);padding:6px 10px;font-size:12.5px;margin:8px 0}
+.ld{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}@media(max-width:1000px){.ld{grid-template-columns:1fr}}
+.card{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.tekst{font-size:14px;margin:6px 0 10px;white-space:pre-line;line-height:1.55}
+.tekst.auto2{color:var(--muted);font-style:italic}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right;white-space:nowrap}
+th{background:#eef0f1;font-weight:600}
+td.l,th.l{text-align:left;white-space:normal}
+tr.klikk{cursor:pointer}tr.klikk:hover td{background:#f6efe2}
+.fg{display:inline-block;min-width:20px;text-align:center;font-weight:700;border-radius:3px;padding:0 5px}
+.fg0{background:#eef0f1;color:#8a979e;font-weight:400}.fg1{background:#56b528;color:#fff}.fg2{background:#ffe800}.fg3{background:#f18700}.fg4{background:#e3001a;color:#fff}.fg5{background:#000;color:#fff}
+.sk{display:inline-block;padding:0 6px;border-radius:3px;font-weight:600;font-size:12px}
+.sk0{background:#3a9b5c;color:#fff}.sk1{background:#f2d21a}.sk2{background:#ed9300}.sk3{background:#d0342c;color:#fff}.skx{background:#eef0f1;color:#8a979e;font-weight:400}
+.hi{background:#fff1b8}.hi2{background:#ffd0a1}
+.fv{font-size:12.5px;margin:2px 0}.fvn{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.yellow{background:#f2d21a}.orange{background:#ed9300}.red{background:#d0342c}
+.prosj{margin-top:12px}
+.prosj .hode{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+.prosj.laast{box-shadow:0 0 0 3px var(--acc)}
+.merk{margin:6px 0 8px;padding:0 0 0 18px;font-size:13px}.merk li{margin:1px 0}
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-top:8px}@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+.vp{font-size:12.5px;border-top:1px solid var(--line);padding:4px 0}
+a.knapp{font-size:12px;border:1px solid var(--line);border-radius:3px;padding:2px 8px;text-decoration:none;color:var(--ink);background:#fff;margin-left:auto}
+a.knapp:hover{background:#f6efe2}
+.gr{color:#9aa4a9}
+/* observert (grønngrå) vs prognose (blå) */
+:root{--obs:#e4eedf;--obs2:#f6f9f4;--prog:#dbe8f6;--prog2:#f3f7fc}
+.go{background:var(--obs)!important}.gp{background:var(--prog)!important}
+.gs{border-left:2px solid #8a979e!important}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:0 5px;border-radius:3px;margin-right:4px;vertical-align:1px}
+.tag.o{background:#5d7a52;color:#fff}.tag.p{background:#2b6cb0;color:#fff}
+.forkl{display:flex;gap:14px;align-items:center;font-size:12.5px;margin:4px 0 2px}.forkl i{display:inline-block;width:14px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+table.dt td:nth-child(n+2):nth-child(-n+6){background:var(--obs2)}table.dt td:nth-child(n+7){background:var(--prog2)}
+table.dt td:nth-child(2),table.dt td:nth-child(7),table.dt td:nth-child(14){border-left:2px solid #8a979e}
+table.dt tr.h2 th:nth-child(-n+5){background:var(--obs)}table.dt tr.h2 th:nth-child(n+6){background:var(--prog)}
+table.dt tr.h2 th:nth-child(1),table.dt tr.h2 th:nth-child(6),table.dt tr.h2 th:nth-child(13){border-left:2px solid #8a979e}
+table.sum td:nth-child(n+2):nth-child(-n+4){background:var(--obs2)}table.sum td:nth-child(n+5):nth-child(-n+8){background:var(--prog2)}
+table.sum td:nth-child(2),table.sum td:nth-child(5),table.sum td:nth-child(7),table.sum td:nth-child(9){border-left:2px solid #8a979e}
+table.sum tr.h2 th:nth-child(-n+3){background:var(--obs)}table.sum tr.h2 th:nth-child(n+4){background:var(--prog)}
+table.sum tr.h2 th:nth-child(1),table.sum tr.h2 th:nth-child(4),table.sum tr.h2 th:nth-child(6){border-left:2px solid #8a979e}
+table.st th{background:var(--obs)}table.st td:nth-child(n+3){background:var(--obs2)}
+.tneg{color:#1f6fd1;font-weight:600}
+.vv{display:inline-block;padding:0 4px;border-radius:3px}
+.vrr0{color:#9aa4a9}.vrr1{background:#d6e8f8}.vrr2{background:#8cc0ee}.vrr3{background:#1f6fd1;color:#fff}.vrr4{background:#123f8c;color:#fff}.vrr5{background:#6a1b9a;color:#fff}
+.vsn0{color:#9aa4a9}.vsn1{color:#1f6fd1;font-weight:600}.vsn2{background:#1f6fd1;color:#fff;font-weight:700}.vsn3{background:#123f8c;color:#fff;font-weight:700}
+.vw1{background:#f2cf00;color:#222}.vw2{background:#ec7a08;color:#fff}.vw3{background:#d0202e;color:#fff}
+.vdn{background:#dbe9f8;color:#0b4a8a}.vds{background:#fde3cc;color:#8a4300}
+.vopp{color:#d0202e;font-weight:700;margin-left:2px}.vned{color:#2e7d32;font-weight:700;margin-left:2px}.tpos{color:#d0202e;font-weight:600}
+table.sum th,table.sum td{padding:3px 4px;font-size:12px}table.sum .sk{padding:0 4px;font-size:11px}
+@media print{body{background:#fff}.card{break-inside:avoid}a.knapp{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="topp"><h1>Morgenbrief – stedsspesifikk skredvarsling</h1><span id="dato" style="font-size:16px;font-weight:600"></span></div>
+  <div class="chips" id="chips"></div>
+  <div class="auto" id="autoNote"></div>
+  <div class="forkl"><span><i style="background:var(--obs);border:1px solid #9fb59a"></i><span class="tag o">OBS</span>Observert (seNorge, værstasjoner) – døgnet som slutter kl. 07:00 i dag</span><span><i style="background:var(--prog);border:1px solid #9ab8da"></i><span class="tag p">PROGNOSE</span>MET Locationforecast (MEPS) i løsneområdet</span><span><span class="tag p">VARSEL</span>Varsom og MET farevarsler</span></div>
+  <h2>Det store bildet</h2>
+  <div class="ld" id="ld"></div>
+  <h2>Prosjektene</h2>
+  <div id="prosjekt"></div>
+  <p class="note" id="fot"></p>
+</main>
+<script>
+/* SKRED – felles klient for arbeidsprosjekt og navigasjon (snakker med menysiden) */
+(function(){const R=window.SKRED={id:null,laas:false,cb:[]};R.on=f=>{R.cb.push(f);if(R.id!==null)f(R.id,R.laas)};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  addEventListener('message',e=>{const d=e.data||{};if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){}})}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}})();
+</script>
+<script>
+const BRIEF=/*__BRIEF__*/null;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const f=(v,e='')=>v==null||v===''?'<span class="gr">–</span>':`${String(v).replace('.',',')}${e}`;
+/* fargetrinn: nedbør per døgn, nysnø (grense M.nysno), vind/kast (MET kuling), retning, 0-isoterm mot løsneområdet, endring */
+const ok_=v=>v!=null&&v!==''&&isFinite(+v);
+const nb=v=>{if(!ok_(v))return f(v);v=+v;const k=v<0.5?0:v<5?1:v<10?2:v<20?3:v<30?4:5;return`<span class="vv vrr${k}">${f(v)}</span>`};
+const ns=v=>{if(!ok_(v))return f(v);v=+v;const g=M.nysno||20,k=v>=2*g?3:v>=g?2:v>=g/2?1:0;return`<span class="vv vsn${k}">${f(v)}</span>`};
+const wv=v=>{if(!ok_(v))return f(v);v=+v;const k=v>=24.5?3:v>=17.2?2:v>=10.8?1:0;return k?`<span class="vv vw${k}">${f(v)}</span>`:f(v)};
+const rC=t=>!t?'<span class="gr">–</span>':/^(NV|N|NØ)$/.test(t)?`<span class="vv vdn">${t}</span>`:/^(S|SØ)$/.test(t)?`<span class="vv vds">${t}</span>`:esc(t);
+const isoC=(v,bunn)=>!ok_(v)?f(v):`<span class="${+v>bunn?'tpos':'tneg'}">${f(v)}</span>`;
+const pilN=(a,b)=>a==null||b==null||+a===+b?'':+a>+b?'<span class="vopp" title="øker fra i dag">▲</span>':'<span class="vned" title="avtar fra i dag">▼</span>';
+/* temperatur: blå under 0, rød over 0, 0 nøytral */
+const tf=v=>{if(v==null||v===''||!isFinite(+v))return f(v);const x=+(+v).toFixed(1);return x<0?`<span class="tneg">${f(v)}</span>`:x>0?`<span class="tpos">${f(v)}</span>`:f(v)};
+const txt=t=>esc(t).replace(/^\s*Observert siste døgn:/gm,'<span class="tag o">OBS</span><b>Observert siste døgn:</b>').replace(/^\s*Prognose i dag og i morgen:/gm,'<span class="tag p">PROGNOSE</span><b>Prognose i dag og i morgen:</b>').replace(/^\s*Varsler:/gm,'<span class="tag p">VARSEL</span><b>Varsler:</b>');
+const tid=s=>s?new Date(s).toLocaleString('nb-NO',{timeZone:'Europe/Oslo',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
+const dag=s=>new Date(s+'T12:00:00Z').toLocaleDateString('nb-NO',{weekday:'short',day:'numeric',month:'short'});
+const SKN=['Grønt','Gult','Oransje','Rødt'];
+const fgB=v=>{const n=v==null?null:+v;return n==null?'<span class="fg fg0">–</span>':`<span class="fg fg${n}" title="${n?'Faregrad '+n:'Ikke vurdert'}">${n||'–'}</span>`};
+const skB=s=>s==null?'<span class="sk skx">–</span>':`<span class="sk sk${s.maks}">${SKN[s.maks]}</span>`;
+const hl=(v,g,g2)=>v!=null&&g2!=null&&v>=g2?'hi2':v!=null&&v>=g?'hi':'';
+const M=BRIEF.merk;
+const fvTxt=x=>`${esc(x.type||'')}, ${esc(x.omrade||'')}, ${tid(x.fra)} – ${tid(x.til)}`;
+function render(){
+  const B=BRIEF,P=B.prosjekt,T=B.tekst||{};
+  dato.textContent=dag(B.i_dag);
+  const alder=(Date.now()-new Date(B.laget))/36e5;
+  chips.innerHTML=[`<span class="chip ${alder>20?'adv':'ok'}">Laget ${tid(B.laget)}</span>`,`<span class="chip">Obs til ${tid(B.obs_siste)}</span>`,
+    `<span class="chip">seNorge-døgn slutter ${dag(B.d0)} 07:00</span>`,`<span class="chip">MEPS-kjøring ${esc(B.meps||'–')}</span>`,`<span class="chip">Prognose oppdatert ${tid(B.prog_oppdatert)}</span>`,
+    `<span class="chip ${B.feil.length?'adv':'ok'}">${B.feil.length?B.feil.length+' feil ved henting':'Alle kilder hentet'}</span>`,
+    B.varsom_utstedt?'':`<span class="chip">Varsom: ingen regionale varsler utstedt</span>`].join('');
+  autoNote.innerHTML=`<b>Automatisk generert, ikke kvalitetssikret.</b> Tall fra MET Frost, NVE seNorge, MET Locationforecast (MEPS), Varsom og MET farevarsler. `+
+    (T.landsdel||T.prosjekt?`Oppsummeringene er skrevet automatisk ut fra disse tallene${T.laget?' ('+tid(T.laget)+')':''}. `:'')+
+    `Merknader bruker indikative grenser (nedbør eller nysnø ≥ ${M.rr} mm/cm per døgn, kast ≥ ${M.kast} m/s, middelvind ≥ ${M.vind} m/s, regn i løsneområdet ≥ ${M.regn_pa_sno_rr} mm, ΔHS ≥ ${M.dHS3} cm på 3 døgn). De er ikke terskler.`+
+    (alder>20?` <b style="color:#b0302a">Briefen er ${Math.round(alder)} timer gammel.</b>`:'');
+  /* landsdeler */
+  ld.innerHTML=Object.entries(B.landsdeler).map(([k,L])=>{
+    const reg=L.regioner.filter(r=>r.navn);
+    const fv=L.farevarsler.length?L.farevarsler.map(x=>`<div class="fv"><span class="fvn ${esc(x.niva)}"></span>${fvTxt(x)}${x.beskrivelse?` <span class="note">– ${esc(x.beskrivelse)}</span>`:''}</div>`).join(''):'<span class="note">Ingen farevarsler for land.</span>';
+    const sum=L.prosj.map(id=>{const p=P[id],d=p.deler;const ob=k=>Math.max(...d.map(x=>x.obs?.[k]??-1)),pr=(per,k)=>Math.max(...d.map(x=>x[per]?.[k]??-1));const nn=v=>v<0?null:v;
+      const kastSt=Math.max(...p.stasjoner.map(s=>s.FGmax??-1));
+      return `<tr class="klikk" onclick="document.getElementById('p_${id}').scrollIntoView({behavior:'smooth'})"><td class="l"><b>${esc(p.navn)}</b></td>
+       <td>${nb(nn(ob('rr')))}</td><td>${ns(nn(ob('nysno')))}</td><td>${wv(nn(kastSt))}</td>
+       <td>${nb(nn(pr('p1','rr')))}</td><td>${wv(nn(pr('p1','fg')))}</td>
+       <td>${nb(nn(pr('p2','rr')))}</td><td>${wv(nn(pr('p2','fg')))}</td>
+       <td>${skB(p.skygge.i_dag)} ${skB(p.skygge.i_morgen)}${pilN(p.skygge.i_morgen?.maks,p.skygge.i_dag?.maks)}</td><td>${p.merknader.length||''}</td></tr>`}).join('');
+    const tx=T.landsdel?.[k];
+    return `<div class="card"><h3>${esc(L.navn)}</h3>
+      ${tx?`<div class="tekst">${txt(tx)}</div>`:''}
+      <table class="sum"><tr><th class="l" rowspan="2">Strekning</th><th colspan="3" class="go gs" style="text-align:center"><span class="tag o">OBS</span>Siste døgn</th><th colspan="2" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I dag</th><th colspan="2" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I morgen</th><th rowspan="2">Skyggevarsel<br>i dag / i morgen</th><th rowspan="2">Merkn.</th></tr>
+      <tr class="h2"><th>RR mm</th><th>Nysnø cm</th><th>Kast m/s</th><th>RR mm</th><th>Kast m/s</th><th>RR mm</th><th>Kast m/s</th></tr>${sum}</table>
+      <p class="note" style="margin:4px 0 10px">Høyeste verdi blant delområdene. Observert: nedbør og nysnø fra seNorge, kast fra stasjonene. Prognose: MEPS i løsneområdet (i dag = 24 t fra 07:00). Klikk en rad for detaljer.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><b style="font-size:13px"><span class="tag p">VARSEL</span>Varsom faregrad</b> <span class="note">i dag / i morgen</span>
+          <div style="columns:2;font-size:12.5px;margin-top:4px">${reg.map(r=>`<div title="${esc(r.i_dag?.tekst||'')}">${fgB(r.i_dag?.fg)} ${fgB(r.i_morgen?.fg)}${+r.i_dag?.fg&&+r.i_morgen?.fg?pilN(r.i_morgen.fg,r.i_dag.fg):''} ${esc(r.navn)}</div>`).join('')}</div></div>
+        <div><b style="font-size:13px"><span class="tag p">VARSEL</span>MET farevarsler</b><div style="margin-top:4px">${fv}</div></div>
+      </div></div>`}).join('');
+  /* prosjekter */
+  const rek=Object.values(B.landsdeler).flatMap(L=>L.prosj);
+  prosjekt.innerHTML=rek.map(id=>{const p=P[id],v0=p.varsom.i_dag,v1=p.varsom.i_morgen,tx=T.prosjekt?.[id];
+    const rad=d=>{const o=d.obs||{},a=d.p1||{},b=d.p2||{};return `<tr><td class="l"><b>${esc(d.navn)}</b><br><span class="note">${d.bunn}–${d.topp} moh.</span></td>
+      <td>${nb(o.rr)}</td><td>${ns(o.nysno)}</td><td>${tf(o.tm)}</td><td>${f(o.hs)}</td><td class="${hl(o.dhs3,M.dHS3)}">${f(o.dhs3)}</td>
+      <td>${nb(a.rr)}${a.rrx>a.rr?` <span class="note">(${f(a.rrx)})</span>`:''}</td><td>${ns(a.nysno)}</td><td>${tf(a.Tt0)} / ${tf(a.Tt1)}</td><td>${tf(a.Tb1)}</td>
+      <td>${wv(a.ff)} / ${wv(a.fg)}</td><td>${rC(a.retn)}</td><td>${isoC(a.iso1,d.bunn)}</td>
+      <td>${nb(b.rr)}</td><td>${tf(b.Tt0)} / ${tf(b.Tt1)}</td><td>${wv(b.ff)} / ${wv(b.fg)}</td><td>${rC(b.retn)}</td><td>${isoC(b.iso1,d.bunn)}</td></tr>`};
+    const st=p.stasjoner.filter(s=>s.data);
+    const vprob=v=>v?(v.problemer.length?v.problemer.map(x=>`<div class="vp"><b>${esc(x.type)}</b> <span class="note">${esc(x.h)} moh. · ${esc(x.eksp)} · ${esc(x.str)} · ${esc(x.sens)} · ${esc(x.utb)}</span></div>`).join(''):`<div class="vp note">${v.utstedt?'Ingen skredproblem':'Ingen varsel utstedt'}</div>`):'<div class="vp note">Ingen data</div>';
+    return `<div class="card prosj" id="p_${id}" data-id="${id}">
+     <div class="hode"><h3>${esc(p.navn)}</h3><span class="note">Varsom ${esc(v0?.region||'–')}: faregrad ${fgB(v0?.fg)} i dag, ${fgB(v1?.fg)}${+v0?.fg&&+v1?.fg?pilN(v1.fg,v0.fg):''} i morgen</span>
+       <span class="note">Skyggevarsel: ${skB(p.skygge.i_dag)} i dag, ${skB(p.skygge.i_morgen)}${pilN(p.skygge.i_morgen?.maks,p.skygge.i_dag?.maks)} i morgen</span>
+       <a class="knapp" href="#" onclick="SKRED.gaa('vaerpakke');return false">Åpne Værpakke ↗</a></div>
+     ${tx?`<div class="tekst">${txt(tx)}</div>`:''}
+     ${p.merknader.length?`<ul class="merk">${p.merknader.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'<p class="note" style="margin:4px 0">Ingen merknader etter de indikative grensene.</p>'}
+     <table class="dt"><tr><th class="l" rowspan="2">Delområde</th><th colspan="5" class="go gs" style="text-align:center"><span class="tag o">OBS</span>Observert siste døgn (seNorge, døgnet til ${dag(BRIEF.d0)} 07:00)</th><th colspan="7" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I dag (MEPS, 24 t fra 07:00)</th><th colspan="5" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I morgen</th></tr>
+      <tr class="h2"><th>RR</th><th>Nysnø</th><th>Tm</th><th>HS</th><th>ΔHS 3 d</th><th>RR (maks)</th><th>Snø est.</th><th>T topp min/maks</th><th>T bunn maks</th><th>Vind / kast</th><th>Fra</th><th>0-iso maks</th><th>RR</th><th>T topp</th><th>Vind / kast</th><th>Fra</th><th>0-iso</th></tr>
+      ${p.deler.map(rad).join('')}</table>
+     <p class="note" style="margin:3px 0 0">Enheter: mm, cm (nysnø, HS), °C, m/s, moh. «Snø est.» = nedbør ved T ≤ 0,5 °C i toppen av løsneområdet (mm vannekv.). Vind gjelder 10 m i prognosepunktet. 0-iso er ekstrapolert fra temperatur i topp og bunn; verdier under bunnen betyr kuldegrader i hele løsneområdet.<br>Farger: temperatur blå &lt; 0, rød &gt; 0 °C. Nedbør: &lt; 5 / 5–10 / 10–20 / 20–30 / ≥ 30 mm. Nysnø og snø est.: blå tekst ≥ halv grense, blå boks ≥ ${M.nysno}, mørk boks ≥ 2 × ${M.nysno} (indikativ grense). Vind og kast: gul ≥ 10,8, oransje ≥ 17,2, rød ≥ 24,5 m/s. Fra: blå = NV–N–NØ, oransje = S–SØ (tommelfingerregel fra Nord-Norge, passer ikke overalt). 0-iso rød = over bunnen av løsneområdet. ▲/▼ = faregrad eller skyggevarsel øker/avtar fra i dag til i morgen.</p>
+     <div class="grid2">
+      <div><b style="font-size:13px"><span class="tag o">OBS</span>Værstasjoner – observert siste døgn</b>
+       <table class="st" style="margin-top:4px"><tr><th class="l">Stasjon</th><th>moh.</th><th>Tmin</th><th>Tmaks</th><th>RR</th><th>Vind maks</th><th>Kast maks</th><th>Fra</th><th>ΔHS 72 t</th></tr>
+       ${st.map(s=>`<tr><td class="l">${esc(s.navn)}</td><td>${f(s.moh)}</td><td>${tf(s.Tmin)}</td><td>${tf(s.Tmax)}</td><td>${nb(s.RR)}</td><td>${wv(s.FFmax)}</td><td>${wv(s.FGmax)}</td><td>${rC(s.retn)}</td><td>${f(s.dHS72)}</td></tr>`).join('')||'<tr><td class="l note" colspan="9">Ingen stasjonsdata</td></tr>'}</table>
+       ${p.mangler.length?`<p class="note" style="margin:3px 0">Uten data: ${esc(p.mangler.join(', '))}</p>`:''}
+       <p class="note" style="margin:3px 0">«Fra» = vindvektet hovedretning for timer med middelvind ≥ 5,5 m/s.</p></div>
+      <div><b style="font-size:13px"><span class="tag p">VARSEL</span>Varsom skredproblem</b> <span class="note">i dag</span>${vprob(v0)}
+       ${v0?.tekst&&v0.fg&&v0.fg!=='0'?`<p class="note" style="margin:4px 0">${esc(v0.tekst)}</p>`:''}
+       <b style="font-size:13px;display:block;margin-top:8px"><span class="tag p">VARSEL</span>MET farevarsler for strekningen</b>
+       ${p.farevarsler.length?p.farevarsler.map(x=>`<div class="fv"><span class="fvn ${esc(x.niva)}"></span>${fvTxt(x)}</div>`).join(''):'<span class="note">Ingen.</span>'}</div>
+     </div></div>`}).join('');
+  fot.innerHTML=`Briefen lages automatisk hver morgen ca. kl. 07:15 (GitHub kan forsinke kjøringen 5–30 min), etter at observasjonsdøgnet er avsluttet kl. 07:00 og MEPS-kjøringen fra 03 UTC er tilgjengelig. Detaljer, grafer og kart: fanen Værpakke.`+
+    (B.feil.length?`<br><b>Feil ved henting:</b> ${B.feil.map(esc).join(' · ')}`:'');
+}
+render();
+SKRED.on((id,laas)=>{document.querySelectorAll('.prosj').forEach(e=>e.classList.toggle('laast',laas&&e.dataset.id===id));
+  if(laas){const e=document.getElementById('p_'+id);if(e)e.scrollIntoView({block:'start'})}});
+</script>
+</body>
+</html>

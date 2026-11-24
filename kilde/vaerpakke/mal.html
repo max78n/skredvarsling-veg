@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Værpakke veg – stedsspesifikk skredvarsling</title>
+<script src="lib/leaflet.js"></script>
+<script src="lib/chart.umd.js"></script>
+<style>/* leaflet 1.9.4 css (inline) */
+/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(images/layers-2x.png);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: url(images/marker-icon.png);
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+
+</style>
+<style>
+:root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--svv:#444f55;--acc:#ed9300;--y:#fff1b8;--o:#ffd0a1;--r:#f7b2a8;--g:#dff0e2}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+header{background:var(--svv);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:600}
+.badge{font-weight:700;padding:2px 8px;border-radius:3px;font-size:12px;display:inline-block}
+.b-ok{background:#3a9b5c;color:#fff}.b-warn{background:var(--acc);color:#000}.b-err{background:#d0342c;color:#fff}.b-wait{background:#8a979e;color:#fff}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;padding:0 20px;flex-wrap:wrap}
+nav button{border:0;background:none;padding:12px 16px;font-size:14px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+nav button.active{color:var(--ink);border-bottom-color:var(--acc);font-weight:600}
+main{padding:16px 20px;max-width:1500px;margin:0 auto}
+section{display:none}section.active{display:block}
+h2{font-size:16px;margin:18px 0 8px}h3{font-size:14px;margin:0 0 6px}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px}
+.grid2{display:grid;grid-template-columns:minmax(320px,1fr) 2fr;gap:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.scard{background:#fff;border:1px solid var(--line);border-left:6px solid var(--line);border-radius:4px;padding:10px;cursor:pointer}
+.scard:hover{box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.scard .reg{color:var(--muted);font-size:12px;margin-bottom:6px}
+.kv{display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 8px;font-size:13px}
+.kv .h{color:var(--muted);font-size:11px;text-transform:uppercase}
+.tdays{display:flex;gap:4px;margin:6px 0}
+.tday{flex:1;text-align:center;font-size:11px;padding:3px 2px;border:1px solid var(--line);border-radius:3px}
+#map{height:max(640px,calc(100vh - 250px));border-radius:4px;background:#dfe8ec}
+.ovgrid{display:grid;grid-template-columns:minmax(480px,1.25fr) 1fr;gap:14px;align-items:start}
+.ovgrid .cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+@media(max-width:1100px){.ovgrid{grid-template-columns:1fr}}
+.kartleg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;margin:8px 0 2px;color:var(--ink)}
+.kartleg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.kartleg i{display:inline-block}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:right;white-space:nowrap}
+th{background:#eef0f1;font-weight:600;position:sticky;top:0}
+td.l,th.l{text-align:left}
+tr.sel td{background:#eef6ff}tr.click{cursor:pointer}
+.sk0{background:#3a9b5c;color:#fff}.sk1{background:#f2d21a;color:#000}.sk2{background:#ed9300;color:#000}.sk3{background:#d0342c;color:#fff}.skx{background:#eef0f1;color:#8a979e}
+td.skc{text-align:center;cursor:pointer;font-weight:600;min-width:74px}td.skc.tsel{outline:3px solid #1f2a30;outline-offset:-3px}
+.c0{background:var(--g)}.c1{background:var(--y)}.c2{background:var(--o)}.c3{background:var(--r)}
+.bl1{border-left-color:#e6c200!important}.bl2{border-left-color:#ed9300!important}.bl3{border-left-color:#d0342c!important}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+select,button.b{padding:5px 8px;font-size:13px;border:1px solid var(--line);border-radius:3px;background:#fff}
+button.b{cursor:pointer}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chartbox{background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px;height:320px}
+.note{color:var(--muted);font-size:12px}.warn{color:#9a5b00;font-size:12px}.err{color:#b0302a;font-size:12px}
+.tblwrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:4px}
+.arrow{display:inline-block}
+.tneg{color:#1f6fd1;font-weight:600}
+.vv{display:inline-block;padding:0 4px;border-radius:3px}
+.vrr0{color:#9aa4a9}.vrr1{background:#d6e8f8}.vrr2{background:#8cc0ee}.vrr3{background:#1f6fd1;color:#fff}.vrr4{background:#123f8c;color:#fff}.vrr5{background:#6a1b9a;color:#fff}
+.vsn0{color:#9aa4a9}.vsn1{color:#1f6fd1;font-weight:600}.vsn2{background:#1f6fd1;color:#fff;font-weight:700}.vsn3{background:#123f8c;color:#fff;font-weight:700}
+.vw1{background:#f2cf00;color:#222}.vw2{background:#ec7a08;color:#fff}.vw3{background:#d0202e;color:#fff}
+.vdn{background:#dbe9f8;color:#0b4a8a}.vds{background:#fde3cc;color:#8a4300}
+.vopp{color:#d0202e;font-weight:700;margin-left:3px}.vned{color:#2e7d32;font-weight:700;margin-left:3px}.tpos{color:#d0202e;font-weight:600}
+#status{background:#fff;border-bottom:1px solid var(--line);padding:8px 20px}
+#status summary{cursor:pointer;font-size:13px}
+#datobar{background:#fff;border-bottom:1px solid var(--line);padding:8px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:1000}
+#dSlider{flex:1;min-width:200px;max-width:640px;accent-color:#ed9300}
+.tsel{outline:2px solid #1f2a30;font-weight:600}
+#status table{font-size:12px;margin-top:6px}
+.legend{background:#fff;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:12px;line-height:1.7}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.vprob{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding:6px 0}
+.vprob svg{flex:none}
+.kartstor img{max-width:100%;max-height:78vh;border:1px solid var(--line);background:#fff;display:block}
+.kartrad{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.kartrad img{width:100%;cursor:zoom-in;border:1px solid var(--line);background:#fff}
+@media(max-width:900px){.grid2,.charts{grid-template-columns:1fr}}
+#mgBody{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:1100px){#mgBody{grid-template-columns:1fr}}
+.mgcard{padding:10px 12px;min-width:0}.mgvalg{font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer;border:1px solid var(--line);border-radius:3px;padding:1px 6px}.mgvalg:has(input:checked){background:#fff1d6;border-color:var(--acc);color:var(--ink)}.mghead{display:flex;gap:10px;align-items:baseline;margin-bottom:4px}
+.mgwrap{position:relative;overflow-x:auto}.mgsvg{display:block}
+.mgtip{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid #bbb;border-radius:3px;padding:6px 8px;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.15);white-space:nowrap;z-index:5}
+.notat{margin:0 0 12px;padding:10px 12px}.notat textarea{width:100%;min-height:58px;font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:3px;resize:vertical;margin:4px 0 6px}
+.notat .nrad{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.notat button.til{background:var(--acc);border-color:var(--acc);font-weight:600}
+.bf{display:inline-block;font-size:10.5px;padding:0 5px;border-radius:8px;margin-left:3px;vertical-align:1px;white-space:nowrap;background:#eef0f1;color:#3d4a50}
+.bf5{background:#e3f1d6}.bf6{background:#fff1b8}.bf7{background:#ffd9a6}.bf8,.bf9{background:#f7b2a8;color:#5a1410}
+.seg .b.on{background:var(--svv);color:#fff;border-color:var(--svv)}
+.kamgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;margin-top:10px}
+.kam{background:#fff;border:1px solid #d9dee1;border-radius:4px;padding:8px}
+.kam img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#e8ebed;border-radius:3px;display:block;cursor:zoom-in}
+.kam .kt{display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:13px}
+.kam .feil{aspect-ratio:16/9;display:grid;place-items:center;background:#f1f3f4;color:#7a858b;font-size:12px;text-align:center;padding:10px;border-radius:3px}
+.kamlys{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;place-items:center;z-index:9999;cursor:zoom-out}
+.kamlys.on{display:grid}.kamlys img{max-width:95vw;max-height:92vh}
+details.fold{margin:12px 0}details.fold>summary{cursor:pointer;font-weight:600;font-size:14px;padding:6px 0;list-style:none}
+details.fold>summary::before{content:'▶';display:inline-block;margin-right:8px;font-size:11px;transition:transform .15s}
+details.fold[open]>summary::before{transform:rotate(90deg)}details.fold>summary::-webkit-details-marker{display:none}
+.charts3{grid-template-columns:1fr 1fr 290px}@media(max-width:1200px){.charts3{grid-template-columns:1fr 1fr}}@media(max-width:900px){.charts3{grid-template-columns:1fr}}
+.rosebox{height:320px;display:flex;flex-direction:column;align-items:center;font-size:12px}.rosebox h4{margin:0 0 2px;font-size:12px;text-align:center}
+.rosebox svg{width:210px;height:210px}.rosebox .rleg{display:flex;flex-wrap:wrap;gap:2px 8px;justify-content:center;font-size:10.5px}.rosebox .rleg i{display:inline-block;width:10px;height:10px;margin-right:3px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Værpakke veg – stedsspesifikk skredvarsling</h1>
+  <span id="hdrStatus"></span>
+  <button class="b" id="btnRefresh" title="Henter fersk MET-prognose direkte (virker bare når fila åpnes lokalt)">Oppdater prognose</button>
+</header>
+<div id="status"><details id="statusBox"><summary id="statusSum"></summary><div id="statusBody"></div></details></div>
+<div id="datobar"><button class="b" id="dPrev" title="Forrige døgn">◀ Forrige døgn</button><span class="note" id="dFra"></span><input type="range" id="dSlider" min="0" step="1" aria-label="Velg døgn"><span class="note" id="dTil"></span><button class="b" id="dNext" title="Neste døgn">Neste døgn ▶</button><button class="b" id="dIdag">Siste observerte døgn</button><span id="dLbl"></span></div>
+<nav>
+  <button data-tab="oversikt" class="active">Oversikt</button>
+  <button data-tab="terskel" class="ta">Terskler</button>
+  <button data-tab="obs">Observasjoner</button>
+  <button data-tab="prog">Prognose og Varsom</button>
+  <button data-tab="mgram">Meteogram</button>
+  <button data-tab="kart">Prognosekart</button>
+  <button data-tab="skygge">Skyggevarsel</button>
+  <button data-tab="kamera">Webkamera</button>
+  <button data-tab="kilder">Datakilder</button>
+</nav>
+<main>
+
+<section id="oversikt" class="active">
+  <div class="ovgrid">
+    <div class="card"><h3>Strekninger, løsneområder og stasjoner</h3>
+      <div class="ctrl" style="margin:0 0 6px"><label>Zoom til <select id="mapZoom"><option value="">Hele landet</option></select></label></div>
+      <div id="map"></div>
+      <div class="kartleg" id="kartleg"></div>
+      <p class="note ta">Bakgrunn: Kartverket. Strekningens farge = terskelnivå for valgt døgn (sirkelen vises ved zoomnivå under 10).</p></div>
+    <div><h3>Status per strekning</h3><div class="cards" id="cards"></div>
+      <p class="note ta">Kortene og kartet følger valgt døgn i datovelgeren. Terskelnivå: <span class="badge c0" style="color:#000">ingen</span> <span class="badge c1" style="color:#000">≥ 1 enkeltterskel</span> <span class="badge c2" style="color:#000">kombinasjon passert</span> <span class="badge c3" style="color:#000">kombinasjon + ≥ 3 enkeltterskler</span>. Døgn = 06–06 UTC, datert med slutt. D0 = siste observerte døgn, D+1/D+2 = prognose.</p></div>
+  </div>
+  <h2>Stasjoner rangert – valgt døgn</h2>
+  <div class="ctrl">
+    <label>Parameter <select id="rankParam"></select></label>
+    <label>Strekning <select id="rankRoad"><option value="">Alle</option></select></label>
+    <button class="b" id="rankToggle">Vis alle</button><span class="note" id="rankPeriod"></span>
+  </div>
+  <table id="rankTbl"></table>
+</section>
+
+<section id="terskel">
+  <div class="ctrl"><label>Strekning <select id="terRoad"></select></label></div>
+  <div class="card" id="terDef"></div>
+  <h2>Vurdering per delområde (vegpunkt)</h2>
+  <div class="tblwrap"><table id="terTbl"></table></div>
+  <p class="note" id="terNote"></p>
+</section>
+
+<section id="skygge">
+  <div class="ctrl"><label>Strekning <select id="skRoad"></select></label>
+    <span class="note">Automatisk aktsomhetsnivå per skredbane fra Varsom-varselet. Ikke en vurdering, men et sammenligningsgrunnlag for vakthavende.</span></div>
+  <div id="skBody"></div>
+  <div class="card" id="skDet" style="margin-top:12px;display:none"></div>
+  <p class="note" id="skNote"></p>
+</section>
+
+<section id="obs">
+  <div class="ctrl"><label>Strekning <select id="obsRoad"></select></label><label>Nedbør i grafer <select class="nbMod" id="nbObs"><option value="t">per time/periode</option><option value="d">døgnsum (06–06 UTC)</option><option value="a">akkumulert per døgn</option></select></label>
+    <select id="obsStation" style="display:none"></select><span class="note" id="obsNote"></span></div>
+  <div class="card notat"><b>Notat – været fram til nå</b> <span class="note">(lagres i nettleseren per strekning)</span>
+    <textarea id="obsNotat" placeholder="Beskriv været de siste 48 t som påvirket snødekket og skredfaren. Inkluder måleverdier."></textarea>
+    <div class="nrad"><button class="b til" id="obsTilVarsel">Overfør til Varselskriver («Været fram til nå») →</button><span class="note" id="obsNotatInfo"></span></div></div>
+  <table id="obsTbl"></table>
+  <div class="charts charts3" style="margin-top:14px"><div class="chartbox"><canvas id="cObsT"></canvas></div><div class="chartbox"><canvas id="cObsW"></canvas></div><div class="chartbox rosebox" id="rObs"></div></div>
+  <h2>seNorge ved løsneområdene (døgnverdier 06–06 UTC)</h2>
+  <table id="gtsTbl"></table>
+  <p class="note">Kilde: NVE seNorge (1 × 1 km), punkt = tyngdepunkt av løsneområdene. Rutens høyde kan avvike fra løsneområdet.</p>
+</section>
+
+<section id="prog">
+  <div class="ctrl"><label>Strekning <select id="progRoad"></select></label><label>Nedbør i grafer <select class="nbMod" id="nbPr"><option value="t">per time/periode</option><option value="d">døgnsum (06–06 UTC)</option><option value="a">akkumulert per døgn</option></select></label><span class="note" id="progMeta"></span></div>
+  <div class="card notat"><b>Notat – kommentar til værprognose</b> <span class="note">(lagres i nettleseren per strekning)</span>
+    <textarea id="progNotat" placeholder="Referer til prognoseverdier. Spesifiser for hvilket delområde beskrivelsen gjelder."></textarea>
+    <div class="nrad"><button class="b til" id="progTilVarsel">Overfør til Varselskriver («Kommentar til værprognose») →</button><span class="note" id="progNotatInfo"></span></div></div>
+  <div class="card" id="varsomBox"></div>
+  <h2>Prognose for løsneområdene</h2>
+  <table id="delTbl"></table>
+  <p class="note" id="delNote"></p>
+  <h2 id="delHead"></h2>
+  <div class="charts charts3"><div class="chartbox"><canvas id="cPrT"></canvas></div><div class="chartbox"><canvas id="cPrW"></canvas></div><div class="chartbox rosebox" id="rPr"></div></div>
+  <details class="fold"><summary>3-timers verdier (tabell)</summary>
+  <div class="tblwrap"><table id="progTbl"></table></div></details>
+  <h2 id="langHead">Lengre prognose – 6-timers verdier</h2>
+  <div class="chartbox" style="height:340px"><canvas id="cPrL"></canvas></div>
+  <details class="fold"><summary>6-timers verdier (tabell)</summary>
+  <div class="tblwrap"><table id="langTbl"></table></div></details>
+  <p class="note">Kilde: MET Locationforecast. De første ca. 2,5 døgn er MEPS (2,5 km), deretter ECMWF (ca. 9 km) – usikkerheten øker kraftig utover. Temperatur høydekorrigert til topp og bunn av løsneområdet; nedbør og vind gjelder punktet.</p>
+</section>
+
+<section id="mgram">
+  <div class="ctrl"><label>Strekning <select id="mgRoad"></select></label>
+    <span class="seg"><button class="b mgv" data-v="t1">48 timer (time)</button><button class="b mgv" data-v="t6">10 døgn (6 t)</button></span>
+    <span class="note" id="mgMeta"></span>
+    <button class="b" id="mgTilVarsel" style="background:var(--acc);border-color:var(--acc);font-weight:600;margin-left:auto">Overfør valgte meteogram til Varselskriver →</button><span class="note" id="mgVarselInfo"></span></div>
+  <div id="mgBody"></div>
+  <p class="note">Punkter fra tabell 7 i skredvarslingsplanene (yr-punkter). Kilde: MET Locationforecast (samme data som yr.no), hentet ved hver oppdatering av sida. Temperatur er høydekorrigert til punktets høyde. Første ca. 2,5 døgn er MEPS 2,5 km, deretter ECMWF ca. 9 km. Pila viser hvilken vei vinden blåser. Vindkast finnes bare i MEPS-perioden. Nedbørsøylene gjelder perioden fram til neste tidspunkt. Værsymboler: Yr/MET Norway (MIT-lisens).</p>
+</section>
+
+<section id="kart">
+  <div class="ctrl"><label>Kart <select id="kProd">
+      <optgroup label="Hver 3. time"><option value="rr3">Nedbør 3 t</option><option value="ff">Middelvind 10 m + vindpiler</option><option value="fg">Vindkast maks 3 t</option><option value="tw0">Snøfallsgrense (våttemp. 0 °C)</option></optgroup>
+      <optgroup label="Døgn 06–06 UTC"><option value="rr24">Nedbør døgn</option><option value="sf24">Snøfall døgn</option><option value="fg24">Vindkast maks døgn</option></optgroup></select></label>
+    <label>Zoom til <select id="kZoom"><option value="">Hele landet</option></select></label>
+    <button class="b" id="kPrev" title="Forrige tidssteg">◀</button><input type="range" id="kT" min="0" step="1" style="width:320px;accent-color:#ed9300" aria-label="Tidssteg"><button class="b" id="kNext" title="Neste tidssteg">▶</button>
+    <button class="b" id="kPlay">Spill av</button><label><input type="checkbox" id="kPil" checked> vindpiler</label></div>
+  <p><b id="kLbl"></b> <span class="note" id="kStatus"></span></p>
+  <div id="kmap" style="height:72vh;border:1px solid var(--line)"></div>
+  <p class="note">Kilde: MET Norway, MEPS deterministisk 2,5 km (CC BY 4.0), thredds.met.no. Snøfallsgrense er vist som høyden der våttemperaturen er 0 °C; faktisk snøfallsgrense ligger ofte 100–300 m lavere ved kraftig nedbør. Snøfall døgn er i mm vannekvivalent (≈ cm nysnø × 0,1 ved lav tetthet: 10 mm ≈ 10–15 cm). Første døgn kan være kortere enn 24 t (fra modellstart).</p>
+</section>
+
+<section id="kamera">
+  <div class="ctrl"><label>Strekning <select id="kamRoad"></select></label>
+        <span class="note">Offentlige kamerabilder hentes ved hver oppdatering av sida (hver 3. time). «Ferskt» åpner siste bilde direkte. Fargen viser bildets alder.</span></div>
+  <div id="kamInt" style="margin:8px 0"></div>
+  <div id="kamBody" class="kamgrid"></div>
+  <p class="note">Kilde: svvcam.synology.me og Statens vegvesens webkameraer.</p>
+</section>
+<section id="kilder">
+  <div class="card" style="line-height:1.6">
+    <h3>Datakilder</h3>
+    <table style="max-width:1100px">
+      <tr><th class="l">Data</th><th class="l">Kilde</th><th class="l">Punkt</th><th class="l">Oppdatering hos kilden</th></tr>
+      <tr><td class="l">Stasjonsobservasjoner</td><td class="l">MET Frost</td><td class="l">Værstasjoner (SVV, MET, NVE, Avinor) funnet via NVDB (objekttype 153) og Frost</td><td class="l">Timesverdier, fortløpende</td></tr>
+      <tr><td class="l">Døgnverdier vær/snø</td><td class="l">NVE seNorge (GTS)</td><td class="l">Løsneområde (tyngdepunkt) og vegpunkt (nedre ende av skredløp)</td><td class="l">Én gang per døgn (døgn 06–06 UTC)</td></tr>
+      <tr><td class="l">Prognose</td><td class="l">MET Locationforecast 2.0 (MEPS)</td><td class="l">Topp/bunn av løsneområdene; vegpunkt for terskler</td><td class="l">Om lag hver time (MEPS-kjøring hver 3. time)</td></tr>
+      <tr><td class="l">Skredproblem</td><td class="l">Varsom snøskredvarsel</td><td class="l">Varslingsregion for strekningen</td><td class="l">Daglig, i sesong; oppdateres ved behov</td></tr>
+      <tr><td class="l">Prognosekart</td><td class="l">MET Norway, MEPS deterministisk 2,5 km via thredds.met.no (CC BY 4.0)</td><td class="l">Nedbør 3 t og døgn, snøfall døgn, middelvind med piler, vindkast, våttemperatur 0 °C-høyde. Sør- og Nord-Norge.</td><td class="l">MEPS kjøres hver time; siste komplette kjøring hentes ved hver oppdatering</td></tr>
+      <tr class="ta"><td class="l">Terskler</td><td class="l">Prosjektet «Skredvarslingsplaner» (15.11.2026)</td><td class="l">seNorge-celler ved vegen</td><td class="l">Statisk</td></tr>
+    </table>
+    <p class="note">Sida bygges på forhånd (bygg.py) etter kjøreplanen øverst. «Oppdater prognose» henter fersk MET-prognose bare når fila åpnes lokalt; på den publiserte sida blokkeres eksterne kall.</p>
+    <h3>Merknader</h3><div id="mangler"></div>
+  </div>
+</section>
+</main>
+
+<script>
+/* SKRED – felles klient for arbeidsprosjekt og overføring mellom faner (snakker med menysiden) */
+(function(){
+  const R=window.SKRED={id:null,laas:false,liste:[],cb:[],mottak:{},vent:{}};
+  R.on=f=>{R.cb.push(f);if(R.id!==null)try{f(R.id,R.laas)}catch(e){console.error(e)}};
+  R.paMottak=(k,f)=>{R.mottak[k]=f;if(R.vent[k]){const d=R.vent[k];delete R.vent[k];f(d)}};
+  R.send=(til,data)=>{try{parent.postMessage({type:'skred-overfor',til,data},'*')}catch(e){}};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  R.prosj=id=>R.liste.find(p=>p.id===id)||null;
+  /* finn <option> i en nedtrekksliste som svarer til prosjektet (verdi = id, eller tekst/verdi som starter med vegkoden) */
+  R.finn=(sel,id)=>{const p=R.prosj(id);if(!sel||!p)return null;const o=[...sel.options].find(o=>o.value===id)||[...sel.options].find(o=>o.text===p.navn||o.value===p.navn)
+      ||[...sel.options].find(o=>(o.text+' ').startsWith(p.kode+' ')||(o.value+' ').startsWith(p.kode+' '));return o||null};
+  addEventListener('message',e=>{const d=e.data||{};
+    if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.liste=d.liste||R.liste;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){console.error(x)}})}
+    if(d.type==='skred-overfor'){if(R.mottak[d.til])R.mottak[d.til](d.data);else R.vent[d.til]=d.data}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}
+})();
+</script>
+<script>
+const CONFIG=/*__CONFIG__*/null;
+const BAKED=/*__BAKED__*/null;
+const TA=CONFIG.terskel_aktiv!==false; // terskler kan slås av i config.json (terskel_aktiv: false)
+const H=3600e3,NOW=new Date();
+const tLab=t=>{const o=osloParts(t),wd=t.toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',weekday:'short'}).replace('.','');return `${wd} ${+o.day}.${+o.month} ${o.hour}`};
+/* ---------- hjelpere ---------- */
+const vals=(a,k)=>a.map(x=>x[k]).filter(v=>v!=null&&isFinite(v));
+const max=(a,k)=>{const v=vals(a,k);return v.length?Math.max(...v):null};
+const min=(a,k)=>{const v=vals(a,k);return v.length?Math.min(...v):null};
+const sumN=(a,k)=>{const v=vals(a,k);return v.length?+v.reduce((x,y)=>x+y,0).toFixed(1):null};
+const last=(a,k)=>{for(let i=a.length-1;i>=0;i--)if(a[i][k]!=null)return a[i][k];return null};
+const mx=a=>{const v=a.filter(x=>x!=null&&isFinite(x));return v.length?Math.max(...v):null};
+const r1=v=>v==null||!isFinite(v)?'–':(+v).toFixed(1);
+/* fargetrinn: nedbør per døgn, nysnø (terskel 20 cm), vind/kast (MET kuling), retning, 0-isoterm mot løsneområdet, endring */
+const NSG=20;
+const nb=v=>{if(v==null||!isFinite(v))return'–';const k=v<0.5?0:v<5?1:v<10?2:v<20?3:v<30?4:5;return`<span class="vv vrr${k}">${r1(v)}</span>`};
+const ns=v=>{if(v==null||!isFinite(v))return'–';const k=v>=2*NSG?3:v>=NSG?2:v>=NSG/2?1:0;return`<span class="vv vsn${k}">${r1(v)}</span>`};
+const wv=v=>{if(v==null||!isFinite(v))return'–';const k=v>=24.5?3:v>=17.2?2:v>=10.8?1:0;return k?`<span class="vv vw${k}">${r1(v)}</span>`:r1(v)};
+const dirC=d=>{if(d==null)return'';const t=dirTxt(d);return/^(NV|N|NØ)$/.test(t)?`<span class="vv vdn">${t}</span>`:/^(S|SØ)$/.test(t)?`<span class="vv vds">${t}</span>`:t};
+const isoC=(v,bunn)=>v==null?'–':`<span class="${v>bunn?'tpos':'tneg'}" title="${v>bunn?'over bunnen av løsneområdet (plussgrader i deler av løsneområdet)':'under bunnen av løsneområdet'}">${isoF(v)}</span>`;
+const pilN=(a,b)=>a==null||b==null||a===b?'':a>b?'<span class="vopp" title="øker fra dagen før">▲</span>':'<span class="vned" title="avtar fra dagen før">▼</span>';
+/* temperatur: blå under 0, rød over 0, 0 nøytral (vurdert på avrundet verdi) */
+const tC=v=>{if(v==null||!isFinite(v))return'–';const x=+(+v).toFixed(1);return x<0?`<span class="tneg">${x.toFixed(1)}</span>`:x>0?`<span class="tpos">${x.toFixed(1)}</span>`:x.toFixed(1)};
+const BFG=[0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7],BFN=['Stille','Flau vind','Svak vind','Lett bris','Laber bris','Frisk bris','Liten kuling','Stiv kuling','Sterk kuling','Liten storm','Full storm','Sterk storm','Orkan'];
+const bfNr=v=>{if(v==null||!isFinite(v))return null;let b=0;while(b<12&&v>=BFG[b])b++;return b};
+const bf=v=>{const b=bfNr(v);return b==null?'':`<span class="bf bf${Math.min(b,9)}" title="Beaufort ${b}: ${BFN[b]}">${BFN[b].toLowerCase()}</span>`};
+const vbf=v=>`${r1(v)} ${bf(v)}`;
+const isoF=v=>v==null?'–':v<=0?'≤ 0':v;
+const dirTxt=d=>["N","NØ","Ø","SØ","S","SV","V","NV"][Math.round(d/45)%8];
+const arrow=d=>d==null?'':`<span class="arrow" style="transform:rotate(${d+180}deg)" title="${Math.round(d)}°">↑</span>`;
+const fmtT=d=>d.toLocaleString('no-NO',{timeZone:'Europe/Oslo',weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('no-NO',{weekday:'short',day:'2-digit',month:'2-digit'});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- data ---------- */
+const D0=BAKED?.d0, ARK=BAKED?.arkiv||{};
+const addD=(s,n)=>{const t=new Date(s+'T12:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+function obsStats(obs){if(!obs.length)return{};const l24=obs.slice(-24);let im=-1;l24.forEach((x,i)=>{if(x.FF!=null&&(im<0||x.FF>l24[im].FF))im=i});
+  return{T:last(obs,'T'),dd:im>=0?l24[im].DD:null}}
+const nivaFra=g=>{if(!g)return null;const n=g.enkelt.filter(e=>e.pass).length,k=g.komb.pass;return k&&n>=3?3:k?2:n?1:0};
+const DATA=CONFIG.strekninger.map(r=>{
+  const st=r.stasjoner.map(s=>{const id=s.sn||s.id,m=BAKED?.frostmeta?.[s.sn]||{},f=BAKED?.frost?.[id];
+    const obs=f?f.rows.map(x=>({T:null,RR:null,FF:null,FG:null,DD:null,HS:null,SFl:null,SFh:null,...x,t:new Date(x.t)})):[];
+    const dag=ARK.frostdag?.[id]||{},har=obs.some(x=>x.T!=null||x.RR!=null||x.FF!=null)||Object.keys(dag).length>0;
+    return{...s,id,lat:s.lat??m.lat,lon:s.lon??m.lon,moh:s.moh??m.moh,obs,dag,s:obsStats(obs),src:har?'Frost':'ingen',kildeTxt:s.kilde==='skredas'?'Skred AS':s.kilde==='wyssen'?'Wyssen':'Frost'}});
+  const delomr=r.delomr.map(d=>{const k=r.id+'|'+d.navn;return{...d,key:k,gts:ARK.gts?.[k]||{},gtsveg:ARK.gtsveg?.[k]||{},gmeta:ARK.meta?.['gts:'+k],ter:BAKED?.terskel?.[k]||{}}});
+  const varsom=ARK.varsom?.[r.id]||{};const vd=Object.keys(varsom).sort();
+  const pts=delomr.map(d=>[d.lat,d.lon]);const lat=pts.reduce((a,p)=>a+p[0],0)/pts.length,lon=pts.reduce((a,p)=>a+p[1],0)/pts.length;
+  return{...r,st,delomr,varsom,lat,lon,region:vd.length?varsom[vd[vd.length-1]].region:'–'};
+});
+/* datoer: arkiv + prognosedøgn */
+const DAGER=(()=>{const s=new Set();DATA.forEach(r=>r.delomr.forEach(d=>Object.keys(d.ter).forEach(x=>s.add(x))));if(ARK.fra){let x=ARK.fra;while(x<=D0){s.add(x);x=addD(x,1)}}return[...s].filter(d=>!ARK.fra||d>=ARK.fra).sort()})();
+let SEL=DAGER.includes(D0)?D0:DAGER[DAGER.length-1];
+const erObs=d=>d<=D0;
+function iSesong(v,dato){const m=String(v||'').match(/(\d+)\.(\d+)\D+(\d+)\.(\d+)/);if(!m)return true;const t=new Date((dato||D0)+'T12:00:00Z'),x=(t.getUTCMonth()+1)*100+t.getUTCDate(),a=+m[2]*100+ +m[1],b=+m[4]*100+ +m[3];return a<=b?(x>=a&&x<=b):(x>=a||x<=b)}
+function nivaDag(r,dato){const L=r.delomr.map(d=>nivaFra(d.ter[dato])).filter(v=>v!=null);return L.length?Math.max(...L):null}
+const roadLevel=r=>TA?(nivaDag(r,SEL)??0):0;
+/* døgnverdier for valgt dato: observert (seNorge/Frost) eller prognose (06–06 UTC) */
+function progDag(d,dato){if(!d.prog?.length)return null;const xs=d.prog.filter(x=>{const t=new Date(x.t.getTime()-6*H-60e3);t.setUTCDate(t.getUTCDate()+1);return t.toISOString().slice(0,10)===dato});
+  return xs.length?{rr:+sum(xs,'RR').toFixed(1),ff:max(xs,'FF'),fg:max(xs,'FG'),Tt:max(xs,'T'),iso:max(xs,'ISO'),timer:xs.length}:null}
+function dagVerdier(r,dato){
+  if(erObs(dato)){const g=r.delomr.map(d=>d.gts[dato]).filter(Boolean),fd=r.st.map(s=>s.dag[dato]).filter(Boolean);
+    return{kilde:'obs',rr:mx(g.map(x=>x.rr)),ns:mx(g.map(x=>x.sdfsw)),tm:mx(g.map(x=>x.tm)),ff:mx(fd.map(x=>x.FFmax)),fg:mx(fd.map(x=>x.FGmax)),tx:mx(fd.map(x=>x.Tmax)),rrSt:mx(fd.map(x=>x.RR))}}
+  const p=r.delomr.map(d=>progDag(d,dato)).filter(Boolean);
+  return{kilde:'prog',rr:mx(p.map(x=>x.rr)),ff:mx(p.map(x=>x.ff)),fg:mx(p.map(x=>x.fg)),tx:mx(p.map(x=>x.Tt)),iso:mx(p.map(x=>x.iso)),timer:mx(p.map(x=>x.timer))}}
+
+/* ---------- prognose (innebygd / live) ---------- */
+const LF='https://api.met.no/weatherapi/locationforecast/2.0/complete';
+async function hentLF(lat,lon,alt){const r=await fetch(`${LF}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&altitude=${Math.round(alt)}`);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+function parseLF(j){const ts=j.properties.timeseries.filter(x=>x.data.next_1_hours).slice(0,66);
+  return{upd:j.properties.meta.updated_at,rows:ts.map(x=>{const i=x.data.instant.details,n=x.data.next_1_hours.details;return{t:new Date(x.time),T:i.air_temperature,FF:i.wind_speed,FG:i.wind_speed_of_gust,DD:i.wind_from_direction,RR:n.precipitation_amount,RRmax:n.precipitation_amount_max}})}}
+function isoterm(Tt,Tb,ht,hb){let g=(hb!=null&&ht>hb&&Tb!=null)?(Tb-Tt)/(ht-hb):0.0065;if(!(g>0.002))g=0.0065;return Math.max(0,Math.round(ht+Tt/g))}
+function finishProg(d){d.prog.forEach(x=>x.ISO=isoterm(x.T,x.Tb,d.topp,d.bunn));const p=d.prog.slice(0,24);d.p24={rr:+sum(p,'RR').toFixed(1),ff:max(p,'FF'),Tt:max(p,'T'),iso:max(p,'ISO')}}
+const sum=(a,k)=>a.reduce((s,x)=>s+(x[k]??0),0);
+function bakedProg(d){const b=BAKED?.prog?.[d.key];if(!b)return false;d.lang=(b.lang||[]).map(x=>({...x,t:new Date(x.t)})).filter(x=>x.t.getTime()>=Date.now()-6*H);d.prog=b.rows.map(x=>({...x,t:new Date(x.t),Tb:x.Tb??null})).filter(x=>x.t.getTime()>=Date.now()-H);if(d.prog.length<6)return false;d.src='innebygd';d.upd=b.upd;finishProg(d);return true}
+DATA.forEach(r=>r.delomr.forEach(d=>{if(!bakedProg(d)){d.prog=[];d.src='mangler'}}));
+async function liveProg(){
+  btnRefresh.disabled=true;btnRefresh.textContent='Henter …';let ok=0,n=0,err='';
+  for(const r of DATA)for(const d of r.delomr){n++;try{const top=parseLF(await hentLF(d.lat,d.lon,d.topp));let bun=null;if(d.bunn!=null)bun=parseLF(await hentLF(d.lat,d.lon,d.bunn));
+    d.prog=top.rows.map((x,i)=>({...x,Tb:bun?bun.rows[i]?.T:null}));d.upd=top.upd;d.src='live';finishProg(d);ok++}catch(e){err=e.message}}
+  btnRefresh.disabled=false;btnRefresh.textContent='Oppdater prognose';
+  liveInfo=ok?`Live prognose hentet ${fmtT(new Date())} (${ok}/${n} punkt)`:`Direkte henting ikke tilgjengelig her (${err||'blokkert'}) – viser innebygd prognose`;
+  renderStatus();renderAll();
+}
+let liveInfo='';
+
+/* ---------- statuspanel ---------- */
+function osloParts(d){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Oslo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);const o={};p.forEach(x=>o[x.type]=x.value);return o}
+function nesteKjoring(){const o=osloParts(new Date()),nowMin=+o.hour*60+ +o.minute;const t=CONFIG.kjoreplan.tider.map(s=>{const[h,m]=s.split(':').map(Number);return h*60+m});
+  const nx=t.find(x=>x>nowMin+2);const mm=nx??t[0];return `${nx==null?'i morgen ':'i dag '}kl. ${String(Math.floor(mm/60)).padStart(2,'0')}:${String(mm%60).padStart(2,'0')}`}
+function renderStatus(){
+  if(!BAKED){statusSum.innerHTML='<span class="badge b-err">Ingen innebygde data</span>';return}
+  const S=BAKED.status,alder=(Date.now()-new Date(BAKED.created))/H,gammel=alder>3.5;
+  const b=(ok,tot)=>ok===tot?'b-ok':ok>0?'b-warn':'b-err';
+  const rows=[
+   ['Stasjonsobservasjoner (Frost, Skred AS)',b(S.frost.ok-S.frost.tomme.length,S.frost.tot),`${S.frost.ok-S.frost.tomme.length}/${S.frost.tot} stasjoner`,S.frost.siste?`siste måling ${fmtT(new Date(S.frost.siste))}`:'–'],
+   ['seNorge døgnverdier (GTS)',b(S.gts.ok,S.gts.tot),`${S.gts.ok}/${S.gts.tot} punkt`,S.gts.siste_dogn?`siste døgn slutter ${fmtD(S.gts.siste_dogn)} 06 UTC`:'–'],
+   ['Prognosekart (MEPS)',S.meps?'b-ok':'b-err',S.meps?`${S.meps.filer} kart`:'–',S.meps?`kjøring ${S.meps.kjoring}`:'ikke hentet'],
+   ['Prognose (MET Locationforecast)',b(S.prog.ok,S.prog.tot),`${S.prog.ok}/${S.prog.tot} punkt`,S.prog.modell?`prognose oppdatert ${fmtT(new Date(S.prog.modell))}`:'–'],
+   ['Varsom snøskredvarsel',b(S.varsom.ok,S.varsom.tot),`${S.varsom.ok}/${S.varsom.tot} regioner`,S.varsom.utstedt?'varsel utstedt':'ingen varsel utstedt fra i dag'],
+   ...(TA?[['Terskelvurdering',b(S.terskel.ok,S.terskel.tot),`${S.terskel.ok}/${S.terskel.tot} delområder`,'vegpunkt, 8 døgn tilbake + D+1/D+2']]:[])];
+  const mangler=[];
+  DATA.forEach(r=>r.st.forEach(s=>{if(!s.obs.some(x=>x.T!=null||x.FF!=null||x.RR!=null))mangler.push(`${r.navn}: ${s.navn} – ${s.utenData?'ikke åpent API':(s.kilde==='skredas'?'ingen data fra Skred AS':s.kilde==='wyssen'?'ingen data fra Wyssen':'ingen data fra Frost')}`)}));
+  (BAKED.feil||[]).forEach(f=>mangler.push('Feil: '+f));
+  const allOk=rows.every(x=>x[1]==='b-ok');
+  hdrStatus.innerHTML=`<span class="badge ${gammel?'b-err':allOk?'b-ok':'b-warn'}">${gammel?'Data er eldre enn 3,5 t':allOk?'Alle kilder OK':'Noen data mangler'}</span> <span style="font-size:12px">Hentet ${fmtT(new Date(BAKED.created))} · neste oppdatering ${nesteKjoring()}</span>`;
+  statusSum.innerHTML=`<b>Datastatus</b> – hentet ${fmtT(new Date(BAKED.created))} (${S.sekunder} s), neste oppdatering ${nesteKjoring()}. Kjøreplan: ${CONFIG.kjoreplan.tider.join(', ')}. Datovelger: ${ARK.fra?fmtD(ARK.fra):''} – ${fmtD(DAGER[DAGER.length-1])}. ${liveInfo?'· '+esc(liveInfo):''} <span class="note">(klikk for detaljer)</span>`;
+  statusBody.innerHTML=`<table style="max-width:1100px"><tr><th class="l">Kilde</th><th class="l">Status</th><th class="l">Omfang</th><th class="l">Gjelder</th></tr>`+
+   rows.map(x=>`<tr><td class="l">${x[0]}</td><td class="l"><span class="badge ${x[1]}">${x[1]==='b-ok'?'OK':x[1]==='b-warn'?'Delvis':'Feilet'}</span></td><td class="l">${x[2]}</td><td class="l">${x[3]}</td></tr>`).join('')+`</table>`+
+   (mangler.length?`<p class="note" style="margin:6px 0 2px"><b>Mangler (${mangler.length}):</b></p><ul class="note" style="margin:0;columns:2">${mangler.map(m=>`<li>${esc(m)}</li>`).join('')}</ul>`:'');
+}
+
+/* ---------- faner ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active',s.id===b.dataset.tab));
+  if(b.dataset.tab==='oversikt')setTimeout(()=>map.invalidateSize(),50);
+  ({prog:renderProg,obs:renderObs,terskel:renderTer,kart:renderKart,skygge:renderSkygge,kamera:renderKamera,mgram:renderMgram})[b.dataset.tab]?.();
+});
+function gotoTab(tab,id){if(SKRED.laas)id=SKRED.id;if(id){[obsRoad,progRoad,terRoad,skRoad,kamRoad,mgRoad].forEach(s=>{if([...s.options].some(o=>o.value===id))s.value=id});selDel=0}document.querySelector(`nav button[data-tab="${tab}"]`).click()}
+DATA.forEach(d=>[obsRoad,progRoad,terRoad,rankRoad,mapZoom].forEach(s=>s.add(new Option(d.navn,d.id))));
+
+/* ---------- bakgrunnskart: flisepakker (Kartverket) i egne filer ---------- */
+const FL=CONFIG.fliser||{},PAKKER={},PAKKEDATA={};
+window.FLISPAKKE=(n,d)=>{PAKKEDATA[n]=d};
+function lastPakke(n){return PAKKER[n]||(PAKKER[n]=new Promise(ok=>{const sc=document.createElement('script');sc.src=FL[n].fil;sc.onload=()=>ok(PAKKEDATA[n]||null);sc.onerror=()=>ok(null);document.head.appendChild(sc)}))}
+async function finnFlis(z,x,y){
+  for(const n in FL){const b=FL[n].bb[z];if(!b||x<b[0]||x>b[1]||y<b[2]||y>b[3])continue;const p=await lastPakke(n);if(!p)continue;
+    const e=p[z+'/'+x+'/'+y];if(e)return 'data:image/jpeg;base64,'+e}
+  return null}
+const Pakkelag=L.GridLayer.extend({createTile(c,done){
+  const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.fillStyle='#dfe8ec';g.fillRect(0,0,256,256);
+  (async()=>{for(let dz=0;c.z-dz>=4;dz++){const f=2**dz,x=Math.floor(c.x/f),y=Math.floor(c.y/f),u=await finnFlis(c.z-dz,x,y);
+      if(u){const im=new Image();im.onload=()=>{const s=256/f;g.drawImage(im,(c.x-x*f)*s,(c.y-y*f)*s,s,s,0,0,256,256);done(null,cv)};im.onerror=()=>done(null,cv);im.src=u;return}}
+    done(null,cv)})();
+  return cv}});
+function bakgrunnLag(m){
+  if(location.protocol==='file:'){L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',{maxZoom:18,attribution:'© Kartverket',pane:'bg'}).addTo(m);return}
+  new Pakkelag({pane:'bg',maxZoom:18,attribution:'© Kartverket',updateWhenZooming:false,keepBuffer:3}).addTo(m)}
+
+/* ---------- kart ---------- */
+const map=L.map('map',{zoomSnap:.25}).setView([65,14],4);
+map.createPane('bg');map.getPane('bg').style.zIndex=250;
+bakgrunnLag(map);
+const FARGE=['#7fbf8e','#e6c200','#ed9300','#d0342c'];
+const sq=(c,b)=>L.divIcon({className:'',html:`<div style="width:9px;height:9px;background:${c};border:1px solid ${b}"></div>`,iconSize:[9,9]});
+const tri=L.divIcon({className:'',html:'<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #6a3d9a"></div>',iconSize:[12,10]});
+const dia=L.divIcon({className:'',html:'<div style="width:9px;height:9px;background:#1f2a30;transform:rotate(45deg)"></div>',iconSize:[9,9]});
+DATA.forEach(d=>{
+  (d.veglinje?.linjer||[]).forEach(l=>{L.polyline(l,{color:'#fff',weight:6,opacity:.9}).addTo(map);L.polyline(l,{color:'#1f2a30',weight:3}).addTo(map).bindTooltip(`${d.navn} (${d.veglinje.ref})`)});
+  d.delomr.forEach(p=>{
+    (p.polys||[]).forEach(q=>L.polygon(q.c,{color:'#b0302a',weight:1,fillColor:'#d0342c',fillOpacity:.35}).addTo(map).bindTooltip(`${d.navn} – ${esc(q.n)}<br>løsneområde ${q.z[0]}–${q.z[1]} moh.`));
+    (p.skredlop||[]).forEach(l=>L.polyline(l,{color:'#2b6cb0',weight:1.5,opacity:.8}).addTo(map));
+    L.circleMarker([p.lat,p.lon],{radius:4,color:'#1f2a30',weight:1,fillColor:'#fff',fillOpacity:1}).addTo(map).bindTooltip(`${d.navn} – ${p.navn}<br>prognosepunkt løsneområde ${p.bunn}–${p.topp} moh.<br>${(p.skredpunkt||[]).join(', ')}`);
+    if(p.veg)L.marker([p.veg.lat,p.veg.lon],{icon:dia}).addTo(map).bindTooltip(`${d.navn} – ${p.navn}<br>vegpunkt (terskler), ${p.veg.moh??'?'} moh.`);
+  });
+  d.st.filter(s=>s.lat).forEach(s=>L.marker([s.lat,s.lon],{icon:s.utenData?tri:s.src==='Frost'?sq('#2b6cb0','#123'):sq('#aab4ba','#555')}).addTo(map)
+    .bindTooltip(`${esc(s.navn)} (${s.eier}${s.sn?', '+s.sn:''}${s.moh!=null?', '+s.moh+' moh.':''})<br>${s.utenData?'skredtårn – ikke åpent API':s.src==='Frost'?'data fra '+s.kildeTxt:'ingen data'}`));
+});
+let roadLayer=L.layerGroup().addTo(map);
+map.on('zoomend',()=>{if(map.getZoom()>=10)map.removeLayer(roadLayer);else if(!map.hasLayer(roadLayer))roadLayer.addTo(map)});
+function renderMap(){roadLayer.clearLayers();DATA.forEach(d=>L.circleMarker([d.lat,d.lon],{radius:13,color:'#222',weight:1,fillColor:TA&&d.terskel?FARGE[roadLevel(d)]:'#8a979e',fillOpacity:.45}).addTo(roadLayer).bindTooltip(d.navn).on('click',()=>gotoTab(TA?'terskel':'prog',d.id)))}
+kartleg.innerHTML=
+ `<span><i style="width:14px;height:10px;background:rgba(208,52,44,.35);border:1px solid #b0302a"></i>Løsneområde</span>
+  <span><i style="width:14px;height:0;border-top:3px solid #1f2a30"></i>Veg (varslingsstrekning)</span>
+  <span><i style="width:14px;height:0;border-top:2px solid #2b6cb0"></i>Skredløp</span>
+  <span><i style="width:9px;height:9px;border-radius:50%;background:#fff;border:1px solid #1f2a30"></i>Prognosepunkt (løsneområde)</span>
+  <span><i style="width:8px;height:8px;background:#1f2a30;transform:rotate(45deg)"></i>Vegpunkt (terskler)</span>
+  <span><i style="width:9px;height:9px;background:#2b6cb0;border:1px solid #123"></i>Værstasjon med data</span>
+  <span><i style="width:9px;height:9px;background:#aab4ba;border:1px solid #555"></i>Værstasjon uten data</span>
+  <span><i style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #6a3d9a"></i>Skredtårn (Wyssen)</span>
+  ${TA?`<span><i style="width:14px;height:14px;border-radius:50%;background:${FARGE[2]};opacity:.6;border:1px solid #222"></i>Strekning (terskelnivå)</span>`:''}`;
+const helt=()=>map.fitBounds(DATA.map(d=>[d.lat,d.lon]),{padding:[30,30]});
+setTimeout(()=>{map.invalidateSize();helt()},0);
+mapZoom.onchange=()=>{const d=DATA.find(x=>x.id===mapZoom.value);if(!d){helt();return}
+  const ll=[...(d.veglinje?.linjer||[]).flat(),...d.delomr.flatMap(p=>(p.polys||[]).flatMap(q=>q.c)),...d.delomr.flatMap(p=>(p.skredlop||[]).flat()),...d.st.filter(s=>s.lat).map(s=>[s.lat,s.lon])];if(ll.length)map.fitBounds(ll,{padding:[20,20],maxZoom:14})};
+
+/* ---------- kort ---------- */
+const probTxt=w=>w?.problemer?.length?w.problemer.map(p=>esc(p.type)).join(', '):(w?(w.utstedt?'ingen skredproblem':'ingen varsel utstedt'):'–');
+function renderCards(){
+  const win=[addD(SEL,-1),SEL,addD(SEL,1)];
+  cards.innerHTML=DATA.map(r=>{
+    const lv=roadLevel(r),v=dagVerdier(r,SEL),w=r.varsom[SEL],ob=v.kilde==='obs';
+    return`<div class="scard ${lv?'bl'+lv:''}" style="${SKRED.laas&&SKRED.id!==r.id?'opacity:.4':''}${SKRED.laas&&SKRED.id===r.id?';box-shadow:0 0 0 2px #ed9300':''}" onclick="gotoTab(TA?'terskel':'prog','${r.id}')">
+     <h3>${r.navn}</h3><div class="reg">Varsomregion: ${esc(r.region)} · ${r.delomr.length} delområde${r.delomr.length>1?'r':''} · ${r.st.filter(s=>s.src==='Frost').length}/${r.st.length} stasjoner med data</div>
+     ${TA?`${!r.terskel?'<div class="note">Ingen terskler definert</div>':iSesong(r.terskel.sesongvindu,SEL)?'':`<div class="warn">Utenfor sesongvinduet for tersklene (${r.terskel.sesongvindu})</div>`}
+     <div class="tdays">${win.map(d=>{const n=nivaDag(r,d);return`<div class="tday ${n==null?'':'c'+n} ${d===SEL?'tsel':''}" title="${erObs(d)?'observert':'prognose'}">${(n=>n===0?'D0':n>0?'D+'+n:'D−'+(-n))(Math.round((new Date(d)-new Date(D0))/864e5))}<br>${fmtD(d)}</div>`}).join('')}</div>`:''}
+     <div class="kv"><span></span><span class="h">${ob?'Observert døgn':'Prognose døgn'} ${fmtD(SEL)}</span><span class="h">${ob?'Kilde':''}</span>
+      <span>Nedbør</span><span>${nb(v.rr)} mm</span><span class="note">${ob?'seNorge løsneomr.':'løsneomr.'}</span>
+      ${ob?`<span>Nysnø</span><span>${ns(v.ns)} cm</span><span class="note">seNorge</span>`:''}
+      <span>Vind maks</span><span>${wv(v.ff)} m/s</span><span class="note">${ob?'Frost stasjoner':'MEPS'}</span>
+      <span>Tmaks</span><span>${tC(v.tx)} °C</span><span class="note">${ob?'Frost stasjoner':'topp løsneomr.'}</span>
+      ${ob?'':`<span>0-isoterm</span><span>maks ${v.iso??'–'} moh.</span><span class="note">${v.timer&&v.timer<24?v.timer+' t':''}</span>`}</div>
+     <div class="note" style="margin-top:6px">Skredproblem ${fmtD(SEL)}: ${probTxt(w)}</div>${(()=>{const s=skMaks(r.id,SEL);return s==null?"":`<div style="margin-top:4px;font-size:12px">Skyggevarsel: <span class="badge sk${s}">${SKN[s]}</span></div>`})()}</div>`}).join('');
+}
+
+/* ---------- rangert ---------- */
+const RANK=[{k:'RR',navn:'Nedbør døgn (mm)'},{k:'FFmax',navn:'Vind middel maks (m/s)'},{k:'FGmax',navn:'Vindkast maks (m/s)'},{k:'Tmax',navn:'Maks temperatur (°C)'},{k:'Tmin',navn:'Min temperatur (°C)',asc:true},{k:'Tm',navn:'Middeltemperatur (°C)'},{k:'HS',navn:'Snødybde (cm)'}];
+RANK.forEach((p,i)=>rankParam.add(new Option(p.navn,i)));let rankAll=false;
+function renderRank(){const p=RANK[rankParam.value];let rows=[];DATA.forEach(d=>{if(rankRoad.value&&rankRoad.value!==d.id)return;d.st.forEach(s=>{const x=s.dag[SEL];if(x&&x[p.k]!=null)rows.push({d,s,x})})});
+  rows.sort((a,b)=>p.asc?a.x[p.k]-b.x[p.k]:b.x[p.k]-a.x[p.k]);
+  rankTbl.innerHTML=`<tr><th>${p.navn}</th><th class="l">Stasjon</th><th class="l">ID</th><th class="l">Eier</th><th>moh.</th><th class="l">Strekning</th><th>Timer</th></tr>`+
+   ((rankAll?rows:rows.slice(0,10)).map(({d,s,x})=>`<tr><td>${/^T/.test(p.k)?tC(x[p.k]):p.k==='RR'?nb(x[p.k]):/^F/.test(p.k)?wv(x[p.k]):r1(x[p.k])}</td><td class="l">${esc(s.navn)}</td><td class="l">${s.sn||(s.kilde==='wyssen'?s.wid:'cs001')}</td><td class="l">${s.eier}</td><td>${s.moh??'–'}</td><td class="l">${d.navn}</td><td class="${x.n<24?'warn':''}">${x.n}</td></tr>`).join('')||`<tr><td class="l note" colspan="7">Ingen stasjonsdata for ${fmtD(SEL)}${erObs(SEL)?'':' (prognosedøgn)'}</td></tr>`);
+  rankToggle.textContent=rankAll?'Vis færre':'Vis alle';rankPeriod.textContent=`Døgn som slutter ${fmtD(SEL)} kl. 06 UTC`}
+rankParam.onchange=rankRoad.onchange=renderRank;rankToggle.onclick=()=>{rankAll=!rankAll;renderRank()};
+
+/* ---------- terskler ---------- */
+function renderTer(){
+  const r=DATA.find(x=>x.id===terRoad.value);if(!r)return;const T=r.terskel;
+  if(!T){terDef.innerHTML=`<h3>Terskler ${r.navn}</h3><p class="note">Ingen værterskler er definert for denne strekningen.</p>`;terTbl.innerHTML='';terNote.innerHTML='';return}
+  terDef.innerHTML=`<h3>Terskler ${r.navn} (${T.skreddager} skreddager, sesongvindu ${T.sesongvindu})</h3>
+   <table style="max-width:900px"><tr><th class="l">#</th><th class="l">Variabel</th><th>Terskel</th><th>AUC</th><th>Treffrate</th><th>Falsk alarm</th></tr>
+   ${T.enkelt.map((t,i)=>`<tr><td class="l">${i+1}</td><td class="l">${esc(t.tekst)}</td><td>${t.operator} ${t.verdi}</td><td>${t.AUC}</td><td>${Math.round(t.treffrate*100)} %</td><td>${Math.round(t.falsk_alarm*100)} %</td></tr>`).join('')}
+   <tr><td class="l"><b>K</b></td><td class="l"><b>Kombinasjon:</b> ${esc(T.komb.regel.replace(/_/g,' '))}</td><td></td><td></td><td>${Math.round(T.komb.treffrate*100)} %</td><td>${Math.round(T.komb.falsk_alarm*100)} %</td></tr></table>
+   ${T.merknad?`<p class="warn">${esc(T.merknad)}</p>`:''}${iSesong(T.sesongvindu,SEL)?'':`<p class="warn"><b>${fmtD(SEL)} er utenfor sesongvinduet (${T.sesongvindu}).</b> Tersklene er beregnet for dager innenfor vinduet.</p>`}`;
+  const win=[-2,-1,0,1].map(n=>addD(SEL,n)).filter(d=>DAGER.includes(d));
+  const g0=d=>r.delomr.map(x=>x.ter[d]).find(Boolean);
+  terTbl.innerHTML=`<tr><th class="l" rowspan="2">Delområde</th><th rowspan="2">Vegpunkt moh.</th>${win.map(d=>{const g=g0(d);return`<th colspan="${T.enkelt.length+1}" style="text-align:center${d===SEL?';background:#dbe9f6':''}">${erObs(d)?'Observert':'Prognose'} – ${fmtD(d)}${g&&g.kilde==='prog'&&g.timer<24?` (${g.timer} t)`:''}</th>`}).join('')}</tr>
+   <tr>${win.map(()=>T.enkelt.map((t,i)=>`<th title="${esc(t.tekst)} ${t.operator} ${t.verdi}">${i+1}</th>`).join('')+'<th>K</th>').join('')}</tr>`+
+   r.delomr.map(x=>`<tr><td class="l">${x.navn}</td><td>${x.veg?.moh??'–'}</td>${win.map(d=>{const g=x.ter[d];if(!g)return`<td colspan="${T.enkelt.length+1}" class="note">–</td>`;
+     return g.enkelt.map(e=>`<td class="${e.pass?'c2':''}">${r1(e.v)}</td>`).join('')+`<td class="${g.komb.pass?'c3':g.komb.pass===false?'c0':''}">${g.komb.pass==null?'–':g.komb.pass?'JA':'nei'}</td>`}).join('')}</tr>`).join('');
+  terNote.innerHTML=`Fire døgn rundt valgt dato (${fmtD(SEL)} er uthevet). Oransje = enkeltterskel passert, rød = kombinasjon passert. Døgn = 06–06 UTC, datert med slutt. Observerte døgn bruker seNorge i vegpunktet; prognosedøgn bruker seNorge bakover + MET-prognose (første prognosedøgn mangler timene før kjøringen). Nysnø i prognose er estimert (nedbør ved T ≤ 0,5 °C, 1 mm ≈ 1 cm). Tersklene er flagg, ikke fasit.`;
+}
+terRoad.onchange=renderTer;
+
+
+/* ---------- skyggevarsel ---------- */
+const SKN=['Grønt','Gult','Oransje','Rødt'],RELN={K:'Kort',M:'Middels',L:'Lang'};
+const SKS=['','S1 Høyst usannsynlig','S2 Lite sannsynlig','S3 Mulig','S4 Sannsynlig','S5 Veldig sannsynlig'];
+CONFIG.strekninger.forEach(r=>{if(BAKED?.skygge?.[r.id])skRoad.add(new Option(r.navn,r.id))});
+const skMaks=(rid,d)=>{const x=BAKED?.skygge?.[rid]?.[d];if(!x)return null;return Math.max(0,...Object.values(x.enheter).map(e=>e[0]))};
+let skSel=null;
+function renderSkygge(){
+  const roads=CONFIG.strekninger.filter(r=>BAKED?.skygge?.[r.id]&&(!skRoad.value||skRoad.value===r.id));
+  const win=[-2,-1,0,1,2].map(n=>addD(SEL,n));
+  skBody.innerHTML=roads.map(r=>{const SK=BAKED.skygge[r.id],E=CONFIG.skygge?.enheter?.[r.id]||{},x0=SK[SEL];
+    const rows=Object.keys(E);
+    return `<h2>${esc(r.navn)} <span class="note">Varsomregion ${esc(x0?.region||'–')}${x0&&!x0.utstedt?' · ingen varsel utstedt':''}</span></h2>
+    <div class="tblwrap" style="max-height:none"><table><tr><th class="l">Skredbane</th><th class="l">Delområde</th>${win.map(d=>`<th style="text-align:center${d===SEL?';background:#dbe9f6':''}">${fmtD(d)}<br><span class="note">${erObs(d)?'':'varsel'}</span></th>`).join('')}</tr>`+
+    rows.map(en=>`<tr><td class="l">${esc(E[en].navn)}${E[en].merk?` <span class="note" title="${esc(E[en].merk)}">⚠</span>`:''}</td><td class="l note">${esc(E[en].del||'')}</td>`+win.map(d=>{const v=SK[d]?.enheter?.[en];
+      if(!v)return`<td class="skc skx">–</td>`;const l=v[0],n=v[1].length;
+      return`<td class="skc sk${l} ${d===SEL?'tsel':''}" onclick="skVis('${r.id}','${d}','${esc(en).replace(/'/g,"\\'")}')" title="${n?n+' skredproblem treffer':'ingen skredproblem treffer'}">${SKN[l]}${(q=>q==null||q===l?'':`<span style="margin-left:4px" title="${l>q?'øker':'avtar'} fra dagen før">${l>q?'▲':'▼'}</span>`)(SK[addD(d,-1)]?.enheter?.[en]?.[0])}</td>`}).join('')+'</tr>').join('')+'</table></div>'}).join('')||'<p class="note">Ingen data.</p>';
+  const P=CONFIG.skygge?.parametre||{};
+  skNote.innerHTML=`▲/▼ = nivået øker/avtar fra dagen før. Metode: hvert skredproblem fra Varsom treffer et løsneområde når høydeintervallet overlapper utsatt høyde${P.hoyde_buffer_m?` (±${P.hoyde_buffer_m} m)`:''} og løsneområdets aspekt ligger innenfor ±${P.retning_toleranse_grader??45}° av en utsatt himmelretning (dvs. nabosektor teller). Snødekkestabilitet fra utløsbarhet (naturlig = svært dårlig; svært lett og lett = dårlig; vanskelig = moderat; svært vanskelig = god) × utbredelse gir S1–S5. Relativt utløp antas middels, kort ved våt snø. D-størrelse fra varselet gir K fra skredbanens konsekvensmatrise; UL gir ingen bidrag. Aktsomhet = risikomatrisen (modell 2; Rv85 modell 1), høyeste nivå av problemene. ${esc(P.begrunnelse||'')} Klikk en celle for detaljer.`;
+  if(skSel)skVis(...skSel,true);
+}
+function skVis(rid,d,en,stille){skSel=[rid,d,en];const v=BAKED.skygge[rid]?.[d]?.enheter?.[en],E=CONFIG.skygge.enheter[rid][en];skDet.style.display='';
+  if(!v){skDet.innerHTML='<p class="note">Ingen data.</p>';return}
+  const reg=BAKED.skygge[rid][d].region||'';
+  skDet.innerHTML=`<h3>${esc(E.navn)} – ${fmtD(d)}: <span class="badge sk${v[0]}">${SKN[v[0]]}</span> <span class="note">Varsomregion ${esc(reg)} · delområde ${esc(E.del||'')}</span></h3>`+(v[1].length?
+   `<table style="max-width:1300px"><tr><th class="l" colspan="5" style="background:#e3edf6">Fra Varsom</th><th class="l" colspan="6" style="background:#f4ece0">Beregnet for skredbanen</th></tr>
+   <tr><th class="l">Skredproblem</th><th class="l">Utsatt høyde (moh.)</th><th class="l">Himmelretning</th><th class="l">Utløsbarhet / utbredelse</th><th>Størrelse</th><th class="l">Sannsynlighet</th><th>Utløp</th><th>Spesifikt utløp</th><th>K</th><th>Nivå</th><th class="l">Løsneområder (nr)</th></tr>`+
+    v[1].map(b=>{const x=b[8]||{};return`<tr><td class="l">${esc(b[0])}</td><td class="l">${esc(x.h||'–')}</td><td class="l">${esc(x.eksp||'–')}</td><td class="l">${esc(x.sens||'–')} / ${esc(x.utb||'–')}</td><td>D${b[2]}</td><td class="l">${SKS[b[1]]}</td><td>${RELN[b[3]]}${b[3]==='K'?' <span class="note">(våt snø)</span>':''}</td><td>${b[4]??'–'}</td><td>${b[5]==null?'–':'K'+b[5]}</td><td>${b[6]==null?'<span class="note">'+(b[4]==='UL'?'utelukket':'ingen matrise')+'</span>':`<span class="badge sk${b[6]}">${SKN[b[6]]}</span>`}</td><td class="l">${b[7].join(', ')}</td></tr>`}).join('')+'</table><p class="note">Skredbanens nivå er det høyeste av skredproblemene som treffer løsneområdene.</p>':'<p class="note">Ingen skredproblem i varselet treffer løsneområdene (høyde og himmelretning).</p>');
+  if(!stille)skDet.scrollIntoView({block:'nearest'})}
+skRoad.onchange=renderSkygge;
+/* ---------- webkamera ---------- */
+const KAM=CONFIG.kamera||{};
+CONFIG.strekninger.forEach(r=>{if(KAM[r.id])kamRoad.add(new Option(r.navn,r.id))});
+const kamLys=document.createElement('div');kamLys.className='kamlys';kamLys.innerHTML='<img alt="">';kamLys.onclick=()=>kamLys.classList.remove('on');document.body.appendChild(kamLys);
+function renderKamera(){const L=KAM[kamRoad.value]||[],BK=BAKED?.kamera||{};
+  const alder=t=>{if(!t)return'';const h=(Date.now()-new Date(t))/36e5;return`<span class="badge" style="background:${h<1?'#3a9b5c':h<24?'#ed9300':'#d0342c'};color:${h<24&&h>=1?'#000':'#fff'}">${h<1?'< 1 t':h<24?Math.round(h)+' t':Math.round(h/24)+' d'}</span>`};
+  const off=L.filter(k=>!k.intern),int=L.filter(k=>k.intern);
+  kamBody.innerHTML=off.map(k=>{const b=BK[k.id];return`<div class="kam">${b?`<img src="${b.fil}?v=${encodeURIComponent(b.hentet)}" alt="${esc(k.n)}">`:`<div class="feil">Bildet ble ikke hentet ved siste kjøring.<br><a href="${k.u}" target="_blank" rel="noopener">Åpne bildet direkte ↗</a></div>`}
+    <div class="kt"><b>${esc(k.n)}</b><span class="note">${b?`${b.endret?'bildet tatt/oppdatert '+fmtT(new Date(b.endret))+' '+alder(b.endret):'hentet '+fmtT(new Date(b.hentet))} · <a href="${k.u}" target="_blank" rel="noopener">ferskt ↗</a>`:''}</span></div></div>`}).join('')||'<p class="note">Ingen offentlige kameraer for denne strekningen.</p>';
+  kamInt.innerHTML=int.length?`<b>Interne kameraer og lenker</b> <span class="note">(åpnes i ny fane; krever Vegvesenets nett hvis ikke annet er merket)</span>: `+int.map(k=>`<a class="b" style="display:inline-block;margin:3px 4px;text-decoration:none;color:inherit" href="${k.u}" target="_blank" rel="noopener">${esc(k.n)}${k.merk?` <span class="note">(${esc(k.merk)})</span>`:''} ↗</a>`).join(''):'';
+  kamBody.querySelectorAll('img').forEach(im=>im.onclick=()=>{kamLys.querySelector('img').src=im.src;kamLys.classList.add('on')})}
+kamRoad.onchange=renderKamera;
+
+
+/* ---------- observasjoner ---------- */
+/* dagbånd: annenhver dag skyggelagt + dagnavn; kulinglinjer i vindgrafer */
+const DAGBAND={id:'dagband',beforeDatasetsDraw(ch){const o=ch.options.plugins?.dagband;if(!o?.t?.length)return;const {ctx,chartArea:a,scales:{x}}=ch;if(!x)return;
+  const key=d=>{const p=osloParts(d);return p.year+p.month+p.day},n=o.t.length,half=n>1?(x.getPixelForValue(1)-x.getPixelForValue(0))/2:0;
+  ctx.save();ctx.beginPath();ctx.rect(a.left,a.top,a.right-a.left,a.bottom-a.top);ctx.clip();let i=0,nr=0;
+  while(i<n){const k=key(o.t[i]);let j=i;while(j+1<n&&key(o.t[j+1])===k)j++;
+    const x0=Math.max(a.left,x.getPixelForValue(i)-half),x1=Math.min(a.right,x.getPixelForValue(j)+half);
+    if(nr%2){ctx.fillStyle='rgba(68,79,85,.07)';ctx.fillRect(x0,a.top,x1-x0,a.bottom-a.top)}
+    if(i>0){ctx.strokeStyle='rgba(68,79,85,.35)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,a.top);ctx.lineTo(x0,a.bottom);ctx.stroke()}
+    if(x1-x0>34){const p=osloParts(o.t[i]),wd=o.t[i].toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',weekday:'short'}).replace('.','');ctx.fillStyle='rgba(31,42,48,.55)';ctx.font='600 11px Segoe UI,Arial';ctx.fillText(`${wd} ${+p.day}.${+p.month}`,x0+4,a.top+12)}
+    i=j+1;nr++}
+  if(o.t0&&ch.scales[o.t0]){const y=ch.scales[o.t0],py=y.getPixelForValue(0);if(py>=a.top&&py<=a.bottom){ctx.strokeStyle='rgba(31,42,48,.7)';ctx.lineWidth=1.2;ctx.setLineDash([6,3]);ctx.beginPath();ctx.moveTo(a.left,py);ctx.lineTo(a.right,py);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(31,42,48,.75)';ctx.font='600 10px Segoe UI,Arial';ctx.textAlign='right';ctx.fillText('0 °C',a.right-4,py-3);ctx.textAlign='left'}}
+  if(o.bf&&ch.scales[o.bf]){const y=ch.scales[o.bf];[[10.8,'liten kuling'],[17.2,'sterk kuling'],[24.5,'full storm']].forEach(([v,t])=>{if(v>y.max)return;const py=y.getPixelForValue(v);
+    ctx.strokeStyle='rgba(176,48,42,.55)';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(a.left,py);ctx.lineTo(a.right,py);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(176,48,42,.8)';ctx.font='10px Segoe UI,Arial';ctx.textAlign='right';ctx.fillText(t,a.right-4,py-3);ctx.textAlign='left'})}
+  ctx.restore()}};
+if(window.Chart)Chart.register(DAGBAND);
+/* husk hvilke kurver som er slått av/på i grafene, også når stasjon/delområde byttes */
+const VISGRP={cPrT:'progT',cPrL:'progT',cPrW:'progW',cObsT:'obsT',cObsW:'obsW'},VIS={};
+const visKey=l=>String(l||'').replace(/\d+([.,]\d+)?/g,'').replace(/\s+/g,' ').trim();
+const visGrp=ch=>VISGRP[ch.canvas?.id]||ch.canvas?.id;
+try{Object.assign(VIS,JSON.parse(localStorage.getItem('vp_vis')||'{}'))}catch(e){}
+function legendKlikk(e,item,legend){const ch=legend.chart,i=item.datasetIndex,vis=!ch.isDatasetVisible(i);ch.setDatasetVisibility(i,vis);ch.update();
+  const g=visGrp(ch);(VIS[g]=VIS[g]||{})[visKey(ch.data.datasets[i].label)]=vis;try{localStorage.setItem('vp_vis',JSON.stringify(VIS))}catch(x){}}
+function brukVis(ch){const v=VIS[visGrp(ch)];if(!v)return;ch.data.datasets.forEach((d,i)=>{const k=visKey(d.label);if(k in v)ch.setDatasetVisibility(i,v[k])})}
+const dagband=(ch,t,bf,t0)=>{if(!ch)return;brukVis(ch);ch.options.plugins.dagband={t,bf,t0};if(t0&&ch.options.scales[t0])Object.assign(ch.options.scales[t0],{suggestedMin:-2,suggestedMax:2});ch.update('none')};
+function opt(title,scales){return{responsive:true,maintainAspectRatio:false,spanGaps:true,interaction:{mode:'index',intersect:false},plugins:{title:{display:true,text:title},legend:{labels:{boxWidth:12},onClick:legendKlikk}},scales:{x:{ticks:{minRotation:90,maxRotation:90,autoSkip:true,maxTicksLimit:24,font:{size:11}}},...scales}}}
+let chObsT,chObsW;
+/* ---------- nedbør: time / døgnsum / akkumulert (døgn 06–06 UTC) ---------- */
+let NBM='t';
+const dogn=(t,start)=>{const d=new Date(t.getTime()-(start?0:60e3)-6*H);return d.toISOString().slice(0,10)};
+function nbDS(rows,k,start,lbl,extra){const base={type:'bar',yAxisID:'y1',grouped:false,order:2,...extra};
+  if(NBM==='t')return base;
+  const sum={};rows.forEach(x=>{const d=dogn(x.t,start);sum[d]=(sum[d]||0)+(x[k]||0)});
+  if(NBM==='d')return{...base,label:'Nedbør døgnsum (mm)',data:rows.map(x=>+sum[dogn(x.t,start)].toFixed(1)),backgroundColor:'rgba(74,144,194,.45)',barPercentage:1,categoryPercentage:1};
+  let acc=0,cur=null;const a=rows.map(x=>{const d=dogn(x.t,start);if(d!==cur){cur=d;acc=0}acc+=x[k]||0;return +acc.toFixed(1)});
+  return{...base,type:'line',label:'Nedbør akkumulert i døgnet (mm)',data:a,borderColor:'#1f5f8b',backgroundColor:'rgba(74,144,194,.25)',fill:true,stepped:true,pointRadius:0}}
+document.querySelectorAll('.nbMod').forEach(s=>s.onchange=()=>{NBM=s.value;document.querySelectorAll('.nbMod').forEach(x=>x.value=NBM);renderObsCharts();renderProg()});
+
+/* ---------- vindrose (oppsummering) ---------- */
+const VKL=[[0,5.5,'#cfe8c4','< 5,5','≤ lett bris'],[5.5,10.8,'#7fbf6a','5,5–10,8','laber–frisk bris'],[10.8,17.2,'#ed9300','10,8–17,2','liten–stiv kuling'],[17.2,99,'#c41f2a','≥ 17,2','≥ sterk kuling']];
+const D16=['N','NNØ','NØ','ØNØ','Ø','ØSØ','SØ','SSØ','S','SSV','SV','VSV','V','VNV','NV','NNV'];
+function vindrose(rows,tittel){const v=rows.filter(x=>x.DD!=null&&x.FF!=null);if(!v.length)return`<h4>${tittel}</h4><p class="note">Ingen vinddata.</p>`;
+  const n=v.length,cnt=[...Array(16)].map(()=>[0,0,0,0]);let stille=0;
+  v.forEach(x=>{if(x.FF<0.5){stille++;return}const s=Math.round(x.DD/22.5)%16,k=VKL.findIndex(c=>x.FF>=c[0]&&x.FF<c[1]);cnt[s][k<0?3:k]++});
+  const tot=cnt.map(c=>c.reduce((a,b)=>a+b,0)),mx=Math.max(...tot,1),R=88,c=105;
+  let g='';[.25,.5,.75,1].forEach(f=>g+=`<circle cx="${c}" cy="${c}" r="${R*Math.sqrt(f)}" fill="none" stroke="#dde2e5"/>`);
+  ['N','Ø','S','V'].forEach((t,i)=>{const a=i*Math.PI/2;g+=`<text x="${c+(R+10)*Math.sin(a)}" y="${c-(R+10)*Math.cos(a)+4}" text-anchor="middle" font-size="11" font-weight="600">${t}</text>`});
+  cnt.forEach((cs,s)=>{let acc=0;const a0=(s*22.5-10)*Math.PI/180,a1=(s*22.5+10)*Math.PI/180;
+    cs.forEach((k,j)=>{if(!k)return;const r0=R*Math.sqrt(acc/mx),r1=R*Math.sqrt((acc+k)/mx);acc+=k;
+      const P=(a,r)=>`${c+r*Math.sin(a)},${c-r*Math.cos(a)}`;
+      g+=`<path d="M${P(a0,r0)} L${P(a0,r1)} A${r1},${r1} 0 0 1 ${P(a1,r1)} L${P(a1,r0)} A${r0},${r0} 0 0 0 ${P(a0,r0)}Z" fill="${VKL[j][2]}" stroke="#fff" stroke-width=".5"><title>${D16[s]}: ${k} t (${Math.round(k/n*100)} %) ${VKL[j][3]} m/s</title></path>`})});
+  const dom=tot.indexOf(Math.max(...tot)),ffm=v.reduce((a,x)=>a+x.FF,0)/n,ffx=Math.max(...v.map(x=>x.FF)),t108=v.filter(x=>x.FF>=10.8).length;
+  const tr=cnt.map((cs,s)=>cs[2]+cs[3]),dt=tr.some(x=>x)?D16[tr.indexOf(Math.max(...tr))]:null;
+  return`<h4>${tittel}</h4><svg viewBox="0 0 210 210">${g}<circle cx="${c}" cy="${c}" r="3" fill="#1f2a30"/></svg>
+   <div class="rleg">${VKL.map(k=>`<span title="${k[3]} m/s"><i style="background:${k[2]}"></i>${k[4]}</span>`).join('')}</div>
+   <div class="note" style="text-align:center;margin-top:3px">Mest fra <b>${D16[dom]}</b> · middel ${r1(ffm)}, maks ${r1(ffx)} m/s<br>≥ 10,8 m/s: <b>${t108} t</b>${dt?` (mest fra ${dt})`:''}${stille?` · stille ${stille} t`:''} · n = ${n} t</div>`}
+
+function renderObs(){
+  const d=DATA.find(x=>x.id===obsRoad.value);if(!d)return;const keep=obsStation.value;obsStation.innerHTML='';
+  d.st.forEach((s,i)=>{if(s.obs.some(x=>x.T!=null||x.FF!=null))obsStation.add(new Option(s.navn,i))});if(keep&&[...obsStation.options].some(o=>o.value===keep))obsStation.value=keep;
+  const f=v=>v==null?'–':v,sf=v=>v==null?'–':r1(v/1000);
+  obsTbl.innerHTML=`<tr><th class="l">Stasjon</th><th class="l">Eier</th><th class="l">ID</th><th>moh.</th><th>Tmin</th><th>Tmid</th><th>Tmaks</th><th>Nedbør</th><th>Vind middel</th><th>Vind maks</th><th>Kast maks</th><th>HS</th><th>Snøfokk lav/høy (kg/m²)</th><th>Timer</th><th class="l">Status</th></tr>`+
+   d.st.map((s,i)=>{const x=s.dag[SEL]||{},g=[...obsStation.options].some(o=>o.value==i);return`<tr class="${g?'click':''} ${g&&obsStation.value==i?'sel':''}" ${g?`onclick="obsStation.value=${i};renderObs()" title="Vis grafer for ${esc(s.navn)}"`:''}><td class="l">${g&&obsStation.value==i?'▶ ':''}${esc(s.navn)}</td><td class="l">${s.eier}</td><td class="l">${s.sn??(s.kilde==='skredas'?'cs001':s.kilde==='wyssen'?s.wid:'–')}</td><td>${s.moh??'–'}</td>
+    <td>${tC(x.Tmin)}</td><td>${tC(x.Tm)}</td><td>${tC(x.Tmax)}</td><td>${nb(x.RR)}</td><td>${wv(x.FFm)}</td><td>${wv(x.FFmax)}</td><td>${wv(x.FGmax)}</td><td>${f(x.HS)}</td>
+    <td>${x.SFl!=null?sf(x.SFl)+' / '+sf(x.SFh):'–'}</td><td class="${x.n&&x.n<24?'warn':''}">${f(x.n)}</td>
+    <td class="l">${s.src==='Frost'?s.kildeTxt:s.utenData?'<span class="note">ikke åpent API</span>':'<span class="warn">ingen data</span>'}</td></tr>`}).join('')+
+   `<tr><td class="l note" colspan="15">Døgn ${fmtD(addD(SEL,-1))} 06 – ${fmtD(SEL)} 06 UTC. Enheter: °C, mm, m/s, cm. «Timer» = antall timer med data (&lt; 24 = ufullstendig døgn).${erObs(SEL)?'':' Valgt dato er et prognosedøgn – ingen stasjonsdata.'}</td></tr>`;
+  obsNote.textContent=`Tabell: valgt døgn. Klikk en stasjon for grafer (siste 72 t, timesverdier fra siste kjøring).`;
+  renderGts(d);renderObsCharts();
+}
+function renderGts(d){
+  const win=[-2,-1,0].map(n=>addD(SEL,n));
+  gtsTbl.innerHTML=`<tr><th class="l">Delområde</th><th>Rute moh.</th><th>Løsneomr. moh.</th>${win.map(x=>`<th>RR ${fmtD(x)}</th>`).join('')}<th>RR 7 d</th>${win.map(x=>`<th>Nysnø ${fmtD(x)}</th>`).join('')}<th>Tm</th><th>HS</th><th>ΔHS 3 d</th></tr>`+
+   d.delomr.map(x=>{const g=x.gts,v=(dd,k)=>g[dd]?.[k]??null;const s7=[...Array(7)].map((_,i)=>v(addD(SEL,-i),'rr'));const rr7=s7.some(z=>z==null)?null:s7.reduce((a,b)=>a+b,0);
+    const hs=v(SEL,'sd'),hs3=v(addD(SEL,-3),'sd');
+    return`<tr><td class="l">${x.navn}</td><td>${x.gmeta?.moh??'–'}</td><td>${x.bunn}–${x.topp}</td>${win.map(dd=>`<td>${nb(v(dd,'rr'))}</td>`).join('')}<td>${r1(rr7)}</td>${win.map(dd=>`<td>${ns(v(dd,'sdfsw'))}</td>`).join('')}<td>${tC(v(SEL,'tm'))}</td><td>${r1(hs)}</td><td>${hs!=null&&hs3!=null?Math.round(hs-hs3):'–'}</td></tr>`}).join('')+
+   `<tr><td class="l note" colspan="14">Enheter: mm, cm (nysnø, snødybde), °C. Dato = døgnets slutt kl. 06 UTC. ${erObs(SEL)?'':'Valgt dato er etter siste seNorge-døgn.'}</td></tr>`;
+}
+function renderObsCharts(){
+  const d=DATA.find(x=>x.id===obsRoad.value),s=d.st[obsStation.value];chObsT&&chObsT.destroy();chObsW&&chObsW.destroy();chObsT=chObsW=null;if(!s){rObs.innerHTML='';return}
+  rObs.innerHTML=vindrose(s.obs,`Vindrose ${esc(s.navn)} – siste 72 t`);
+  const o=s.obs,lab=o.map(x=>tLab(x.t)),sfx=o.some(x=>x.SFl!=null);
+  chObsT=new Chart(cObsT,{data:{labels:lab,datasets:[nbDS(o,'RR',false,'',{label:'Nedbør (mm/t)',data:o.map(x=>x.RR),backgroundColor:'#4a90c2'}),
+    {type:'line',label:'Temperatur (°C)',data:o.map(x=>x.T),borderColor:'#d0342c',pointRadius:0,yAxisID:'y'},{type:'line',label:'Snødybde (cm)',data:o.map(x=>x.HS),borderColor:'#444f55',borderDash:[4,3],pointRadius:0,yAxisID:'y2'}]},
+    options:opt(`${s.navn} – siste 72 t`,{y:{title:{display:true,text:'°C'}},y1:{position:'right',min:0,title:{display:true,text:'mm'},grid:{drawOnChartArea:false}},y2:{position:'right',title:{display:true,text:'cm'},grid:{drawOnChartArea:false}}})});
+  chObsW=new Chart(cObsW,{type:'line',data:{labels:lab,datasets:[{label:'Middelvind (m/s)',data:o.map(x=>x.FF),borderColor:'#2c6e49',pointRadius:0},{label:'Vindkast (m/s)',data:o.map(x=>x.FG),borderColor:'#8fbf9f',pointRadius:0},
+    {label:'Retning (°)',data:o.map(x=>x.DD),borderColor:'#999',showLine:false,pointRadius:2,yAxisID:'yd'},
+    ...(sfx?[{type:'bar',label:'Snøfokk lav (g/m² per t)',data:o.map(x=>x.SFl),backgroundColor:'rgba(106,61,154,.45)',yAxisID:'ys'},{type:'bar',label:'Snøfokk høy (g/m² per t)',data:o.map(x=>x.SFh),backgroundColor:'rgba(106,61,154,.85)',yAxisID:'ys'}]:[])]},
+    options:opt(`${s.navn} – vind${sfx?' og snøfokk':''}`,{y:{min:0,title:{display:true,text:'m/s'}},yd:{position:'right',min:0,max:360,ticks:{stepSize:90},grid:{drawOnChartArea:false}},...(sfx?{ys:{position:'right',min:0,title:{display:true,text:'g/m²'},grid:{drawOnChartArea:false}}}:{})})});
+  dagband(chObsT,o.map(x=>x.t),null,'y');dagband(chObsW,o.map(x=>x.t),'y');
+}
+obsRoad.onchange=()=>{obsStation.value='';renderObs();lastNotat('obs')};obsStation.onchange=renderObsCharts;
+
+/* ---------- Varsom ---------- */
+function rose(eksp){const s=String(eksp||'00000000');let p='';for(let i=0;i<8;i++){const a0=(i*45-22.5-90)*Math.PI/180,a1=(i*45+22.5-90)*Math.PI/180;
+  p+=`<path d="M30,30 L${30+26*Math.cos(a0)},${30+26*Math.sin(a0)} A26,26 0 0,1 ${30+26*Math.cos(a1)},${30+26*Math.sin(a1)} Z" fill="${s[i]==='1'?'#d0342c':'#eef0f1'}" stroke="#fff" stroke-width="1"/>`}
+  return`<svg width="60" height="60" viewBox="0 0 60 60" role="img" aria-label="Utsatte himmelretninger">${p}<text x="30" y="9" font-size="8" text-anchor="middle">N</text></svg>`}
+function hoyde(p){const h1=p.h1,h2=p.h2;if(h1==null)return'–';if(p.fill===1)return`over ${h1} moh.`;if(p.fill===2)return`under ${h1} moh.`;return`<span title="Varsom høydekode ${p.fill}">mellom ${Math.min(h1,h2)} og ${Math.max(h1,h2)} moh.</span>`}
+function renderVarsom(d){
+  const win=[-1,0,1].map(n=>addD(SEL,n)).filter(x=>d.varsom[x]);
+  if(!win.length){varsomBox.innerHTML=`<h3>Varsom</h3><p class="note">Ingen data fra Varsom for ${fmtD(SEL)}.</p>`;return}
+  varsomBox.innerHTML=`<h3>Varsom – skredproblem (${esc(d.region)})</h3>`+win.map(x=>{const v=d.varsom[x];return`<div${x===SEL?' style="background:#eef6ff"':''}><b>${fmtD(x)}</b> ${v.problemer.length?'':'<span class="note">– '+(v.utstedt?'ingen skredproblem':'ingen varsel utstedt')+'</span>'}
+   ${v.problemer.map(p=>`<div class="vprob">${rose(p.eksp)}<div><b>${esc(p.type)}</b> – ${esc(p.arsak)}<br><span class="note">Utsatt høyde: ${hoyde(p)} · Himmelretning: ${[...String(p.eksp||'')].map((c,i)=>c==='1'?["N","NØ","Ø","SØ","S","SV","V","NV"][i]:null).filter(Boolean).join(', ')||'–'}<br>
+   ${esc(p.storrelse)} · ${esc(p.utlosning)} · ${esc(p.sannsynlighet)} · ${esc(p.utbredelse)}</span></div></div>`).join('')}</div>`}).join('')+
+   `<p class="note" style="margin-top:6px">Kilde: varsom.no (NVE). Faregrad vises ikke.</p>`;
+}
+
+/* ---------- prognose ---------- */
+let selDel=0,chPrT,chPrW;
+function per(p,a,b){const s=p.slice(a,b);return s.length?{rr:+sum(s,'RR').toFixed(1),rrx:+sum(s,'RRmax').toFixed(1),Tt0:min(s,'T'),Tt1:max(s,'T'),Tb1:max(s,'Tb'),ff:max(s,'FF'),fg:max(s,'FG'),iso0:min(s,'ISO'),iso1:max(s,'ISO')}:null}
+function renderProg(){
+  const d=DATA.find(x=>x.id===progRoad.value);if(!d)return;renderVarsom(d);
+  const u=d.delomr.find(x=>x.upd)?.upd;progMeta.textContent=u?`MET Locationforecast, prognose oppdatert ${fmtT(new Date(u))} (${d.delomr[0].src})`:'Prognose mangler';
+  delTbl.innerHTML=`<tr><th class="l">Delområde</th><th class="l">Skredpunkt</th><th>Løsneområde (moh.)</th><th>RR 0–24 t</th><th>RR 24–48 t</th><th>RR 48–66 t</th><th>RR maks 0–24 t</th><th>T topp min/maks</th><th>T bunn maks</th><th>Vind maks</th><th>Kast maks</th><th>0-isoterm</th></tr>`+
+   d.delomr.map((x,i)=>{if(!x.prog.length)return`<tr><td class="l">${x.navn}</td><td colspan="11" class="l note">mangler</td></tr>`;const a=per(x.prog,0,24),b=per(x.prog,24,48),c=per(x.prog,48,66);
+    return`<tr class="click ${i==selDel?'sel':''}" onclick="selDel=${i};renderProg()"><td class="l"><b>${x.navn}</b></td><td class="l" title="${esc((x.skredpunkt||[]).join(', '))}">${esc((x.skredpunkt||[]).slice(0,3).join(', '))}${(x.skredpunkt||[]).length>3?' …':''}</td>
+     <td>${x.bunn}–${x.topp}</td><td>${nb(a.rr)}</td><td>${nb(b?.rr)}</td><td>${nb(c?.rr)}</td><td>${nb(a.rrx)}</td><td>${tC(a.Tt0)} / ${tC(a.Tt1)}</td><td>${tC(a.Tb1)}</td><td>${wv(a.ff)} ${bf(a.ff)}</td><td>${wv(a.fg)}</td><td>${isoF(a.iso0)}–${isoC(a.iso1,x.bunn)}</td></tr>`}).join('');
+  delNote.innerHTML='Verdier for 0–24 t fra prognosestart. Enheter: mm, °C, m/s, moh. Kun temperatur høydekorrigeres; nedbør og vind er felles for topp og bunn. RR maks = sum av 90-persentil per time (øvre anslag). Klikk en rad for grafer.<br>Farger: temperatur blå &lt; 0, rød &gt; 0 °C. Nedbør (døgn): &lt; 5 / 5–10 / 10–20 / 20–30 / ≥ 30 mm. Nysnø (seNorge): blå tekst ≥ 10 cm, blå boks ≥ 20 cm, mørk boks ≥ 40 cm (indikativ grense, ikke terskel). Vind og kast: gul ≥ 10,8, oransje ≥ 17,2, rød ≥ 24,5 m/s. Retning: blå = NV–N–NØ, oransje = S–SØ (tommelfingerregel fra Nord-Norge; passer ikke overalt, øst for Nordkapp er N–NØ aktuelt). 0-isoterm rød = over bunnen av løsneområdet, blå = under.';
+  const x=d.delomr[selDel]||d.delomr[0];chPrT&&chPrT.destroy();chPrW&&chPrW.destroy();chPrT=chPrW=null;if(!x||!x.prog.length){progTbl.innerHTML='';renderLang(x);return}
+  const p=x.prog;rPr.innerHTML=vindrose(p,`Vindrose prognose 0–${p.length} t`);delHead.textContent=`${x.navn} – løsneområder ${x.bunn}–${x.topp} moh.`;
+  const lab=p.map(v=>tLab(v.t));
+  chPrT=new Chart(cPrT,{data:{labels:lab,datasets:[nbDS(p,'RR',true,'',{label:'Nedbør median (mm/t)',data:p.map(v=>v.RR),backgroundColor:'#4a90c2'}),
+    ...(NBM==='t'?[{type:'bar',label:'Nedbør maks (mm/t)',data:p.map(v=>v.RRmax),backgroundColor:'rgba(74,144,194,.25)',yAxisID:'y1',grouped:false,order:3}]:[]),
+    {type:'line',label:`T topp ${x.topp} moh. (°C)`,data:p.map(v=>v.T),borderColor:'#d0342c',pointRadius:0,yAxisID:'y',order:1},
+    {type:'line',label:`T bunn ${x.bunn} moh. (°C)`,data:p.map(v=>v.Tb),borderColor:'#f08a7e',borderDash:[4,3],pointRadius:0,yAxisID:'y',order:1},
+    {type:'line',label:'0-isoterm (moh.)',data:p.map(v=>v.ISO),borderColor:'#ed9300',pointRadius:0,yAxisID:'y2',order:1}]},
+    options:opt('Temperatur i løsneområdet, nedbør og 0-isoterm',{y:{title:{display:true,text:'°C'}},y1:{position:'right',min:0,title:{display:true,text:'mm'},grid:{drawOnChartArea:false}},y2:{position:'right',min:0,title:{display:true,text:'moh.'},grid:{drawOnChartArea:false}}})});
+  chPrW=new Chart(cPrW,{type:'line',data:{labels:lab,datasets:[{label:'Middelvind (m/s)',data:p.map(v=>v.FF),borderColor:'#2c6e49',pointRadius:0},{label:'Vindkast (m/s)',data:p.map(v=>v.FG),borderColor:'#8fbf9f',pointRadius:0},
+    {label:'Retning (°)',data:p.map(v=>v.DD),borderColor:'#999',showLine:false,pointRadius:2,yAxisID:'yd'}]},
+    options:opt('Vind (10 m, ikke høydekorrigert)',{y:{min:0,title:{display:true,text:'m/s'}},yd:{position:'right',min:0,max:360,ticks:{stepSize:90},grid:{drawOnChartArea:false}}})});
+  dagband(chPrT,p.map(v=>v.t),null,'y');dagband(chPrW,p.map(v=>v.t),'y');
+  const rows=[];for(let j=0;j+2<p.length;j+=3){const s=p.slice(j,j+3);rows.push({t:s[0].t,T:s.at(-1).T,Tb:s.at(-1).Tb,rr:sum(s,'RR'),rrx:sum(s,'RRmax'),ff:max(s,'FF'),fg:max(s,'FG'),dd:s.at(-1).DD,iso:s.at(-1).ISO})}
+  progTbl.innerHTML=`<tr><th class="l">Periode fra</th><th>T topp (°C)</th><th>T bunn (°C)</th><th>RR 3 t (mm)</th><th>RR maks 3 t (mm)</th><th>Vind maks (m/s)</th><th>Kast maks (m/s)</th><th>Retning</th><th>0-isoterm (moh.)</th></tr>`+
+   rows.map(v=>`<tr><td class="l">${fmtT(v.t)}</td><td>${tC(v.T)}</td><td>${tC(v.Tb)}</td><td>${r1(v.rr)}</td><td>${r1(v.rrx)}</td><td>${wv(v.ff)} ${bf(v.ff)}</td><td>${wv(v.fg)}</td><td>${arrow(v.dd)} ${dirC(v.dd)}</td><td>${isoC(v.iso,x.bunn)}</td></tr>`).join('');
+  renderLang(x);
+}
+
+let chPrL;
+function renderLang(x){chPrL&&chPrL.destroy();chPrL=null;const L=x?.lang||[];
+  if(!L.length){langTbl.innerHTML='<tr><td class="l note">Lengre prognose er ikke hentet ennå (kommer ved neste oppdatering).</td></tr>';return}
+  L.forEach(v=>v.ISO=v.T!=null?isoterm(v.T,v.Tb,x.topp,x.bunn):null);
+  langHead.textContent=`Lengre prognose – 6-timers verdier, ${x.navn} (til ${fmtT(L.at(-1).t)})`;
+  chPrL=new Chart(cPrL,{data:{labels:L.map(v=>tLab(v.t)),datasets:[
+    nbDS(L,'RR',true,'',{label:'Nedbør 6 t (mm)',data:L.map(v=>v.RR),backgroundColor:'#4a90c2'}),
+    ...(NBM==='t'?[{type:'bar',label:'Nedbør 6 t maks (mm)',data:L.map(v=>v.RRmax),backgroundColor:'rgba(74,144,194,.25)',yAxisID:'y1',grouped:false,order:3}]:[]),
+    {type:'line',label:`T topp ${x.topp} moh. (°C)`,data:L.map(v=>v.T),borderColor:'#d0342c',pointRadius:0,yAxisID:'y',order:1},
+    {type:'line',label:`T bunn ${x.bunn} moh. (°C)`,data:L.map(v=>v.Tb),borderColor:'#f08a7e',borderDash:[4,3],pointRadius:0,yAxisID:'y',order:1},
+    {type:'line',label:'Middelvind (m/s)',data:L.map(v=>v.FF),borderColor:'#2c6e49',pointRadius:0,yAxisID:'yw',order:1},
+    {type:'line',label:'0-isoterm (moh.)',data:L.map(v=>v.ISO),borderColor:'#ed9300',pointRadius:0,yAxisID:'y2',order:1,hidden:true}]},
+    options:opt('Temperatur, nedbør og vind – hele prognoseperioden',{y:{title:{display:true,text:'°C'}},y1:{position:'right',min:0,title:{display:true,text:'mm'},grid:{drawOnChartArea:false}},yw:{position:'right',min:0,title:{display:true,text:'m/s'},grid:{drawOnChartArea:false}},y2:{display:false,min:0}})});
+  dagband(chPrL,L.map(v=>v.t),'yw','y');
+  langTbl.innerHTML=`<tr><th class="l">Periode fra</th><th>T topp (°C)</th><th>T bunn (°C)</th><th>T maks/min 6 t</th><th>RR 6 t (mm)</th><th>RR maks 6 t (mm)</th><th>Vind (m/s)</th><th>Kast (m/s)</th><th>Retning</th><th>0-isoterm (moh.)</th></tr>`+
+   L.map(v=>`<tr><td class="l">${fmtT(v.t)}</td><td>${tC(v.T)}</td><td>${tC(v.Tb)}</td><td>${tC(v.Tx)} / ${tC(v.Tn)}</td><td>${r1(v.RR)}</td><td>${r1(v.RRmax)}</td><td>${wv(v.FF)} ${bf(v.FF)}</td><td>${wv(v.FG)}</td><td>${arrow(v.DD)} ${dirC(v.DD)}</td><td>${isoC(v.ISO,x.bunn)}</td></tr>`).join('');
+}
+progRoad.onchange=()=>{selDel=0;renderProg();lastNotat('prog')};
+
+/* ---------- MEPS-kart ---------- */
+const MP=BAKED?.meps;let kTimer=null,kmap=null,kOv={},kPilLag=null,kLeg=null;
+const p2=n=>String(n).padStart(2,'0');
+const erDag=p=>['rr24','sf24','fg24'].includes(p);
+function kInit(){
+  if(kmap||!MP)return;
+  kmap=L.map('kmap').setView([65,14],4);kmap.createPane('bg');kmap.getPane('bg').style.zIndex=250;kmap.createPane('meps');kmap.getPane('meps').style.zIndex=320;kmap.getPane('meps').style.pointerEvents='none';
+  bakgrunnLag(kmap);
+  kmap.attributionControl.addAttribution('MEPS © MET Norway (CC BY 4.0)');
+  DATA.forEach(d=>{(d.veglinje?.linjer||[]).forEach(l=>{L.polyline(l,{color:'#fff',weight:5,opacity:.9}).addTo(kmap);L.polyline(l,{color:'#1f2a30',weight:2.5}).addTo(kmap).bindTooltip(d.navn)});
+    d.delomr.forEach(p=>(p.polys||[]).forEach(q=>L.polygon(q.c,{color:'#7a1d18',weight:1,fill:false}).addTo(kmap).bindTooltip(`${d.navn} – ${esc(q.n)}<br>${q.z[0]}–${q.z[1]} moh.`)));
+    d.st.filter(s=>s.lat&&!s.utenData).forEach(s=>L.circleMarker([s.lat,s.lon],{radius:3,color:'#123',weight:1,fillColor:'#fff',fillOpacity:1}).addTo(kmap).bindTooltip(`${esc(s.navn)}${s.moh!=null?', '+s.moh+' moh.':''}`))});
+  Object.entries(MP.regioner).forEach(([k,r])=>kOv[k]=L.imageOverlay('',r.grenser,{pane:'meps',interactive:false}).addTo(kmap));
+  kPilLag=L.layerGroup().addTo(kmap);
+  kLeg=L.control({position:'bottomright'});kLeg.onAdd=()=>L.DomUtil.create('div','legend');kLeg.addTo(kmap);
+  DATA.forEach(d=>kZoom.add(new Option(d.navn,d.id)));
+}
+const pil=(dd,ff)=>{const c=ff>=17.2?'#c41f2a':ff>=10.8?'#e8601c':ff>=5.5?'#1f2a30':'#5b6770';const sz=ff>=10.8?20:16;
+  return L.divIcon({className:'',iconSize:[sz,sz],html:`<svg width="${sz}" height="${sz}" viewBox="-10 -10 20 20" style="transform:rotate(${dd+180}deg)"><path d="M0 9 L0 -7 M-4 -2 L0 -8 L4 -2" stroke="${c}" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`})};
+function renderKart(){
+  if(!MP){kStatus.textContent='MEPS-kartene er ikke hentet ennå.';return}
+  kInit();setTimeout(()=>kmap.invalidateSize(),50);
+  const p=kProd.value,dag=erDag(p),n=dag?MP.dager.length:MP.steg.length;
+  kT.max=n-1;if(+kT.value>n-1)kT.value=n-1;const i=+kT.value;
+  Object.entries(kOv).forEach(([k,o])=>o.setUrl(`kart/meps/${k}_${p}_${dag?i:p2(i)}.png`));
+  const lt=t=>new Date(t).toLocaleString('nb-NO',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Oslo'});
+  if(dag){const d=MP.dager[i];kLbl.textContent=`${MP.prod[p].navn}: ${lt(d.fra)} – ${lt(d.til)}`+((new Date(d.til)-new Date(d.fra))<864e5?' (kortere døgn)':'')}
+  else{const t=MP.steg[i];kLbl.textContent=`${MP.prod[p].navn}: ${p==='rr3'||p==='fg'?'siste 3 t til ':''}${lt(t)} (+${Math.round((new Date(t)-new Date(MP.start))/36e5)} t)`}
+  kStatus.textContent=`MEPS-kjøring ${lt(MP.start)} (${MP.kjoring}), hentet ${lt(MP.hentet)}.`;
+  kPilLag.clearLayers();
+  if(kPil.checked&&!dag&&(p==='ff'||p==='fg')){const z=kmap.getZoom(),hopp=z<=5?3:z<=6?2:1;
+    Object.values(MP.vind).forEach(v=>{const m=v.ll.length,st=v.steg[i];v.ll.forEach((ll,j)=>{if(j%hopp)return;const dd=st[j],ff=st[m+j]/10;if(dd<0||ff<0)return;
+      L.marker(ll,{icon:pil(dd,ff),interactive:true}).bindTooltip(`${Math.round(dd)}° ${ff.toFixed(1)} m/s`).addTo(kPilLag)})})}
+  const P=MP.prod[p],g=P.grenser,f=P.farger;
+  kLeg.getContainer().innerHTML=`<b>${P.navn} (${P.enhet})</b><br>`+f.map((c,j)=>`<i style="width:14px;height:10px;background:${c}"></i>${p==='tw0'&&j===0?'1':g[j]}${g[j+1]!=null?'–'+g[j+1]:'+'}`).reverse().join('<br>')
+    +(p==='tw0'?'<br><span class="note">ingen farge: 0 m (våttemp. &lt; 0 °C ned til havnivå)</span>':`<br><span class="note">under ${g[0]}: ingen farge</span>`)+`<br><i style="width:14px;height:0;border-top:2px solid #7a1d18"></i>løsneområde`;
+}
+kProd.onchange=kT.oninput=kPil.onchange=renderKart;
+kPrev.onclick=()=>{kT.value=Math.max(0,+kT.value-1);renderKart()};kNext.onclick=()=>{kT.value=Math.min(+kT.max,+kT.value+1);renderKart()};
+kPlay.onclick=()=>{if(kTimer){clearInterval(kTimer);kTimer=null;kPlay.textContent='Spill av';return}kPlay.textContent='Stopp';kTimer=setInterval(()=>{kT.value=(+kT.value+1)%(+kT.max+1);renderKart()},900)};
+kZoom.onchange=()=>{const d=DATA.find(x=>x.id===kZoom.value);if(!d){kmap.setView([65,14],4);return}
+  const ll=[...(d.veglinje?.linjer||[]).flat(),...d.delomr.flatMap(p=>(p.polys||[]).flatMap(q=>q.c))];if(ll.length)kmap.fitBounds(ll,{padding:[60,60],maxZoom:11})};
+
+/* ---------- oppstart ---------- */
+mangler.innerHTML='<ul class="note">'+(CONFIG.mangler||[]).map(m=>`<li>${esc(m)}</li>`).join('')+'</ul>';
+function renderAll(){renderCards();renderMap();const a=document.querySelector('section.active')?.id;({prog:renderProg,obs:renderObs,terskel:renderTer,skygge:renderSkygge})[a]?.()}
+btnRefresh.onclick=liveProg;
+function setSel(i){i=Math.max(0,Math.min(DAGER.length-1,i));SEL=DAGER[i];dSlider.value=i;dPrev.disabled=i===0;dNext.disabled=i===DAGER.length-1;
+  dLbl.innerHTML=`<b>${fmtD(SEL)}</b> <span class="note">døgn ${fmtD(addD(SEL,-1))} 06 – ${fmtD(SEL)} 06 UTC · ${SEL===D0?'siste observerte døgn':SEL>D0?'<b>prognose</b>':'observert'}</span>`;
+  renderAll();renderRank()}
+dSlider.max=DAGER.length-1;dFra.textContent=fmtD(DAGER[0]);dTil.textContent=fmtD(DAGER[DAGER.length-1]);
+dSlider.oninput=()=>setSel(+dSlider.value);dPrev.onclick=()=>setSel(DAGER.indexOf(SEL)-1);dNext.onclick=()=>setSel(DAGER.indexOf(SEL)+1);dIdag.onclick=()=>setSel(DAGER.indexOf(D0));
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target!==dSlider||e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft'&&e.target!==dSlider)setSel(DAGER.indexOf(SEL)-1);if(e.key==='ArrowRight'&&e.target!==dSlider)setSel(DAGER.indexOf(SEL)+1)});
+if(!TA)document.querySelectorAll('.ta').forEach(e=>e.style.display='none');
+
+
+/* ---------- meteogram (yr-stil) for punktene i skredvarslingsplanene ---------- */
+const MGP=CONFIG.meteogram||{};
+let MGV='t1';
+CONFIG.strekninger.forEach(r=>{if(MGP[r.id])mgRoad.add(new Option(r.navn,r.id))});
+const MG_DAG=['Sø.','Ma.','Ti.','On.','To.','Fr.','Lø.'],MG_MND=['jan.','feb.','mars','apr.','mai','juni','juli','aug.','sep.','okt.','nov.','des.'];
+function mgSvg(d,v,uid,cw){
+  const s=d[v],n=s.t.length;if(!n)return '<p class="note">Ingen data.</p>';
+  const tid=s.t.map(t=>new Date(t+':00:00Z')),op=tid.map(osloParts);
+  const L=44,R=40,dx=Math.max(v==='t1'?10:14,Math.min(v==='t1'?24:34,((cw||1300)-L-R)/n)),W=L+R+dx*n,
+    LS=v==='t1'?(dx*2>=22?2:dx*3>=22?3:6):(dx>=24?1:2),top=46,h1=170,gap=26,h2=86,aH=22,H=top+h1+gap+h2+aH+28;
+  const X=i=>L+dx*i,XC=i=>L+dx*(i+.5);  // X: tidspunkt (momentanverdier), XC: midt i perioden (nedbør, symbol)
+  // temperatur-akse
+  const tv=s.T.filter(x=>x!=null);let tmin=Math.min(...tv),tmax=Math.max(...tv);
+  tmin=Math.floor((tmin-2)/4)*4;tmax=Math.ceil((tmax+5)/4)*4;if(tmax<=0)tmax=4;if(tmin>=0)tmin=-4;if(tmax-tmin<12)tmax=tmin+12;
+  const yT=t=>top+h1-(t-tmin)/(tmax-tmin)*h1;
+  const rmax=Math.max(4,Math.ceil(Math.max(0,...s.RRx.map(x=>x||0),...s.RR.map(x=>x||0))/2)*2*(v==='t1'?1:1));
+  const yR=r=>top+h1-r/rmax*h1;
+  const wmax=Math.max(4,Math.ceil(Math.max(0,...s.FG.map(x=>x||0),...s.FF.map(x=>x||0))/4)*4);
+  const y2=top+h1+gap,yW=w=>y2+h2-w/wmax*h2;
+  let o=`<svg class="mgsvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif">
+<defs><pattern id="hat${uid}" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#cfe3fa"/><line x1="0" y1="0" x2="0" y2="4" stroke="#5ea3ef" stroke-width="1.6"/></pattern>
+<linearGradient id="tg${uid}" gradientUnits="userSpaceOnUse" x1="0" y1="${top}" x2="0" y2="${top+h1}">${(()=>{const f=Math.min(1,Math.max(0,(yT(0)-top)/h1));return `<stop offset="0" stop-color="#c60000"/><stop offset="${f}" stop-color="#c60000"/><stop offset="${f}" stop-color="#005be7"/><stop offset="1" stop-color="#005be7"/>`})()}</linearGradient></defs>`;
+  // annenhver dag skyggelagt
+  {let start=0,nr=0;const nyD=i=>i>0&&(+op[i].hour===0||(v==='t6'&&+op[i].hour<6&&+op[i-1].hour>=18));
+   for(let i=1;i<=n;i++){if(i===n||nyD(i)){if(nr%2)o+=`<rect x="${L+dx*start}" y="${top}" width="${dx*(i-start)}" height="${y2+h2-top}" fill="#444f55" opacity=".06"/>`;start=i;nr++}}}
+  // rutenett
+  const step=tmax-tmin>24?8:4;
+  for(let t=tmin;t<=tmax;t+=step){const y=yT(t);o+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e3e3e3"/><text x="${L-6}" y="${y+4}" font-size="11" text-anchor="end" fill="#555">${t}°</text>`}
+  for(let r=0;r<=rmax;r+=rmax/4){o+=`<text x="${W-R+6}" y="${yR(r)+4}" font-size="11" fill="#555">${+r.toFixed(1)}</text>`}
+  o+=`<line x1="${L}" x2="${W-R}" y1="${yT(0)}" y2="${yT(0)}" stroke="#555" stroke-width="1.2" stroke-dasharray="6 3"/>`;
+  for(let w=0;w<=wmax;w+=wmax/4){const y=yW(w);o+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e3e3e3"/><text x="${L-6}" y="${y+4}" font-size="11" text-anchor="end" fill="#555">${w}</text>`}
+  o+=`<text x="${L-6}" y="${top-26}" font-size="10" text-anchor="end" fill="#555">°C</text><text x="${W-R+6}" y="${top-26}" font-size="10" fill="#555">mm</text><text x="${L-6}" y="${y2-6}" font-size="10" text-anchor="end" fill="#555">m/s</text>`;
+  // tidsakse, døgnskiller
+  const fny=op.findIndex((q,k)=>k>0&&(+q.hour===0||(v==='t6'&&+q.hour<6&&+op[k-1].hour>=18)));
+  for(let i=0;i<n;i++){const hr=+op[i].hour,x0=L+dx*i;
+    const ny=hr===0||(v==='t6'&&hr<6&&i>0&&+op[i-1].hour>=18);
+    if(i>0)o+=`<line x1="${x0}" x2="${x0}" y1="${top}" y2="${y2+h2}" stroke="${ny?'#9a9a9a':'#f0f0f0'}"/>`;
+    if(v==='t1'?hr%LS===0:i%LS===0)o+=`<text x="${x0}" y="${top-8}" font-size="11" text-anchor="middle" fill="#333">${op[i].hour}</text>`;
+    if((i===0&&(fny<0||fny*dx>95))||ny){const dd=tid[i];const wd=MG_DAG[new Date(dd.toLocaleString('en-US',{timeZone:'Europe/Oslo'})).getDay()];
+      o+=`<text x="${x0+2}" y="${top-26}" font-size="13" font-weight="600" fill="#1f2a30">${wd} ${+op[i].day}. ${MG_MND[+op[i].month-1]}</text>`}}
+  o+=`<rect x="${L}" y="${top}" width="${W-L-R}" height="${h1}" fill="none" stroke="#bbb"/><rect x="${L}" y="${y2}" width="${W-L-R}" height="${h2}" fill="none" stroke="#bbb"/>`;
+  // nedbør
+  const bw=dx*.72;
+  for(let i=0;i<n;i++){const r=s.RR[i]||0,rx=Math.max(r,s.RRx[i]||0),x=XC(i)-bw/2;
+    if(rx>r)o+=`<rect x="${x}" y="${yR(rx)}" width="${bw}" height="${yR(r)-yR(rx)}" fill="url(#hat${uid})"/>`;
+    if(r>0)o+=`<rect x="${x}" y="${yR(r)}" width="${bw}" height="${top+h1-yR(r)}" fill="#006edb"/>`;
+    if(dx>=18&&r>=(v==='t1'?.3:1))o+=`<text x="${XC(i)}" y="${yR(rx)-3}" font-size="9" text-anchor="middle" fill="#006edb">${r.toFixed(1)}</text>`}
+  // temperatur
+  const pts=s.T.map((t,i)=>t==null?null:`${X(i).toFixed(1)},${yT(t).toFixed(1)}`).filter(Boolean).join(' ');
+  o+=`<polyline points="${pts}" fill="none" stroke="url(#tg${uid})" stroke-width="2.6" stroke-linejoin="round"/>`;
+  // symboler
+  const ss=Math.max(1,Math.ceil(26/dx)),iz=Math.min(30,dx*ss-2);
+  for(let i=0;i<n;i+=ss){if(!s.S[i]||s.T[i]==null)continue;const y=Math.max(top+1,Math.min(yT(s.T[i])-iz-6,top+h1-iz));
+    o+=`<image href="kart/ikon/${s.S[i]}.svg" x="${XC(i)-iz/2}" y="${y}" width="${iz}" height="${iz}"/>`}
+  // kulinggrenser (Beaufort)
+  [[10.8,'liten kuling'],[17.2,'sterk kuling'],[24.5,'full storm']].forEach(([w,t])=>{if(w>wmax)return;const y=yW(w);
+    o+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#b0302a" stroke-dasharray="4 3" opacity=".55"/><text x="${W-R-4}" y="${y-3}" font-size="9.5" text-anchor="end" fill="#b0302a">${t}</text>`});
+  // vind
+  const lin=k=>s[k].map((w,i)=>w==null?null:`${X(i).toFixed(1)},${yW(w).toFixed(1)}`).filter(Boolean).join(' ');
+  o+=`<polyline points="${lin('FG')}" fill="none" stroke="#7b2bd6" stroke-width="1.6" stroke-dasharray="5 3"/><polyline points="${lin('FF')}" fill="none" stroke="#7b2bd6" stroke-width="2.4"/>`;
+  // vindretning (pil peker dit vinden blåser)
+  for(let i=0;i<n;i+=ss){if(s.DD[i]==null)continue;const cx=X(i),cy=y2+h2+aH/2+2;
+    o+=`<g transform="translate(${cx},${cy}) rotate(${s.DD[i]})"><line x1="0" y1="-7" x2="0" y2="6" stroke="#222" stroke-width="1.4"/><path d="M-3.5,2.5 L0,7.5 L3.5,2.5" fill="none" stroke="#222" stroke-width="1.4"/></g>`}
+  // forklaring
+  const ly=H-8;o+=`<g font-size="11" fill="#333"><rect x="${L}" y="${ly-9}" width="14" height="3" fill="#c60000"/><rect x="${L}" y="${ly-6}" width="14" height="3" fill="#005be7"/><text x="${L+18}" y="${ly}">Temperatur °C</text>
+<rect x="${L+120}" y="${ly-10}" width="10" height="10" fill="#006edb"/><text x="${L+134}" y="${ly}">Nedbør mm</text><rect x="${L+214}" y="${ly-10}" width="10" height="10" fill="url(#hat${uid})"/><text x="${L+228}" y="${ly}">Maks nedbør mm</text>
+<line x1="${L+340}" x2="${L+356}" y1="${ly-4}" y2="${ly-4}" stroke="#7b2bd6" stroke-width="2.4"/><text x="${L+360}" y="${ly}">Vind m/s</text><line x1="${L+430}" x2="${L+446}" y1="${ly-4}" y2="${ly-4}" stroke="#7b2bd6" stroke-width="1.6" stroke-dasharray="5 3"/><text x="${L+450}" y="${ly}">Vindkast m/s</text></g>`;
+  o+=`<line class="mghov" x1="0" x2="0" y1="${top}" y2="${y2+h2}" stroke="#1f2a30" stroke-width="1" opacity="0"/><rect class="mghit" x="${L}" y="${top}" width="${W-L-R}" height="${y2+h2-top}" fill="transparent" data-dx="${dx}" data-l="${L}"/></svg>`;
+  return o}
+const MG_RET=['N','NNØ','NØ','ØNØ','Ø','ØSØ','SØ','SSØ','S','SSV','SV','VSV','V','VNV','NV','NNV'];
+function renderMgram(){const vid=mgRoad.value,L=MGP[vid]||[],BM=(BAKED&&BAKED.mgram&&BAKED.mgram[vid])||{};
+  document.querySelectorAll('.mgv').forEach(b=>b.classList.toggle('on',b.dataset.v===MGV));
+  let upd=null;
+  mgBody.innerHTML=L.map((p,i)=>{const d=BM[String(i)];if(d&&(!upd||d.upd>upd))upd=d.upd;
+    const yr=p.yr?`<a href="https://www.yr.no/nb/værvarsel/graf/${p.yr}" target="_blank" rel="noopener">yr.no ↗</a>`:`<a href="https://www.yr.no/nb/detaljer/graf/${p.lat},${p.lon}" target="_blank" rel="noopener">yr.no ↗</a>`;
+    return `<div class="card mgcard"><div class="mghead"><label class="mgvalg" title="Ta med i skredvarselet"><input type="checkbox" data-mgi="${i}" ${mgValg(vid).includes(i)?'checked':''}> i varsel</label> <b>${p.n}</b> <span class="note">${p.moh} moh · ${p.lat.toFixed(3)}° N, ${p.lon.toFixed(3)}° Ø</span> <span class="note" style="margin-left:auto">${yr}</span></div>
+      <div class="mgwrap" data-i="${i}">${d?mgSvg(d,MGV,vid+i,MGW()):'<p class="note">Ingen prognose i siste oppdatering.</p>'}<div class="mgtip"></div></div></div>`}).join('')||'<p class="note">Ingen meteogrampunkter er lagt inn for denne strekningen.</p>';
+  mgMeta.textContent=upd?'Modellkjøring '+fmtT(new Date(upd)):'';
+  mgBody.querySelectorAll('.mgwrap').forEach(w=>{const d=BM[w.dataset.i];if(!d)return;const s=d[MGV],hit=w.querySelector('.mghit'),hov=w.querySelector('.mghov'),tip=w.querySelector('.mgtip');if(!hit)return;
+    const dx=+hit.dataset.dx,L0=+hit.dataset.l;
+    hit.onmousemove=e=>{const r=w.querySelector('svg').getBoundingClientRect(),x=e.clientX-r.left,i=Math.max(0,Math.min(s.t.length-1,Math.round((x-L0)/dx)));
+      const cx=L0+dx*i;hov.setAttribute('x1',cx);hov.setAttribute('x2',cx);hov.setAttribute('opacity',.5);
+      const t=new Date(s.t[i]+':00:00Z'),f=v=>v==null?'–':v;
+      tip.innerHTML=`<b>${tLab(t)}${MGV==='t6'?'–'+String((+osloParts(new Date(t.getTime()+6*36e5)).hour)).padStart(2,'0'):''}</b><br>${f(s.T[i])} °C${s.Tx?` (${f(s.Tn[i])} / ${f(s.Tx[i])})`:''}<br>Nedbør ${f(s.RR[i])} mm (maks ${f(s.RRx[i])})<br>Vind ${f(s.FF[i])} (${f(s.FG[i])}) m/s ${s.DD[i]==null?'':MG_RET[Math.round(s.DD[i]/22.5)%16]}${s.FF[i]==null?'':' · '+BFN[bfNr(s.FF[i])].toLowerCase()}`;
+      tip.style.display='block';const wl=w.getBoundingClientRect();let tx=e.clientX-wl.left+w.scrollLeft+14;if(tx+170>w.scrollLeft+w.clientWidth)tx-=190;tip.style.left=tx+'px';tip.style.top=(e.clientY-wl.top+10)+'px'};
+    hit.onmouseleave=()=>{hov.setAttribute('opacity',0);tip.style.display='none'}});
+}
+mgRoad.onchange=renderMgram;
+/* valg av meteogram til skredvarselet (yr-meteogram for punktet tas inn i e-posten) */
+const mgKey=id=>'vp_mgvalg_'+id;
+function mgValg(id){try{return JSON.parse(localStorage.getItem(mgKey(id))||'[]')}catch(e){return[]}}
+function mgSettValg(id,L){try{localStorage.setItem(mgKey(id),JSON.stringify(L))}catch(e){}}
+mgBody.addEventListener('change',e=>{const c=e.target.closest('[data-mgi]');if(!c)return;const id=mgRoad.value,i=+c.dataset.mgi;
+  let L=mgValg(id).filter(x=>x!==i);if(c.checked)L.push(i);L.sort((a,b)=>a-b);mgSettValg(id,L);mgVarselInfo.textContent=`${L.length} valgt`});
+/* meteogrammet som PNG (48 t), så det vises i e-post uten eksterne bilder */
+const IKON={};
+async function ikonData(u){if(!IKON[u]){const t=await (await fetch(u)).text();IKON[u]='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(t)))}return IKON[u]}
+async function mgPng(vid,i){const d=BAKED?.mgram?.[vid]?.[String(i)];if(!d)return null;
+  let s=mgSvg(d,'t1','png'+i,640);const W=+s.match(/width="([\d.]+)"/)[1],H=+s.match(/height="([\d.]+)"/)[1];
+  for(const u of [...new Set(s.match(/kart\/ikon\/[^"]+\.svg/g)||[])]){try{s=s.split(u).join(await ikonData(u))}catch(e){}}
+  s=s.replace(/<line class="mghov"[^>]*\/>/,'').replace(/(<svg[^>]*>)/,'$1<rect width="100%" height="100%" fill="#fff"/>');
+  const im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);await im.decode();
+  const k=2,c=document.createElement('canvas');c.width=W*k;c.height=H*k;const g=c.getContext('2d');g.scale(k,k);g.drawImage(im,0,0,W,H);
+  return{png:c.toDataURL('image/png'),w:W,h:H}}
+mgTilVarsel.onclick=async()=>{const id=mgRoad.value,P=MGP[id]||[],L=mgValg(id).filter(i=>P[i]),r=DATA.find(x=>x.id===id);
+  if(!L.length){mgVarselInfo.textContent='Hak av «i varsel» på ett eller flere meteogram først.';return}
+  mgVarselInfo.textContent='Lager bilder …';
+  const mg=[];for(const i of L){const p=P[i];let b=null;try{b=await mgPng(id,i)}catch(e){console.error(e)}
+    mg.push({n:p.n,moh:p.moh,yr:p.yr||null,lat:p.lat,lon:p.lon,...(b||{})})}
+  SKRED.send('varsel',{kilde:'vaerpakke',prosjekt:id,navn:r?.navn,meteogram:mg});
+  mgVarselInfo.textContent=`Sendt ${L.length} meteogram til Varselskriver for ${r?.navn||id}.`};
+function MGW(){const w=mgBody.clientWidth||1400,en=getComputedStyle(mgBody).gridTemplateColumns.split(' ').length<2;return Math.floor((en?w:(w-12)/2)-26)}
+let mgRT;addEventListener('resize',()=>{clearTimeout(mgRT);mgRT=setTimeout(()=>{if(document.getElementById('mgram').classList.contains('active'))renderMgram()},250)});
+document.querySelectorAll('.mgv').forEach(b=>b.onclick=()=>{MGV=b.dataset.v;renderMgram()});
+
+/* ---------- notater -> Varselskriver ---------- */
+const NOT={obs:{ta:'obsNotat',sel:()=>obsRoad.value,felt:'vaerhittil',navn:'Været fram til nå',btn:'obsTilVarsel',info:'obsNotatInfo'},
+           prog:{ta:'progNotat',sel:()=>progRoad.value,felt:'vaerkomm',navn:'Kommentar til værprognose',btn:'progTilVarsel',info:'progNotatInfo'}};
+const notKey=(k,id)=>`vp_notat_${k}_${id}`;
+const notGet=(k,id)=>{try{return localStorage.getItem(notKey(k,id))||''}catch(e){return ''}};
+const notSet=(k,id,v)=>{try{localStorage.setItem(notKey(k,id),v)}catch(e){}};
+function lastNotat(k){const n=NOT[k];document.getElementById(n.ta).value=notGet(k,n.sel());document.getElementById(n.info).textContent=''}
+Object.entries(NOT).forEach(([k,n])=>{const ta=document.getElementById(n.ta);
+  ta.oninput=()=>notSet(k,n.sel(),ta.value);
+  document.getElementById(n.btn).onclick=()=>{const t=ta.value.trim(),id=n.sel(),r=DATA.find(x=>x.id===id);
+    if(!t){document.getElementById(n.info).textContent='Notatet er tomt.';return}
+    SKRED.send('varsel',{kilde:'vaerpakke',prosjekt:id,navn:r?.navn,felt:{[n.felt]:t}});
+    document.getElementById(n.info).textContent=`Sendt til «${n.navn}» for ${r?.navn||id}.`}});
+
+/* ---------- arbeidsprosjekt (låst fra menysiden) ---------- */
+SKRED.on((id,laas)=>{const sel=[obsRoad,progRoad,terRoad,skRoad,kamRoad,mgRoad,rankRoad,mapZoom];
+  sel.forEach(s=>{if(laas&&[...s.options].some(o=>o.value===id))s.value=id;s.disabled=laas;s.title=laas?'Låst til arbeidsprosjektet (velges i menyen øverst)':''});
+  if(!laas){rankRoad.value='';}
+  selDel=0;try{mapZoom.onchange()}catch(e){}renderAll();renderRank();
+  const a=document.querySelector('section.active')?.id;if(a==='kamera')renderKamera();if(a==='mgram')renderMgram();lastNotat('obs');lastNotat('prog')});
+
+renderStatus();setSel(DAGER.indexOf(SEL));setInterval(renderStatus,60e3);lastNotat('obs');lastNotat('prog');
+</script>
+</body>
+</html>

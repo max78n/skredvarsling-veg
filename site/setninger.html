@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setningsassistent – stedsspesifikk skredvarsling</title>
+<style>
+:root{--bg:#f4f5f6;--card:#fff;--ink:#1f2a30;--mut:#5f6b72;--line:#d6dadd;--acc:#2b5f75;--accl:#e3eef2;
+--g:#92d050;--y:#ffe600;--o:#ffb000;--r:#e8322b}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:12px 18px;background:#444f55;color:#fff;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .sp{flex:1}
+header button{background:transparent;color:#fff;border:1px solid #8a969c;border-radius:4px;padding:4px 10px;cursor:pointer;font:inherit}
+main{display:grid;grid-template-columns:300px 1fr 420px;gap:12px;padding:12px;align-items:start}
+@media(max-width:1200px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:0 0 8px}
+h3{font-size:14px;margin:14px 0 6px}
+.grp{margin-bottom:12px}
+.lbl{font-size:12px;color:var(--mut);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:14px;padding:3px 10px;cursor:pointer;font:inherit;font-size:13px}
+.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chip.lv{border-width:2px}
+.chip.lv.on{color:#000}
+.chip[data-v="Grønt"].on{background:var(--g);border-color:#5f9a1f}
+.chip[data-v="Gult"].on{background:var(--y);border-color:#b8a400}
+.chip[data-v="Oransje"].on{background:var(--o);border-color:#b37a00}
+.chip[data-v="Rødt"].on{background:var(--r);border-color:#a01a14;color:#fff}
+textarea,input,select{font:inherit;border:1px solid var(--line);border-radius:4px;padding:6px;width:100%}
+textarea{resize:vertical}
+.hint{font-size:12px;color:var(--mut)}
+.sec{border-top:1px solid var(--line);padding-top:6px;margin-top:6px}
+.sec:first-child{border-top:0;margin-top:0}
+.sechd{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.sechd .n{font-size:12px;color:var(--mut)}
+.sug{display:flex;gap:8px;align-items:flex-start;padding:6px;border-radius:4px;margin:3px 0;border:1px solid transparent}
+.sug:hover{background:var(--accl)}
+.sug.picked{background:#eef6e8;border-color:#b9d9a0}
+.sug .txt{flex:1}
+.sug .meta{font-size:11px;color:var(--mut)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;border:1px solid #0003}
+.add{flex:none;border:1px solid var(--acc);color:var(--acc);background:#fff;border-radius:4px;cursor:pointer;width:28px;height:26px;font-size:16px;line-height:1}
+.picked .add{background:var(--acc);color:#fff}
+.more{background:none;border:0;color:var(--acc);cursor:pointer;font:inherit;font-size:12px;padding:2px 6px}
+.ph{display:grid;grid-template-columns:120px 1fr;gap:4px 8px;align-items:center;margin:6px 0}
+.ph label{font-size:12px;color:var(--mut);text-align:right}
+.drow{display:flex;gap:6px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed var(--line)}
+.drow .txt{flex:1;outline:none;padding:2px 4px;border-radius:3px}
+.drow .txt:focus{background:#fffbe0}
+.drow button{border:0;background:none;cursor:pointer;color:var(--mut);font-size:14px;padding:0 3px}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:4px;padding:7px 12px;cursor:pointer;font:inherit}
+.btn.sec2{background:#fff;color:var(--acc);border:1px solid var(--acc)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+mark{background:#fff0a8;padding:0 1px}
+.tok{background:#e3eef2;border-radius:3px;padding:0 3px;color:#1d4a5c}
+#out{min-height:160px;font-size:13px;white-space:pre-wrap}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1f2a30;color:#fff;padding:8px 14px;border-radius:4px;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.modal .card{max-width:760px;width:100%}
+.empty{color:var(--mut);font-style:italic;font-size:13px}
+.ny{display:inline-block;background:#2b5f75;color:#fff;border-radius:3px;font-size:10px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.brukt{color:#2b5f75;font-weight:600}
+.drow .star{color:#b37a00;font-size:13px;border:1px solid #e0c46a;border-radius:3px;background:#fffbe0}
+.kand{border:1px solid var(--line);border-radius:6px;padding:8px;margin:8px 0}
+.kand textarea{margin:4px 0}
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.kgrid label{font-size:12px;color:var(--mut)}
+#laerStatus{font-size:12px;color:#cfd6da}
+.ltab{width:100%;border-collapse:collapse;font-size:12.5px}.ltab td,.ltab th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+</style>
+</head>
+<body>
+<header>
+  <h1>Setningsassistent – skredfarevurdering</h1>
+  <span class="sp"></span>
+  <span class="hint" style="color:#cfd6da" id="cnt"></span>
+  <span id="laerStatus"></span><button id="bLaer">Læring</button><button id="bImp">Importer katalog</button>
+  <button id="bReset">Nullstill</button>
+</header>
+<main>
+<!-- VENSTRE: situasjon -->
+<section class="card">
+  <h2>Situasjon</h2>
+  <div class="grp">
+    <div class="lbl">Beskriv kort (stikkord)</div>
+    <textarea id="free" rows="3" placeholder="f.eks. snø og sterk vind fra sørvest, økende, flak på kantkorn, gult"></textarea>
+    <div class="hint">Stikkord setter valgene under og løfter setninger som inneholder ordene. Du kan overstyre valgene.</div>
+  </div>
+  <div class="grp"><div class="lbl">Aktsomhetsnivå</div><div class="chips" id="cNiv"></div></div>
+  <div class="grp"><div class="lbl">Skredproblem (flere mulig)</div><div class="chips" id="cProb"></div></div>
+  <div class="grp"><div class="lbl">Utvikling</div><div class="chips" id="cUtv"></div></div>
+  <div class="grp"><div class="lbl">Rekkevidde</div><div class="chips" id="cRek"></div>
+    <div class="hint">NIV når ikke veg · SNV snøsky når veg · NV når veg · OV går over veg</div></div>
+  <div class="grp"><div class="lbl">Annet</div><div class="chips">
+    <button class="chip" id="tUs">Usikker situasjon</button>
+    <button class="chip" id="tAll">Vis alle nivå</button></div></div>
+</section>
+
+<!-- MIDTEN: forslag -->
+<section class="card">
+  <h2>Forslag per del av varselet</h2>
+  <div class="row" style="margin:0 0 6px">
+    <button class="btn sec2" id="bAuto">Lag utkast med beste forslag</button>
+    <input id="search" placeholder="Søk i alle setninger…" style="flex:1;min-width:180px">
+  </div>
+  <div id="sugs"></div>
+</section>
+
+<!-- HØYRE: utkast -->
+<section class="card">
+  <h2>Utkast</h2>
+  <div id="draft"><div class="empty">Klikk + på et forslag for å legge det til.</div></div>
+  <div id="phs"></div>
+  <h3>Ferdig tekst</h3>
+  <div id="out" class="card" style="background:#fafbfb"></div>
+  <div class="row">
+    <button class="btn" id="bCopy">Kopier tekst</button>
+    <button class="btn" id="bVarsel" style="background:#ed9300;border-color:#ed9300;color:#000" title="Legg hele teksten inn i «Vurdering» (skredfare) i Varselskriver">Overfør til Varselskriver →</button>
+    <button class="btn sec2" id="bClear">Tøm utkast</button>
+    <button class="btn sec2" id="bEgen">+ Egen setning</button>
+  </div>
+  <div class="hint" style="margin-top:6px">Klikk i en setning i utkastet for å redigere den. Plassholdere fylles inn i feltene over. Endrede og egne setninger merkes ★ – når du kopierer teksten, foreslås de lagret i katalogen, og valgene dine brukes til å rangere forslagene neste gang.</div>
+</section>
+</main>
+
+<div class="modal" id="mImp"><div class="card">
+  <h2>Importer oppdatert katalog</h2>
+  <p class="hint">Merk kolonnene A–H i arket «Setningskatalog» i Excel (ID, Del av varselet, Aktsomhetsnivå, Skredproblem, Utvikling, Rekkevidde, Usikkerhet, Setning), inkludert overskriftsraden, kopier og lim inn her.</p>
+  <textarea id="impTxt" rows="12"></textarea>
+  <div class="row"><button class="btn" id="impOk">Importer</button><button class="btn sec2" id="impStd">Bruk innebygd katalog</button><button class="btn sec2" id="impX">Avbryt</button></div>
+  <div class="hint" id="impMsg"></div>
+</div></div>
+<div class="modal" id="mKand"><div class="card" style="max-height:90vh;overflow:auto">
+  <h2>Lagre nye setninger i katalogen?</h2>
+  <p class="hint">Disse setningene er nye eller endret. Hak av de som skal kunne foreslås neste gang, og sjekk merkingen (fylt ut fra valgene dine nå).</p>
+  <div id="kandListe"></div>
+  <div class="row"><button class="btn" id="kandOk">Lagre valgte</button><button class="btn sec2" id="kandX">Ikke nå</button></div>
+</div></div>
+<div class="modal" id="mLaer"><div class="card" style="max-height:90vh;overflow:auto">
+  <h2>Læring</h2><p class="hint" id="laerInfo"></p>
+  <h3>Lærte setninger</h3><div id="laerListe"></div>
+  <h3>Mest brukte setninger</h3><div id="laerBruk"></div>
+  <div class="row"><button class="btn sec2" id="laerTsv">Kopier nye setninger (for Excel)</button><button class="btn sec2" id="laerNull">Nullstill bruksstatistikk</button><button class="btn sec2" id="laerX">Lukk</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* SKRED – felles klient for arbeidsprosjekt og overføring mellom faner (snakker med menysiden) */
+(function(){
+  const R=window.SKRED={id:null,laas:false,liste:[],cb:[],mottak:{},vent:{}};
+  R.on=f=>{R.cb.push(f);if(R.id!==null)try{f(R.id,R.laas)}catch(e){console.error(e)}};
+  R.paMottak=(k,f)=>{R.mottak[k]=f;if(R.vent[k]){const d=R.vent[k];delete R.vent[k];f(d)}};
+  R.send=(til,data)=>{try{parent.postMessage({type:'skred-overfor',til,data},'*')}catch(e){}};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  R.prosj=id=>R.liste.find(p=>p.id===id)||null;
+  /* finn <option> i en nedtrekksliste som svarer til prosjektet (verdi = id, eller tekst/verdi som starter med vegkoden) */
+  R.finn=(sel,id)=>{const p=R.prosj(id);if(!sel||!p)return null;const o=[...sel.options].find(o=>o.value===id)||[...sel.options].find(o=>o.text===p.navn||o.value===p.navn)
+      ||[...sel.options].find(o=>(o.text+' ').startsWith(p.kode+' ')||(o.value+' ').startsWith(p.kode+' '));return o||null};
+  addEventListener('message',e=>{const d=e.data||{};
+    if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.liste=d.liste||R.liste;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){console.error(x)}})}
+    if(d.type==='skred-overfor'){if(R.mottak[d.til])R.mottak[d.til](d.data);else R.vent[d.til]=d.data}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}
+})();
+</script>
+<script>
+const BUILTIN = [{"id": "H01", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Skredfaren for vegen er lav."}, {"id": "H02", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Vi anbefaler grønt aktsomhetsnivå. Naturlig utløste skred som når vegen er ikke sannsynlig."}, {"id": "H03", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Vi venter ikke skred som når vegen i noen av delområdene."}, {"id": "H04", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Skred kan løsne i bratte heng, men vil ikke nå vegen."}, {"id": "H05", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Lite snø, lite nedbør og rolig vær gjør at vi ikke venter skred som når vegen."}, {"id": "H06", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Snødekket er stabilt, og naturlig utløste skred som når vegen er lite sannsynlig."}, {"id": "H07", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Mildvær og lite snø gir lav skredfare for vegen."}, {"id": "H08", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Kaldt vær med lite eller ingen nedbør gir lav skredfare for vegen."}, {"id": "H09", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Lite nedbør, lavere temperatur og et smelteomvandlet, stabilt snødekke gjør at vi ikke venter skred som når vegen."}, {"id": "H10", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Våt snø i solvendte heng er viktigste skredproblem, men skred som når vegen er ikke sannsynlig."}, {"id": "H11", "del_": "1 Hovedbudskap", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Mildvær og soloppvarming gir våt snø i lavere løsneområder, men det er lite løs snø som kan løsne. Vi venter ikke skred som når vegen."}, {"id": "H12", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "NIV", "us": false, "t": "Snø og vind gir økende skredfare, men skred vil trolig ikke nå vegen."}, {"id": "H13", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Snøfall, snøfokk og skiftende vindretning gjør at vi øker aktsomhetsnivået til gult."}, {"id": "H14", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Generelt", "utv": "Øker", "rek": "NIV", "us": true, "t": "Vi anbefaler gult aktsomhetsnivå. Små skred er sannsynlig, men skred som når vegen er lite sannsynlig."}, {"id": "H15", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Små skred kan løsne, men blir ikke store nok til å nå vegen."}, {"id": "H16", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "NIV", "us": false, "t": "Mildvær gir fare for små våte løssnøskred. Vi anbefaler økt oppmerksomhet."}, {"id": "H17", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "NV", "us": false, "t": "Regn på snødekket gir økt skredfare for vegen."}, {"id": "H18", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Det gamle snødekket er stabilt, men snø og vind gir økende skredfare [dag]."}, {"id": "H19", "del_": "1 Hovedbudskap", "niv": "Gult", "prob": "Generelt", "utv": "Uendret", "rek": "NV", "us": false, "t": "Vi anbefaler gult aktsomhetsnivå fordi små skred kan nå grøfta eller vegskulderen i [delområde]."}, {"id": "H20", "del_": "1 Hovedbudskap", "niv": "Oransje", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "Store snømengder og sterk vind gir høy skredfare for vegen."}, {"id": "H21", "del_": "1 Hovedbudskap", "niv": "Oransje", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "Vi venter store, naturlig utløste skred fra de mest utsatte løsneområdene. Skred kan nå vegen."}, {"id": "H22", "del_": "1 Hovedbudskap", "niv": "Oransje", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "Vi venter svært store skred fra de største løsneområdene. Skred fra [delområde] kan nå vegen."}, {"id": "H23", "del_": "1 Hovedbudskap", "niv": "Oransje", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": false, "t": "Vi anbefaler oransje aktsomhetsnivå fordi naturlig utløste skred er mulig, og dimensjonerende skredstørrelse kan nå vegen."}, {"id": "H24", "del_": "1 Hovedbudskap", "niv": "Rødt", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": false, "t": "Vi anbefaler rødt aktsomhetsnivå fordi naturlig utløste skred er sannsynlig, og dimensjonerende skredstørrelse kan nå vegen."}, {"id": "H25", "del_": "1 Hovedbudskap", "niv": "Rødt", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "Vi øker til rødt aktsomhetsnivå [tidspunkt] fordi svært store skred kan nå vegen."}, {"id": "H26", "del_": "1 Hovedbudskap", "niv": "Rødt", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "Det er sannsynlig at skred når vegen i løpet av [dag]."}, {"id": "H27", "del_": "1 Hovedbudskap", "niv": "Rødt", "prob": "Fokksnø", "utv": "Øker", "rek": "OV", "us": false, "t": "Svært store skred kan nå vegen, særlig fra [delområde]."}, {"id": "H28", "del_": "1 Hovedbudskap", "niv": "Rødt", "prob": "Fokksnø", "utv": "Uendret", "rek": "NV", "us": false, "t": "Faren for naturlig utløste skred er fortsatt høy på grunn av meldt nedbør og vind."}, {"id": "V01", "del_": "2 Vær og utløsende faktorer", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "–", "us": false, "t": "Oppholdsvær og lite vind gir lite snøtransport og liten skredfare for vegen."}, {"id": "V02", "del_": "2 Vær og utløsende faktorer", "niv": "Grønt", "prob": "Generelt", "utv": "Avtar", "rek": "–", "us": false, "t": "Rolig vær gir snødekket mer tid til å stabilisere seg."}, {"id": "V03", "del_": "2 Vær og utløsende faktorer", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "–", "us": false, "t": "Det har kommet mindre nedbør enn varslet."}, {"id": "V04", "del_": "2 Vær og utløsende faktorer", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Pent vær og lite vind. Mye sol kan gi noen små våte løssnøskred, men de når ikke vegen."}, {"id": "V05", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": true, "t": "Snøfall og økende vind gjør at vi følger tett med på situasjonen."}, {"id": "V06", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Snø og vind gir pålagring av fokksnø i løsneområdene."}, {"id": "V07", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "[dag] øker vinden, og det kan bli snøtransport og nye fokksnøflak."}, {"id": "V08", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "[dag] kommer det mer snø, og vinden øker til sterk kuling eller liten storm fra [retning]."}, {"id": "V09", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Sterk kuling fra [retning] gir oppbygging av fokksnøflak [periode]."}, {"id": "V10", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Mye nysnø [dag] gjør at vind raskt kan gi snøtransport og nye fokksnøflak. Følg med på vindstyrke og vindretning."}, {"id": "V11", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "–", "us": false, "t": "Skredfaren øker når det igjen blir plussgrader og regn."}, {"id": "V12", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "NV", "us": false, "t": "I løsneområdene kommer nedbøren først som snø og går så over til regn. Temperaturstigning og regn på snødekket kan gi naturlig utløste flakskred."}, {"id": "V13", "del_": "2 Vær og utløsende faktorer", "niv": "Gult", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Soloppvarming kan gi små våte løssnøskred, men skredmassene når ikke vegen."}, {"id": "V14", "del_": "2 Vær og utløsende faktorer", "niv": "Oransje", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Vinterens største snøfall og kuling gir store mengder fokksnø i leheng."}, {"id": "V15", "del_": "2 Vær og utløsende faktorer", "niv": "Oransje", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Stort snøfall over [antall] døgn og vind fra [retning] gir nye, store fokksnøflak."}, {"id": "V16", "del_": "2 Vær og utløsende faktorer", "niv": "Oransje", "prob": "Våt snø", "utv": "Øker", "rek": "NIV", "us": false, "t": "Under [høyde] moh kommer nedbøren mest som regn. Her kan det gå våte skred, men vi venter ikke at de når vegen."}, {"id": "V17", "del_": "2 Vær og utløsende faktorer", "niv": "Rødt", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Fra [tidspunkt] øker skredfaren ytterligere med mer nedbør fra samme vindretning og stigende temperatur."}, {"id": "V18", "del_": "2 Vær og utløsende faktorer", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Det er meldt [x] mm nedbør [periode], med opptil [y] mm/t [tidspunkt]."}, {"id": "V19", "del_": "2 Vær og utløsende faktorer", "niv": "Alle", "prob": "Fokksnø", "utv": "–", "rek": "–", "us": false, "t": "Vinden øker til [x] m/s fra [retning] i fjellet, og det blir betydelig snøtransport."}, {"id": "V20", "del_": "2 Vær og utløsende faktorer", "niv": "Alle", "prob": "Våt snø", "utv": "–", "rek": "–", "us": false, "t": "Nullgradersgrensen stiger til [høyde] moh [tidspunkt]."}, {"id": "S01", "del_": "3 Snødekke og svake lag", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Snøoverflaten består av [løs nysnø / fokksnø / skare / overflaterim] etter [hendelse]."}, {"id": "S02", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Snødekket er tynt, og eventuelle skred blir små."}, {"id": "S03", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Snømengden er mindre enn normalt for årstiden, og snødekket i de mest utsatte løsneområdene er lite sammenhengende."}, {"id": "S04", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Løsneområdene fylles gradvis med snø, men det er fortsatt mye oppstikkende terreng i løsneområder og skredløp."}, {"id": "S05", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Det er lite snø i skredløpene, og ruheten er fortsatt stor."}, {"id": "S06", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Våt snø", "utv": "Avtar", "rek": "–", "us": false, "t": "Snødekket har vært gjennom flere runder med smelting og frysing og er nå stabilt."}, {"id": "S07", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Vedvarende svakt lag", "utv": "Uendret", "rek": "–", "us": false, "t": "Det er svake lag høyt i snødekket, men rolig vær gjør at store skred ikke ventes å løsne av seg selv."}, {"id": "S08", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Vedvarende svakt lag", "utv": "Uendret", "rek": "–", "us": false, "t": "Observert skredaktivitet tyder ikke på aktive, utbredte vedvarende svake lag i snødekket."}, {"id": "S09", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Fokksnø", "utv": "Avtar", "rek": "–", "us": false, "t": "Fokksnøflakene fra uværet stabiliserer seg."}, {"id": "S10", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Fokksnø", "utv": "Avtar", "rek": "–", "us": false, "t": "Mildere temperatur stabiliserer fokksnøen raskt."}, {"id": "S11", "del_": "3 Snødekke og svake lag", "niv": "Grønt", "prob": "Fokksnø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Litt nysnø og lett snøfokk kan danne små, ustabile flak i enkelte løsneområder. Vi venter ikke naturlig utløste skred som når vegen."}, {"id": "S12", "del_": "3 Snødekke og svake lag", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "–", "us": false, "t": "Nysnø og perioder med snøfokk kan danne små, ustabile flak i enkelte løsneområder."}, {"id": "S13", "del_": "3 Snødekke og svake lag", "niv": "Gult", "prob": "Vedvarende svakt lag", "utv": "Øker", "rek": "–", "us": false, "t": "Flakene kan ligge på svake lag av overflaterim eller kantkorn. Små til middels store skred kan løsne av seg selv mens uværet pågår."}, {"id": "S14", "del_": "3 Snødekke og svake lag", "niv": "Gult", "prob": "Våt snø", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Fuktig snø i skredløpet gir kort utløpslengde, og skred vil ikke nå vegen."}, {"id": "S15", "del_": "3 Snødekke og svake lag", "niv": "Gult", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Det er lite snø i terrenget fra før, og skred som når vegen er lite sannsynlig."}, {"id": "S16", "del_": "3 Snødekke og svake lag", "niv": "Oransje", "prob": "Vedvarende svakt lag", "utv": "Øker", "rek": "NV", "us": true, "t": "Flakene ligger på et vedvarende svakt lag av kantkorn. Store skred kan løsne av seg selv hvis nedbøren blir som meldt."}, {"id": "S17", "del_": "3 Snødekke og svake lag", "niv": "Alle", "prob": "Vedvarende svakt lag", "utv": "–", "rek": "–", "us": false, "t": "Det vedvarende svake laget av [kantkorn / begerkrystaller / overflaterim] ligger [x] cm under overflaten i [himmelretning] over [høyde] moh. Laget er vanskelig å løse ut, men kan gi store skred."}, {"id": "S18", "del_": "3 Snødekke og svake lag", "niv": "Alle", "prob": "Våt snø", "utv": "Øker", "rek": "–", "us": false, "t": "Snødekket er isotermt (0 °C) i løsneområdene under [høyde] moh."}, {"id": "S19", "del_": "3 Snødekke og svake lag", "niv": "Alle", "prob": "Våt snø", "utv": "Avtar", "rek": "–", "us": false, "t": "Skaren binder snødekket så lenge temperaturen holder seg under 0 °C."}, {"id": "S20", "del_": "3 Snødekke og svake lag", "niv": "Alle", "prob": "Glideskred", "utv": "Uendret", "rek": "–", "us": false, "t": "Det er åpne glidesprekker i [delområde]. Glideskred kan løsne når som helst på døgnet og er vanskelige å forutsi."}, {"id": "A01", "del_": "4 Skredaktivitet og observasjoner", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "–", "us": false, "t": "Vi har ingen observasjoner av naturlig utløste skred i området."}, {"id": "A02", "del_": "4 Skredaktivitet og observasjoner", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Siste tre døgn er det observert [antall] naturlig utløste [flakskred / løssnøskred] av størrelse [D1–D5] i [himmelretning] over [høyde] moh."}, {"id": "A03", "del_": "4 Skredaktivitet og observasjoner", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Det er meldt om drønn og skytende sprekker, som tyder på et ustabilt snødekke."}, {"id": "A04", "del_": "4 Skredaktivitet og observasjoner", "niv": "Alle", "prob": "Fokksnø", "utv": "–", "rek": "–", "us": false, "t": "Det er observert snøfokk fra toppene og fersk pålagring i [delområde]."}, {"id": "A05", "del_": "4 Skredaktivitet og observasjoner", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Skredkontroll [dag] ga [ingen / få / noen] skred av størrelse [D1–D5]."}, {"id": "R01", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Aktuelle skredstørrelser vil trolig ikke nå vegen."}, {"id": "R02", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Grønt", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Lite nedbør og lite løs snø fra før gjør at eventuelle skred blir små og ikke når vegen."}, {"id": "R03", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Generelt", "utv": "Uendret", "rek": "NIV", "us": false, "t": "Mindre skred kan gå i bratte renner i andre himmelretninger, men heller ikke disse ventes å nå vegen."}, {"id": "R04", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "NV", "us": false, "t": "Små våte skred kan nå fresegrøfta og i enkelte tilfeller vegbanen."}, {"id": "R05", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Våt snø", "utv": "Øker", "rek": "NIV", "us": false, "t": "Små våte skred kan løsne langs vegen, men blir ikke store nok til å nå vegbanen."}, {"id": "R06", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": false, "t": "Sannsynligheten for skred som kan nå vegbanen øker."}, {"id": "R07", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": false, "t": "[dag] øker sannsynligheten for middels store tørre flakskred i [delområde] som kan nå vegbanen."}, {"id": "R08", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Gult", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": true, "t": "Selv med moderate nedbørsmengder kan vi ikke utelukke skred der vegen ligger tett inntil løsneområdene."}, {"id": "R09", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "SNV", "us": false, "t": "Skredet kan nå vegen som snøsky, men de faste skredmassene ventes å stoppe før vegen."}, {"id": "R10", "del_": "5 Skredstørrelse og rekkevidde", "niv": "Alle", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": false, "t": "Mye løs, tørr snø i skredløpet gir lang utløpslengde."}, {"id": "U01", "del_": "6 Utvikling", "niv": "Grønt", "prob": "Generelt", "utv": "Avtar", "rek": "–", "us": false, "t": "Skredfaren avtar når nedbøren og vinden løyer [tidspunkt]."}, {"id": "U02", "del_": "6 Utvikling", "niv": "Grønt", "prob": "Generelt", "utv": "Øker", "rek": "NIV", "us": false, "t": "Skredfaren øker noe, men skred som når vegen er fortsatt lite sannsynlig."}, {"id": "U03", "del_": "6 Utvikling", "niv": "Gult", "prob": "Fokksnø", "utv": "Avtar", "rek": "–", "us": false, "t": "Ferske fokksnøflak stabiliserer seg trolig raskt, men små skred kan løsne av seg selv til vinden løyer og snøtransporten avtar."}, {"id": "U04", "del_": "6 Utvikling", "niv": "Gult", "prob": "Våt snø", "utv": "Avtar", "rek": "–", "us": false, "t": "Snødekket stabiliserer seg når temperaturen synker [tidspunkt]."}, {"id": "U05", "del_": "6 Utvikling", "niv": "Gult", "prob": "Våt snø", "utv": "Avtar", "rek": "–", "us": false, "t": "Temperaturen har sunket under 0 °C i alle løsneområder, og faren for våte løssnøskred og våte flakskred avtar."}, {"id": "U06", "del_": "6 Utvikling", "niv": "Oransje", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": false, "t": "Skredfaren er størst i perioden med mest intens nedbør [tidspunkt]. Vi anbefaler oransje aktsomhetsnivå i denne perioden."}, {"id": "U07", "del_": "6 Utvikling", "niv": "Alle", "prob": "Generelt", "utv": "Avtar", "rek": "–", "us": false, "t": "Vi venter at aktsomhetsnivået kan senkes til [nivå] [tidspunkt] hvis vinden løyer som meldt."}, {"id": "U08", "del_": "6 Utvikling", "niv": "Alle", "prob": "Generelt", "utv": "Uendret", "rek": "–", "us": false, "t": "Skredfaren holder seg på samme nivå de neste [antall] døgnene."}, {"id": "X01", "del_": "7 Usikkerhet", "niv": "Grønt", "prob": "Våt snø", "utv": "Uendret", "rek": "–", "us": true, "t": "Mildværet ser foreløpig ikke ut til å øke skredfaren."}, {"id": "X02", "del_": "7 Usikkerhet", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": true, "t": "Hvis nedbøren [dag] kommer som snø, kan skred nå nær vegbanen."}, {"id": "X03", "del_": "7 Usikkerhet", "niv": "Gult", "prob": "Generelt", "utv": "Øker", "rek": "NV", "us": true, "t": "Hvis den øvre nedbørsprognosen slår til, øker vi til oransje aktsomhetsnivå."}, {"id": "X04", "del_": "7 Usikkerhet", "niv": "Gult", "prob": "Fokksnø", "utv": "Øker", "rek": "NV", "us": true, "t": "Faren for skred på vegen avhenger av hvor mye snø som kommer, og hvordan snøen er fordelt fra før."}, {"id": "X05", "del_": "7 Usikkerhet", "niv": "Gult", "prob": "Generelt", "utv": "Øker", "rek": "–", "us": true, "t": "Uværet gir usikkerhet, og vi anbefaler økt oppmerksomhet på strekningen."}, {"id": "X06", "del_": "7 Usikkerhet", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": true, "t": "Vi har få observasjoner fra løsneområdene, og vurderingen bygger i hovedsak på værdata og modellert snødekke."}, {"id": "X07", "del_": "7 Usikkerhet", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": true, "t": "Snøgrensen er usikker. Ligger den lavere enn meldt, øker faren for tørre skred."}, {"id": "X08", "del_": "7 Usikkerhet", "niv": "Alle", "prob": "Generelt", "utv": "–", "rek": "–", "us": true, "t": "Vi oppdaterer varselet [tidspunkt] hvis forholdene utvikler seg annerledes enn ventet."}, {"id": "T01", "del_": "8 Anbefaling og tiltak", "niv": "Grønt", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Normal drift og trafikkavvikling."}, {"id": "T02", "del_": "8 Anbefaling og tiltak", "niv": "Gult", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler økt oppmerksomhet i delområdene."}, {"id": "T03", "del_": "8 Anbefaling og tiltak", "niv": "Gult", "prob": "Fokksnø", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler økt oppmerksomhet så lenge det er mye snøfokk."}, {"id": "T04", "del_": "8 Anbefaling og tiltak", "niv": "Gult", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Trafikk skal ikke stoppes i skredpunktene, og arbeid utenfor kjøretøy bør unngås."}, {"id": "T05", "del_": "8 Anbefaling og tiltak", "niv": "Oransje", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler å forberede stenging på kort varsel og å vurdere forebyggende skredkontroll [tidspunkt]."}, {"id": "T06", "del_": "8 Anbefaling og tiltak", "niv": "Oransje", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Kolonnekjøring må risikovurderes. Trafikk skal ikke stoppes i skredpunktene."}, {"id": "T07", "del_": "8 Anbefaling og tiltak", "niv": "Rødt", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler at vegen holdes stengt til etter skredkontroll [tidspunkt]."}, {"id": "T08", "del_": "8 Anbefaling og tiltak", "niv": "Rødt", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler at vegen holdes stengt til ny vurdering [tidspunkt]."}, {"id": "T09", "del_": "8 Anbefaling og tiltak", "niv": "Rødt", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Vi anbefaler aktiv skredkontroll i [delområde] før gjenåpning [tidspunkt]."}, {"id": "T10", "del_": "8 Anbefaling og tiltak", "niv": "Rødt", "prob": "Generelt", "utv": "–", "rek": "–", "us": false, "t": "Gjenåpning skjer etter prosedyre når aktsomhetsnivået er senket."}];
+const LEVELS=["Grønt","Gult","Oransje","Rødt"];
+const PROBS=["Generelt","Nysnø","Fokksnø","Våt snø","Vedvarende svakt lag","Glideskred"];
+const UTV=["Avtar","Uendret","Øker"];
+const REK=["NIV","SNV","NV","OV"];
+const LVCOL={"Grønt":"#92d050","Gult":"#ffe600","Oransje":"#ffb000","Rødt":"#e8322b","Alle":"#d9d9d9"};
+const SECTIONS_SFV=["1","2","5","6","7","8"], SECTIONS_SD=["3","4"];
+
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let BASE=store.get("ssk_data",null)||BUILTIN;
+/* ---------- læring: lærte setninger + bruksstatistikk (db hvis tilgjengelig, ellers denne nettleseren) ---------- */
+let LAERT=store.get("ssk_laert",[]), BRUK=store.get("ssk_bruk",{});
+const LAER={db:null,modus:"lokal",skriv:true};
+let DATA=BASE.concat(LAERT);
+function rebuild(){DATA=BASE.concat(LAERT.filter(x=>x&&x.t))}
+const ctxKey=()=>[st.niv||"-",[...st.prob].sort().join("+")||"-",st.utv||"-",st.rek||"-"].join("|");
+function laerBonus(s){const b=BRUK[s.id];let p=s.laert?0.5:0;if(!b)return p;const c=b[ctxKey()]||0,n=b._n||0;return p+Math.min(3,1.3*Math.log(1+c))+Math.min(1,0.3*Math.log(1+n))}
+const norm=t=>String(t||"").replace(/\s+/g," ").trim().toLowerCase();
+const endret=d=>d.ny||(d.orig!=null&&norm(d.t)!==norm(d.orig));
+function settStatus(){const e=document.getElementById("laerStatus");if(e)e.textContent=LAER.modus==="db"?(LAER.skriv?"Læring lagres på tvers av enheter":"Læring: kun lesing – dine valg lagres i denne nettleseren"):"Læring lagres i denne nettleseren";}
+async function lagreBruk(){store.set("ssk_bruk",BRUK);
+  if(LAER.db&&LAER.skriv){try{await LAER.db.doc("ssk_bruk/teller").set({b:BRUK,oppdatert:new Date().toISOString()})}catch(e){LAER.skriv=false;settStatus()}}}
+async function lagreSetning(o){
+  if(LAER.db&&LAER.skriv){try{const {id,laert,...body}=o;await LAER.db.collection("ssk_setninger").doc(id).set(body);return}catch(e){LAER.skriv=false;settStatus()}}
+  LAERT=LAERT.filter(x=>x.id!==o.id).concat([o]);store.set("ssk_laert",LAERT);rebuild();render()}
+async function slettSetning(id){
+  if(LAER.db&&LAER.skriv){try{await LAER.db.collection("ssk_setninger").doc(id).delete();return}catch(e){LAER.skriv=false;settStatus()}}
+  LAERT=LAERT.filter(x=>x.id!==id);store.set("ssk_laert",LAERT);rebuild();render()}
+async function initDb(){
+  try{if(!window.claude||!window.claude.use)return;const db=await window.claude.use("db");if(!db)return;
+    LAER.db=db;LAER.modus="db";settStatus();
+    const lokaleS=LAERT.slice(),lokaleB=JSON.parse(JSON.stringify(BRUK));
+    let forsteS=true,forsteB=true;
+    db.collection("ssk_setninger").onSnapshot(snap=>{LAERT=snap.docs.map(d=>({...d.data(),id:d.id,laert:true}));
+      if(forsteS&&!snap.metadata.fromCache){forsteS=false;lokaleS.filter(x=>!LAERT.some(y=>y.id===x.id)).forEach(x=>lagreSetning(x))}
+      rebuild();render()},()=>{});
+    db.doc("ssk_bruk/teller").onSnapshot(snap=>{const b=snap.exists?(snap.data().b||{}):{};
+      if(forsteB&&!snap.metadata.fromCache){forsteB=false;const m=JSON.parse(JSON.stringify(b));let endr=false;
+        Object.entries(lokaleB).forEach(([id,o])=>{m[id]=m[id]||{};Object.entries(o).forEach(([k,v])=>{if((m[id][k]||0)<v){m[id][k]=v;endr=true}})});
+        BRUK=m;if(endr)lagreBruk()}else if(!forsteB)BRUK=JSON.parse(JSON.stringify(b));
+      render()},()=>{});
+  }catch(e){}}
+let st={niv:null,prob:[],utv:null,rek:null,us:false,all:false,free:"",search:""};
+let draft=store.get("ssk_draft",[]);   // [{id,t,del}]
+let phv=store.get("ssk_ph",{});
+let open={};      // sections showing all
+
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1600)}
+
+/* ---------- chips ---------- */
+function chips(el,vals,key,multi,lv){
+  const c=$(el);c.innerHTML="";
+  vals.forEach(v=>{const b=document.createElement("button");b.className="chip"+(lv?" lv":"");b.dataset.v=v;b.textContent=v;
+    b.onclick=()=>{ if(multi){const a=st[key];const i=a.indexOf(v);i<0?a.push(v):a.splice(i,1)} else st[key]=st[key]===v?null:v; render()};
+    c.appendChild(b)});
+}
+function syncChips(){
+  [["#cNiv","niv"],["#cUtv","utv"],["#cRek","rek"]].forEach(([el,k])=>document.querySelectorAll(el+" .chip").forEach(b=>b.classList.toggle("on",st[k]===b.dataset.v)));
+  document.querySelectorAll("#cProb .chip").forEach(b=>b.classList.toggle("on",st.prob.includes(b.dataset.v)));
+  $("#tUs").classList.toggle("on",st.us);$("#tAll").classList.toggle("on",st.all);
+}
+
+/* ---------- stikkord-tolkning ---------- */
+const KW=[
+ [/\b(grønt|grønn)\b/,"niv","Grønt"],[/\b(gult|gul)\b/,"niv","Gult"],[/\boransje\b/,"niv","Oransje"],[/\b(rødt|rød)\b/,"niv","Rødt"],
+ [/(vind|fokk|kuling|storm|pålagr|snøtransport|leheng|flak)/,"prob","Fokksnø"],
+ [/(nysnø|snøfall|snøbyge|mye snø)/,"prob","Nysnø"],
+ [/(regn|mildvær|plussgrad|mildt|sol|våt|fukt|isoterm|smelt|varm|nullgrad)/,"prob","Våt snø"],
+ [/(kantkorn|begerkrystall|overflaterim|vedvarende|svakt lag|svake lag|rim\b)/,"prob","Vedvarende svakt lag"],
+ [/(glide|glidesprekk)/,"prob","Glideskred"],
+ [/(øker|økende|tiltar|tiltagende|forverr)/,"utv","Øker"],
+ [/(avtar|avtagende|løyer|stabiliser|bedr|synker|kaldere|senke)/,"utv","Avtar"],
+ [/(uendret|stabile forhold|som i dag)/,"utv","Uendret"],
+ [/(snøsky)/,"rek","SNV"],[/(over vegen|over veg|krysser)/,"rek","OV"],
+ [/(ikke nå|når ikke|stopper før)/,"rek","NIV"],[/(når veg|nå veg|når vegen|nå vegen|vegbanen|treffer veg)/,"rek","NV"],
+ [/(usikker|dersom|hvis|prognose|tvil|få observasjon)/,"us",true],
+];
+let auto={};
+function parseFree(txt){
+  const t=txt.toLowerCase();const found={niv:null,prob:[],utv:null,rek:null,us:false};
+  KW.forEach(([re,k,v])=>{ if(re.test(t)){ if(k==="prob"){ if(!found.prob.includes(v))found.prob.push(v)} else if(k==="rek"){ if(!found.rek)found.rek=v } else if(!found[k]) found[k]=v } });
+  if(found.rek==="NV" && /(ikke nå|når ikke)/.test(t)) found.rek="NIV";
+  // fjern tidligere auto-valg, legg inn nye
+  if(auto.niv&&st.niv===auto.niv)st.niv=null; if(auto.utv&&st.utv===auto.utv)st.utv=null; if(auto.rek&&st.rek===auto.rek)st.rek=null;
+  if(auto.us&&st.us)st.us=false; (auto.prob||[]).forEach(p=>{const i=st.prob.indexOf(p);if(i>=0)st.prob.splice(i,1)});
+  if(found.niv&&!st.niv)st.niv=found.niv; if(found.utv&&!st.utv)st.utv=found.utv; if(found.rek&&!st.rek)st.rek=found.rek;
+  if(found.us&&!st.us)st.us=true; found.prob.forEach(p=>{if(!st.prob.includes(p))st.prob.push(p)});
+  auto=found;
+}
+const STOP=new Set("og i på er en et at som det for med av til de kan vil fra men ikke har om ved vi blir eller".split(" "));
+function words(t){return t.toLowerCase().replace(/[^a-zæøå0-9 ]/g," ").split(/\s+/).filter(w=>w.length>2&&!STOP.has(w))}
+
+/* ---------- poeng ---------- */
+let IDF={};function buildIdf(){IDF={};const N=DATA.length;const W=DATA.map(s=>words(s.t));IDF._W=W;IDF._N=N}
+function idf(st5){if(IDF[st5]!==undefined)return IDF[st5];const df=IDF._W.filter(ws=>ws.some(x=>x.startsWith(st5))).length;return IDF[st5]=df?0.6*(1+Math.log(IDF._N/df)):0}
+function score(s,fw){
+  let p=0;
+  if(st.niv){const i=LEVELS.indexOf(st.niv), j=LEVELS.indexOf(s.niv);
+    if(s.niv===st.niv)p+=6; else if(s.niv==="Alle")p+=2.5; else if(Math.abs(i-j)===1)p+=1; else if(!st.all) return null; }
+  else p+= s.niv==="Alle"?1:0;
+  const probs=st.prob.includes("Nysnø")?st.prob.concat(["Fokksnø"]):st.prob;
+  if(probs.length){ if(probs.includes(s.prob))p+=4; else if(s.prob==="Generelt")p+=1.5; else p-=3; }
+  if(st.utv){ if(s.utv===st.utv)p+=2.5; else if(s.utv==="–"||!s.utv)p+=0.5; else p-=2; }
+  if(st.rek){ if(s.rek===st.rek)p+=2.5; else if(s.rek==="–"||!s.rek)p+=0.3; else p-=1.5; }
+  if(st.us&&s.us)p+=2.5; if(!st.us&&s.us)p-=0.5;
+  if(fw.length){const sw=words(s.t);let h=0;fw.forEach(w=>{const st5=w.slice(0,5);if(sw.some(x=>x.startsWith(st5)))h+=idf(st5)});p+=Math.min(h,6);}
+  return p+laerBonus(s);
+}
+
+/* ---------- forslag ---------- */
+function sections(){const m=new Map();DATA.forEach(s=>{if(!m.has(s.del_))m.set(s.del_,[]);m.get(s.del_).push(s)});return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0],"no"))}
+function hl(t,fw){let h=esc(t).replace(/\[[^\]]+\]/g,m=>`<span class="tok">${m}</span>`);
+  fw.forEach(w=>{const re=new RegExp("(\\b"+w.slice(0,5).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"[a-zæøå]*)","gi");h=h.replace(re,"<mark>$1</mark>")});return h}
+function renderSugs(){
+  const fw=words(st.free+" "+st.search), box=$("#sugs"); box.innerHTML="";
+  const q=st.search.trim().toLowerCase();
+  sections().forEach(([sec,list])=>{
+    let L=list.map(s=>({s,p:score(s,fw)})).filter(x=>x.p!==null);
+    if(q) L=L.filter(x=>x.s.t.toLowerCase().includes(q));
+    L.sort((a,b)=>b.p-a.p);
+    const n=open[sec]?L.length:Math.min(3,L.length);
+    const d=document.createElement("div");d.className="sec";
+    d.innerHTML=`<div class="sechd"><h3 style="margin:6px 0">${esc(sec.replace(/^\d+ /,""))}</h3><span class="n">${L.length} treff</span></div>`;
+    if(!L.length) d.innerHTML+=`<div class="empty">Ingen setninger for valgene.</div>`;
+    L.slice(0,n).forEach(({s})=>{
+      const picked=draft.some(x=>x.id===s.id);
+      const r=document.createElement("div");r.className="sug"+(picked?" picked":"");
+      r.innerHTML=`<button class="add" title="${picked?"Fjern":"Legg til"}">${picked?"✓":"+"}</button><div class="txt">${hl(s.t,fw)}<div class="meta"><span class="dot" style="background:${LVCOL[s.niv]||"#ccc"}"></span>${esc(s.niv)} · ${esc(s.prob)}${s.laert?'<span class="ny">ny</span>':""}${BRUK[s.id]&&BRUK[s.id]._n?` · <span class="brukt">brukt ${BRUK[s.id]._n}×</span>`:""}${s.utv&&s.utv!=="–"?" · "+esc(s.utv):""}${s.rek&&s.rek!=="–"?" · "+esc(s.rek):""}${s.us?" · usikkerhet":""} · ${esc(s.id)}</div></div>`;
+      r.querySelector(".add").onclick=()=>toggle(s);
+      d.appendChild(r)});
+    if(L.length>3){const m=document.createElement("button");m.className="more";m.textContent=open[sec]?"Vis færre":`Vis alle ${L.length}`;m.onclick=()=>{open[sec]=!open[sec];renderSugs()};d.appendChild(m)}
+    box.appendChild(d)});
+}
+function toggle(s){const i=draft.findIndex(x=>x.id===s.id); if(i>=0)draft.splice(i,1); else draft.push({id:s.id,t:s.t,del_:s.del_,orig:s.t}); draft.sort((a,b)=>a.del_.localeCompare(b.del_,"no")); save(); renderSugs(); renderDraft()}
+
+/* ---------- utkast ---------- */
+function tokens(){const m=new Map();draft.forEach(d=>(d.t.match(/\[[^\]]+\]/g)||[]).forEach(t=>m.set(t,1)));return [...m.keys()]}
+function fill(t){return t.replace(/\[[^\]]+\]/g,m=>phv[m]&&phv[m].trim()?phv[m]:m)}
+function renderDraft(){
+  const box=$("#draft");box.innerHTML="";
+  if(!draft.length){box.innerHTML='<div class="empty">Klikk + på et forslag for å legge det til.</div>'}
+  draft.forEach((d,i)=>{
+    const r=document.createElement("div");r.className="drow";
+    r.innerHTML=`<div class="txt" contenteditable="true" ${d.ny&&!d.t?'data-ph="Skriv setningen her"':''}>${esc(d.t)}</div>${d.ny?`<select class="dsel" title="Del av varselet" style="width:auto;font-size:11px;padding:2px">${sections().map(([k])=>`<option ${k===d.del_?"selected":""}>${esc(k)}</option>`).join("")}</select>`:""}<span class="star" title="Ny eller endret – foreslås lagret når du kopierer" style="${endret(d)?"":"display:none"}">★</span><button title="Opp">↑</button><button title="Ned">↓</button><button title="Fjern">✕</button>`;
+    const [up,dn,x]=r.querySelectorAll("button");
+    const sel=r.querySelector(".dsel");if(sel)sel.onchange=()=>{d.del_=sel.value;save();renderOut()};
+    r.querySelector(".txt").oninput=e=>{d.t=e.target.innerText.trim();r.querySelector(".star").style.display=endret(d)?"":"none";save();renderOut();renderPh(true)};
+    up.onclick=()=>{if(i>0){[draft[i-1],draft[i]]=[draft[i],draft[i-1]];save();renderDraft()}};
+    dn.onclick=()=>{if(i<draft.length-1){[draft[i+1],draft[i]]=[draft[i],draft[i+1]];save();renderDraft()}};
+    x.onclick=()=>{draft.splice(i,1);save();renderDraft();renderSugs()};
+    box.appendChild(r)});
+  renderPh(); renderOut();
+}
+function renderPh(keepFocus){
+  const tk=tokens(), box=$("#phs");
+  if(keepFocus && box.dataset.k===tk.join("|")) return;
+  box.dataset.k=tk.join("|"); box.innerHTML="";
+  if(!tk.length)return;
+  const g=document.createElement("div");g.className="ph";g.innerHTML='<div style="grid-column:1/3;font-size:12px;font-weight:600;margin-top:6px">Fyll inn</div>';
+  tk.forEach(t=>{
+    const inner=t.slice(1,-1); const opts=inner.includes(" / ")?inner.split(" / "):null;
+    const l=document.createElement("label");l.textContent=inner.length>22?inner.slice(0,20)+"…":inner;l.title=inner;
+    let f;
+    if(opts){f=document.createElement("select");f.innerHTML=`<option value="">– velg –</option>`+opts.map(o=>`<option ${phv[t]===o?"selected":""}>${esc(o)}</option>`).join("");}
+    else if(t==="[nivå]"){f=document.createElement("select");f.innerHTML=`<option value="">– velg –</option>`+LEVELS.map(o=>`<option ${phv[t]===o.toLowerCase()?"selected":""} value="${o.toLowerCase()}">${o}</option>`).join("");}
+    else if(t==="[D1–D5]"){f=document.createElement("select");f.innerHTML=`<option value="">– velg –</option>`+["D1 (små)","D2 (middels store)","D3 (store)","D4 (svært store)","D5 (ekstremt store)"].map(o=>`<option ${phv[t]===o?"selected":""}>${o}</option>`).join("");}
+    else {f=document.createElement("input");f.value=phv[t]||"";f.placeholder=inner;}
+    f.oninput=f.onchange=()=>{phv[t]=f.value;save();renderOut()};
+    g.appendChild(l);g.appendChild(f)});
+  box.appendChild(g);
+}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):s}
+function text(){
+  const part=keys=>draft.filter(d=>keys.includes(d.del_[0])).map(d=>cap(fill(d.t).trim())).join(" ");
+  const a=part(SECTIONS_SFV), b=part(SECTIONS_SD); let o="";
+  if(a)o+="Skredfarevurdering\n"+a; if(b)o+=(o?"\n\n":"")+"Snødekke\n"+b; return o;
+}
+function renderOut(){const t=text();$("#out").innerHTML=t?esc(t).replace(/\[[^\]]+\]/g,m=>`<span class="tok">${m}</span>`):'<span class="empty">Tomt</span>'}
+
+/* ---------- auto-utkast ---------- */
+function autoDraft(){
+  const fw=words(st.free);draft=[];
+  const want={"1":1,"2":1,"3":1,"4":0,"5":1,"6":1,"7":st.us?1:0,"8":1};
+  sections().forEach(([sec,list])=>{
+    const n=want[sec[0]]||0; if(!n)return;
+    const L=list.map(s=>({s,p:score(s,fw)})).filter(x=>x.p!==null&&x.p>0).sort((a,b)=>b.p-a.p);
+    L.slice(0,n).forEach(({s})=>draft.push({id:s.id,t:s.t,del_:s.del_,orig:s.t}))});
+  save();renderSugs();renderDraft();toast(draft.length?"Utkast laget – juster etter behov":"Velg nivå eller skriv stikkord først");
+}
+
+/* ---------- import ---------- */
+function importTSV(txt){
+  const rows=txt.trim().split(/\r?\n/).map(r=>r.split("\t"));
+  if(rows.length<2) throw "For få rader";
+  const h=rows[0].map(x=>x.trim().toLowerCase());
+  const ix=n=>h.findIndex(x=>x.startsWith(n));
+  const I={id:ix("id"),del_:ix("del"),niv:ix("aktsom"),prob:ix("skredprob"),utv:ix("utvikl"),rek:ix("rekkev"),us:ix("usikk"),t:ix("setning")};
+  if(I.t<0||I.del_<0||I.niv<0) throw "Fant ikke kolonnene «Del av varselet», «Aktsomhetsnivå» og «Setning» i overskriftsraden";
+  const out=rows.slice(1).filter(r=>r[I.t]&&r[I.t].trim()).map((r,k)=>({id:(I.id>=0&&r[I.id])||("I"+(k+1)),del_:r[I.del_].trim(),niv:r[I.niv].trim(),
+    prob:(I.prob>=0&&r[I.prob].trim())||"Generelt",utv:(I.utv>=0&&r[I.utv].trim())||"–",rek:(I.rek>=0&&r[I.rek].trim())||"–",us:I.us>=0&&/x|ja/i.test(r[I.us]||""),t:r[I.t].replace(/^"|"$/g,"").trim()}));
+  if(!out.length) throw "Ingen setninger funnet";
+  return out;
+}
+
+/* ---------- init ---------- */
+function save(){store.set("ssk_draft",draft);store.set("ssk_ph",phv)}
+function render(){if(IDF._N!==DATA.length||IDF._D!==DATA){buildIdf();IDF._D=DATA}syncChips();renderSugs();$("#cnt").textContent=DATA.length+" setninger"}
+chips("#cNiv",LEVELS,"niv",false,true);chips("#cProb",PROBS,"prob",true);chips("#cUtv",UTV,"utv");chips("#cRek",REK,"rek");
+$("#tUs").onclick=()=>{st.us=!st.us;render()};$("#tAll").onclick=()=>{st.all=!st.all;render()};
+let tmr;$("#free").oninput=e=>{clearTimeout(tmr);tmr=setTimeout(()=>{st.free=e.target.value;parseFree(st.free);render()},250)};
+$("#search").oninput=e=>{st.search=e.target.value;renderSugs()};
+$("#bAuto").onclick=autoDraft;
+$("#bClear").onclick=()=>{draft=[];save();renderDraft();renderSugs()};
+$("#bReset").onclick=()=>{st={niv:null,prob:[],utv:null,rek:null,us:false,all:false,free:"",search:""};auto={};$("#free").value="";$("#search").value="";draft=[];phv={};save();render();renderDraft()};
+$("#bVarsel").onclick=()=>{if(!draft.length){toast("Utkastet er tomt");return}
+  /* setningskatalogen er for skredfarevurderingen: all tekst går til «Vurdering» i Varselskriver */
+  const felt={vurdering:draft.map(d=>cap(fill(d.t).trim())).filter(Boolean).join(" ")};
+  const ap=Object.values(felt).join(" ").match(/\[[^\]]+\]/g);if(ap&&!confirm("Teksten har ufylte plassholdere ("+[...new Set(ap)].slice(0,4).join(", ")+"). Overføre likevel?"))return;
+  SKRED.send("varsel",{kilde:"setninger",felt,prosjekt:SKRED.id||undefined});registrerBruk&&registrerBruk()};
+$("#bCopy").onclick=async()=>{const t=text();if(!t){toast("Utkastet er tomt");return}
+  registrerBruk();
+  try{await navigator.clipboard.writeText(t);toast("Kopiert")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("Kopiert")}catch(e2){toast("Merk teksten og kopier manuelt")}ta.remove()}
+  visKandidater()};
+function registrerBruk(){const k=ctxKey();draft.forEach(d=>{if(endret(d)||!d.id)return;const b=BRUK[d.id]=BRUK[d.id]||{};b[k]=(b[k]||0)+1;b._n=(b._n||0)+1});lagreBruk();renderSugs()}
+const opt=(l,v)=>l.map(x=>`<option ${x===v?"selected":""}>${esc(x)}</option>`).join("");
+let KAND=[];
+function visKandidater(){KAND=draft.filter(d=>endret(d)&&d.t&&d.t.trim().length>8);if(!KAND.length)return;
+  $("#kandListe").innerHTML=KAND.map((d,i)=>`<div class="kand"><label style="font-size:13px"><input type="checkbox" checked data-i="${i}" style="width:auto"> ${d.ny?"Egen setning":"Endret setning"}</label>
+   <textarea rows="2" data-f="t">${esc(fill(d.t)===d.t?d.t:d.t)}</textarea>${d.orig&&!d.ny?`<div class="hint">Original: ${esc(d.orig)}</div>`:""}
+   <div class="kgrid"><div><label>Del av varselet</label><select data-f="del_">${opt(sections().map(x=>x[0]),d.del_)}</select></div>
+    <div><label>Aktsomhetsnivå</label><select data-f="niv">${opt(["Alle"].concat(LEVELS),st.niv||"Alle")}</select></div>
+    <div><label>Skredproblem</label><select data-f="prob">${opt(PROBS,st.prob[0]||"Generelt")}</select></div>
+    <div><label>Utvikling</label><select data-f="utv">${opt(["–"].concat(UTV),st.utv||"–")}</select></div>
+    <div><label>Rekkevidde</label><select data-f="rek">${opt(["–"].concat(REK),st.rek||"–")}</select></div>
+    <div><label>Usikkerhet</label><select data-f="us">${opt(["nei","ja"],st.us?"ja":"nei")}</select></div></div></div>`).join("");
+  $("#mKand").classList.add("on")}
+$("#kandX").onclick=()=>$("#mKand").classList.remove("on");
+$("#kandOk").onclick=async()=>{const bokser=[...document.querySelectorAll("#kandListe .kand")];let n=0;
+  for(const [i,el] of bokser.entries()){if(!el.querySelector("input[type=checkbox]").checked)continue;const f=k=>el.querySelector(`[data-f="${k}"]`).value;
+    const o={id:"N"+Date.now().toString(36)+i,t:f("t").trim(),del_:f("del_"),niv:f("niv"),prob:f("prob"),utv:f("utv"),rek:f("rek"),us:f("us")==="ja",laert:true,
+      basis:KAND[i].ny?null:KAND[i].id,laget:new Date().toISOString()};
+    if(!o.t)continue;await lagreSetning(o);n++;
+    const d=KAND[i];d.id=o.id;d.orig=o.t;d.ny=false;const b=BRUK[o.id]=BRUK[o.id]||{};const k=ctxKey();b[k]=(b[k]||0)+1;b._n=(b._n||0)+1}
+  if(n)lagreBruk();save();$("#mKand").classList.remove("on");renderDraft();renderSugs();toast(n?`${n} setning${n>1?"er":""} lagret i katalogen`:"Ingen lagret")};
+$("#bEgen").onclick=()=>{const sec=sections().map(x=>x[0]);draft.push({id:null,t:"",del_:sec.find(x=>x[0]==="2")||sec[0],ny:true});save();renderDraft();
+  const ts=document.querySelectorAll("#draft .txt");ts[ts.length-1]?.focus()};
+$("#bLaer").onclick=()=>{
+  $("#laerInfo").textContent=(LAER.modus==="db"?(LAER.skriv?"Lærte setninger og bruksstatistikk lagres i verktøyet og følger deg på tvers av enheter.":"Du kan lese lærte setninger, men dine valg lagres bare i denne nettleseren."):"Lærte setninger og bruksstatistikk lagres bare i denne nettleseren.")+` ${LAERT.length} lærte setninger.`;
+  $("#laerListe").innerHTML=LAERT.length?`<table class="ltab"><tr><th>Setning</th><th>Del</th><th>Merking</th><th></th></tr>${LAERT.map(x=>`<tr><td>${esc(x.t)}</td><td>${esc(x.del_)}</td><td>${esc(x.niv)} · ${esc(x.prob)}${x.utv&&x.utv!=="–"?" · "+esc(x.utv):""}${x.rek&&x.rek!=="–"?" · "+esc(x.rek):""}</td><td><button class="more" data-slett="${esc(x.id)}">Slett</button></td></tr>`).join("")}</table>`:'<div class="empty">Ingen lærte setninger ennå.</div>';
+  const topp=Object.entries(BRUK).filter(([,b])=>b._n).sort((a,b)=>b[1]._n-a[1]._n).slice(0,15);
+  $("#laerBruk").innerHTML=topp.length?`<table class="ltab"><tr><th>Brukt</th><th>Setning</th></tr>${topp.map(([id,b])=>{const s=DATA.find(x=>x.id===id);return`<tr><td>${b._n}×</td><td>${s?esc(s.t):'<span class="empty">(ikke i katalogen)</span>'}</td></tr>`}).join("")}</table>`:'<div class="empty">Ingen bruk registrert ennå. Bruk registreres når du kopierer teksten.</div>';
+  $("#mLaer").classList.add("on")};
+$("#laerListe").addEventListener("click",async e=>{const b=e.target.closest("[data-slett]");if(!b)return;if(!confirm("Slette setningen fra katalogen?"))return;await slettSetning(b.dataset.slett);$("#bLaer").onclick()});
+$("#laerX").onclick=()=>$("#mLaer").classList.remove("on");
+$("#laerNull").onclick=()=>{if(!confirm("Nullstille bruksstatistikken?"))return;BRUK={};lagreBruk();render();$("#bLaer").onclick()};
+$("#laerTsv").onclick=async()=>{const r=["ID\tDel av varselet\tAktsomhetsnivå\tSkredproblem\tUtvikling\tRekkevidde\tUsikkerhet\tSetning"].concat(LAERT.map(x=>[x.id,x.del_,x.niv,x.prob,x.utv,x.rek,x.us?"x":"",x.t].join("\t"))).join("\n");
+  try{await navigator.clipboard.writeText(r);toast("Kopiert – lim inn i Excel")}catch(e){toast("Kunne ikke kopiere")}};
+$("#bImp").onclick=()=>{$("#impMsg").textContent="";$("#mImp").classList.add("on")};
+$("#impX").onclick=()=>$("#mImp").classList.remove("on");
+$("#impStd").onclick=()=>{BASE=BUILTIN;rebuild();try{localStorage.removeItem("ssk_data")}catch(e){};$("#mImp").classList.remove("on");render();toast("Innebygd katalog i bruk")};
+$("#impOk").onclick=()=>{try{const d=importTSV($("#impTxt").value);BASE=d;rebuild();store.set("ssk_data",d);$("#mImp").classList.remove("on");render();toast(d.length+" setninger importert")}catch(e){$("#impMsg").textContent="Feil: "+e}};
+settStatus();render();renderDraft();initDb();
+</script>
+</body>
+</html>

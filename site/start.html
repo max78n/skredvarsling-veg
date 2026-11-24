@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Start – Skredvarsling veg</title>
+<style>
+:root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--acc:#ed9300;--acct:#fff4e0}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+main{padding:16px 20px;max-width:1500px;margin:auto}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px}
+.note{color:var(--muted);font-size:12px}
+.topp{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1.2fr 1fr .8fr;gap:14px}
+@media(max-width:1150px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:14px}
+.tid{width:100%;border-collapse:collapse;font-size:13.5px}
+.tid td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tid td:first-child{white-space:nowrap;font-weight:600;width:92px}
+.tid tr.ferdig td{color:#9aa4a9}
+.tid tr.neste td{background:var(--acct)}
+.tid tr.neste td:first-child{box-shadow:inset 4px 0 0 var(--acc)}
+.tid tr.ikkeidag td{color:#b5bdc1;font-style:italic}
+.tid a{color:inherit}
+.dok{display:flex;flex-direction:column;gap:4px}
+.dok a,.dok span.mangler{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:4px;text-decoration:none;color:var(--ink)}
+.dok a:hover{background:#f6efe2}
+.dok span.mangler{color:#9aa4a9;cursor:help}
+.ik{width:30px;height:30px;border-radius:4px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex:none}
+.x{background:#1d6f42}.w{background:#2b579a}.p{background:#c43e1c}.f{background:#b30b00}.n{background:#5d6b73}.t{background:var(--acc)}
+.mangler .ik{opacity:.45}
+.kode{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13.5px}
+.kode b{font-family:Consolas,monospace;font-weight:600}
+.kode .tom{color:#9aa4a9;font-style:italic}
+.klokke{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+/* morgenbrief */
+#brief{margin-top:18px}
+#brief h2.bh{font-size:17px;margin:0 0 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+#brief .chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+#brief .chip{font-size:12px;padding:2px 8px;border-radius:3px;background:#e6eaec}
+#brief .chip.ok{background:#dff0e2}#brief .chip.adv{background:#ffe1dd}
+#brief .auto{background:var(--acct);border-left:4px solid var(--acc);padding:6px 10px;font-size:12.5px;margin:8px 0}
+#brief .ld{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}@media(max-width:1100px){#brief .ld{grid-template-columns:1fr}}
+#brief .card{overflow-x:auto}
+#brief h3{font-size:15px;margin:0}
+#brief .tekst{font-size:14px;margin:6px 0 10px;white-space:pre-line;line-height:1.55}
+#brief .tekst.auto2{color:var(--muted);font-style:italic}
+#brief table.sum{border-collapse:collapse;width:100%}
+#brief table.sum th,#brief table.sum td{border-bottom:1px solid var(--line);padding:3px 4px;font-size:12px;text-align:right;white-space:nowrap}
+#brief table.sum th{background:#eef0f1;font-weight:600}
+#brief table.sum th.gr2{background:#e3edf6}
+#brief table.sum .l{text-align:left;white-space:normal}
+#brief tr.laast td{box-shadow:inset 0 -2px 0 var(--acc)}#brief tr.laast td:first-child{box-shadow:inset 4px -2px 0 var(--acc)}
+#brief .fg{display:inline-block;min-width:20px;text-align:center;font-weight:700;border-radius:3px;padding:0 5px}
+#brief .fg0{background:#eef0f1;color:#8a979e;font-weight:400}#brief .fg1{background:#56b528;color:#fff}#brief .fg2{background:#ffe800}#brief .fg3{background:#f18700}#brief .fg4{background:#e3001a;color:#fff}#brief .fg5{background:#000;color:#fff}
+#brief .sk{display:inline-block;min-width:14px;text-align:center;padding:0 2px;border-radius:3px;font-weight:600;font-size:11px}
+#brief .sk0{background:#3a9b5c;color:#fff}#brief .sk1{background:#f2d21a}#brief .sk2{background:#ed9300}#brief .sk3{background:#d0342c;color:#fff}#brief .skx{background:#eef0f1;color:#8a979e;font-weight:400}
+#brief .hi{background:#fff1b8}#brief .hi2{background:#ffd0a1}
+#brief .fv{font-size:12.5px;margin:2px 0}#brief .fvn{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+#brief .yellow{background:#f2d21a}#brief .orange{background:#ed9300}#brief .red{background:#d0342c}
+#brief .merk{margin:4px 0 8px;padding-left:18px;font-size:12.5px}#brief .merk li{margin:1px 0}
+#brief .gr{color:#9aa4a9}
+#brief{--obs:#e4eedf;--obs2:#f6f9f4;--prog:#dbe8f6;--prog2:#f3f7fc}
+#brief .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:0 5px;border-radius:3px;margin-right:4px;vertical-align:1px}
+#brief .tag.o{background:#5d7a52;color:#fff}#brief .tag.p{background:#2b6cb0;color:#fff}
+#brief .forkl{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;margin:4px 0 8px}
+#brief table.sum th.go{background:var(--obs)}#brief table.sum th.gp{background:var(--prog)}
+#brief table.sum td:nth-child(n+2):nth-child(-n+5){background:var(--obs2)}#brief table.sum td:nth-child(n+6):nth-child(-n+11){background:var(--prog2)}
+#brief table.sum td:nth-child(2),#brief table.sum td:nth-child(6),#brief table.sum td:nth-child(9),#brief table.sum td:nth-child(12){border-left:2px solid #8a979e}
+#brief table.sum tr.h2 th:nth-child(-n+4){background:var(--obs)}#brief table.sum tr.h2 th:nth-child(n+5){background:var(--prog)}
+#brief table.sum tr.h2 th:nth-child(1),#brief table.sum tr.h2 th:nth-child(5),#brief table.sum tr.h2 th:nth-child(8){border-left:2px solid #8a979e}
+#brief table.sum th.gs{border-left:2px solid #8a979e}
+#brief .vv{display:inline-block;padding:0 4px;border-radius:3px}
+#brief .vrr0{color:#9aa4a9}#brief .vrr1{background:#d6e8f8}#brief .vrr2{background:#8cc0ee}#brief .vrr3{background:#1f6fd1;color:#fff}#brief .vrr4{background:#123f8c;color:#fff}#brief .vrr5{background:#6a1b9a;color:#fff}
+#brief .vsn0{color:#9aa4a9}#brief .vsn1{color:#1f6fd1;font-weight:600}#brief .vsn2{background:#1f6fd1;color:#fff;font-weight:700}#brief .vsn3{background:#123f8c;color:#fff;font-weight:700}
+#brief .vw1{background:#f2cf00;color:#222}#brief .vw2{background:#ec7a08;color:#fff}#brief .vw3{background:#d0202e;color:#fff}
+#brief .vdn{background:#dbe9f8;color:#0b4a8a}#brief .vds{background:#fde3cc;color:#8a4300}
+#brief .tneg{color:#1f6fd1;font-weight:600}#brief .tpos{color:#d0202e;font-weight:600}
+#brief .vopp{color:#d0202e;font-weight:700;margin-left:2px}#brief .vned{color:#2e7d32;font-weight:700;margin-left:2px}
+#brief .to{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){#brief .to{grid-template-columns:1fr}}
+.agenda{margin-top:4px;font-size:13px}.agenda summary{cursor:pointer;color:var(--muted)}.agenda ul,.agenda ol{margin:4px 0 6px;padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+  <div class="topp"><img src="logo.png" alt="Skredvarsling for veg – Statens vegvesen" style="width:88px;height:88px;align-self:center"><h1>Stedsspesifikk skredvarsling – vakt</h1><span class="klokke" id="klokke"></span><span class="note" id="dato"></span></div>
+  <div class="grid">
+    <div class="card"><h2>Tidsplan for vakta</h2><table class="tid" id="tid"></table>
+      <p class="note">Neste oppgave er uthevet ut fra klokka (norsk tid). Grå = ferdig i dag eller ikke aktuelt i dag.</p></div>
+    <div class="card"><h2>Varslingsverktøy og wiki</h2><div class="dok" id="dokVerktoy"></div>
+</div>
+    <div class="card"><h2>Timeføring <span class="note">(merk med skredvarsling)</span></h2><div class="kode" id="koder"></div>
+      <div class="dok" id="dokDfo" style="margin-top:8px"></div></div>
+  </div>
+  <section id="brief">
+    <h2 class="bh">Morgenbrief <span id="briefDato" style="font-size:15px"></span></h2>
+    <div class="chips" id="briefChips"></div>
+    <div class="auto" id="briefNote"></div>
+    <div class="forkl"><span><span class="tag o">OBS</span>Observert (seNorge, værstasjoner) – døgnet som slutter kl. 07:00</span><span><span class="tag p">PROGNOSE</span>MET Locationforecast (MEPS) i løsneområdet</span><span><span class="tag p">VARSEL</span>Varsom og MET farevarsler</span></div>
+    <div class="ld" id="briefLd"><div class="card note">Henter morgenbriefen …</div></div>
+    <p class="note" id="briefFot"></p>
+  </section>
+  <p class="note" id="mangelNote"></p>
+</main>
+<script>
+/* SKRED – felles klient for arbeidsprosjekt (snakker med menysiden) */
+(function(){const R=window.SKRED={id:null,laas:false,cb:[]};R.on=f=>{R.cb.push(f);if(R.id!==null)f(R.id,R.laas)};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  addEventListener('message',e=>{const d=e.data||{};if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){}})}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}})();
+</script>
+<script>
+/* Lenker til SharePoint. Tom streng = lenke mangler (vises grå). Nøkkel som starter med # = fane i verktøyet. */
+const L={
+  vaktrapport:'', vaktplan:'', kontakt_stedsspesifikk:'', kontakt_flom:'',
+  prosedyre:'https://vegvesen.sharepoint.com/sites/org-DoV-geofag/09%20Fagtema/Skred/04%20Overv%C3%A5kning%20varsling/03%20Stedspesifikk%20skredvarsling/01%20Prosedyre/01%20Prosedyre%20stedsspesifikk%20skredvarsling/Prosedyre%20for%20stedsspesifikk%20skredvarsling%20for%20veg%20V2.docx', skrive_varsel:'', setningskatalog_xlsx:'',
+  respons:'https://kart.vegvesen.no/respons', logikk:'', konsekvens:'https://vegvesen.sharepoint.com/:x:/s/org-DoV-geofag/EVeO8LeUTB1NlArwWql9-ycBJBKU1DoAvTCBBN7iUbqiLw?e=Hpbd6y', dim_liste:'https://vegvesen.sharepoint.com/:x:/s/org-DoV-geofag/EVTQvYB0nLFLuwTXAiDFt1QB1L70-DxPlyDzeK5ZrIfxFg?e=BM9oWo', dim_bilder:'https://vegvesen.sharepoint.com/:p:/s/org-DoV-geofag/Ee5bWW-waStPsWZAXaDRe1sBU7M8RKetBYpY6D7lKtgtAg?e=YLQa6O', wiki_aktsomhet:'https://www.vegvesen.no/wiki/spaces/GSV/pages/294576479/4.1+Stedsspesifikk+skredvarsling',
+  dfo:'https://www.vegvesen.no/wiki/spaces/GSV/pages/344887496/F%c3%b8ring+av+vakter+i+DF%c3%98', metbrief:'', vaktskifte:'',
+  morgenbrief:'@brief'
+};
+const KODER=[['E134 Haukelifjell','C14097-DB04'],['Rv15 Strynefjellet','C13671-DB04'],['Rv13 Vikafjellet','C16477-DB04'],['Rv85 Gullesfjord',''],['E69 Nordkapp',''],['Rv94 Hammerfest','']];
+const TID=[ // [klokkeslett hverdag, helg, tekst, lenkenøkkel, dager (0=søn..6=lør) eller null]
+  ['07:30','07:30','Les morgenbriefen nedenfor (lages automatisk kl. 07:15, ferdig ca. 07:25)','morgenbrief',null],
+  ['08:40','08:40','Morgenmøte med snøskredvarslinga og skredvakt N/S',null,null],
+  ['09:00','09:45','Met-brief','metbrief',null],
+  ['09:00',null,'Snødekke statusmøte (Varsom-observatører og skredvarsler)',null,[4]],
+  ['13:30','13:30','Sidemannskontroll av varsel (før 13:30). Gyldighetsvurderingen trenger ingen KS.',null,null],
+  ['14:00','14:00','Publisering og utsending av skredvarsel',null,null],
+  ['14:15',null,'Vaktskiftemøte 14:15–14:45 (møteleder: påtroppende vakt i sør)','vaktskifte',[3],'vaktskifte'],
+  ['Siste vaktdag','Siste vaktdag','Utfylling av vaktrapport','vaktrapport','siste']
+];
+const AGO={};const AGENDA={vaktskifte:`<b>Avtroppende vakt før vaktskiftet:</b><ul><li>Rydd innboksene i skredberedskap-eposten, også mappene Elrapp og Retriever. Bare pågående saker blir liggende; håndterte saker arkiveres.</li><li>Skriv vaktrapport.</li></ul>
+<b>Saker:</b><ol><li>Pågående saker (er loggen oppdatert?)</li><li>Pågående vær og naturfarer</li><li>Legg inn møter fra skredberedskap-kalenderen i egen kalender</li><li>Sett over telefonen</li><li>Eventuelt</li></ol>`};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const IK={x:'X',w:'W',p:'P',f:'PDF',n:'🌐',t:'↗'};
+const gaaFane=f=>`try{parent.location.hash='${f}'}catch(e){location.hash='${f}'};return false`;
+const intern=(fane,tekst,ik='t')=>`<a href="#" onclick="${gaaFane(fane)}"><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</a>`;
+const lenke=(nok,tekst,ik)=>L[nok]?`<a href="${esc(L[nok])}" target="_blank" rel="noopener"${/^https?:/.test(L[nok])?'':' download'}><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</a>`:`<span class="mangler" title="Lenke mangler"><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</span>`;
+const tilBrief=`document.getElementById('brief').scrollIntoView({behavior:'smooth'});return false`;
+dokVerktoy.innerHTML=[lenke('respons','RESPONS – varslingsverktøy','n'),lenke('konsekvens','Konsekvensmatriser','x'),
+  lenke('dim_liste','Dimensjonerende skredstørrelser – liste','x'),lenke('dim_bilder','Dimensjonerende skredstørrelser – bilder','p'),
+  lenke('wiki_aktsomhet','Wiki – 4.1 Stedsspesifikk skredvarsling','n')].join('');
+dokDfo.innerHTML=lenke('dfo','Føring av vakter i DFØ','n');
+koder.innerHTML=KODER.map(([n,k])=>`<span>${esc(n)}</span>${k?`<b>${esc(k)}</b>`:'<span class="tom">mangler</span>'}`).join('');
+
+function oslo(){const f=new Intl.DateTimeFormat('nb-NO',{timeZone:'Europe/Oslo',weekday:'short',hour:'2-digit',minute:'2-digit',day:'numeric',month:'long',year:'numeric',hourCycle:'h23'}).formatToParts(new Date());const g=t=>f.find(p=>p.type===t)?.value;
+  const wd=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Oslo'})).getDay();return{h:+g('hour'),m:+g('minute'),wd,tekst:`${g('weekday')} ${g('day')}. ${g('month')} ${g('year')}`}}
+function tegnTid(){const o=oslo(),helg=o.wd===0||o.wd===6,naa=o.h*60+o.m;klokke.textContent=String(o.h).padStart(2,'0')+':'+String(o.m).padStart(2,'0');dato.textContent=o.tekst;
+  let nesteFunnet=false;
+  tid.innerHTML=TID.map(([hv,hg,t,nok,dager,ag])=>{const kl=helg?hg:hv;const idag=dager===null||dager==='siste'||(Array.isArray(dager)&&dager.includes(o.wd))&&kl!==null;
+    let kls='';const min=kl&&/^\d\d:\d\d$/.test(kl)?(+kl.slice(0,2))*60+(+kl.slice(3)):null;
+    if(!idag||kl===null)kls='ikkeidag';else if(min!==null&&min<naa-(t.startsWith('Sidemann')?0:20))kls='ferdig';else if(min!==null&&!nesteFunnet){kls='neste';nesteFunnet=true}
+    const u=nok&&L[nok];
+    const tekst=!u?esc(t):u.startsWith('@')?`<a href="#" onclick="${tilBrief}">${esc(t)} ↓</a>`:u.startsWith('#')?`<a href="#" onclick="${gaaFane(u.slice(1))}">${esc(t)} ↗</a>`:`<a href="${esc(u)}" target="_blank" rel="noopener"${/^https?:/.test(u)?'':' download'}>${esc(t)}</a>`;
+    const visKl=kl===null?(hv+(Array.isArray(dager)?' ('+['søn','man','tir','ons','tor','fre','lør'].filter((_,i)=>dager.includes(i)).join(', ')+')':'')):kl+(Array.isArray(dager)?' ('+['søn','man','tir','ons','tor','fre','lør'].filter((_,i)=>dager.includes(i)).join(', ')+')':'')+(helg&&hv!==hg&&hg?' (helg)':'');
+    return `<tr class="${kls}"><td>${esc(visKl)}</td><td>${tekst}${ag&&AGENDA[ag]?`<details class="agenda" ontoggle="AGO['${ag}']=this.open"${(AGO[ag]??kls==='neste')?' open':''}><summary>Fast agenda</summary>${AGENDA[ag]}</details>`:''}</td></tr>`}).join('')}
+tegnTid();setInterval(tegnTid,30e3);
+</script>
+<script>
+/* Morgenbrief: data hentes fra morgenbrief.html (bygges automatisk kl. 07:15) og vises her. */
+(function(){
+const f=(v,e='')=>v==null||v===''?'<span class="gr">–</span>':`${String(v).replace('.',',')}${e}`;
+const tid=s=>s?new Date(s).toLocaleString('nb-NO',{timeZone:'Europe/Oslo',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
+const dag=s=>new Date(s+'T12:00:00Z').toLocaleDateString('nb-NO',{weekday:'short',day:'numeric',month:'short'});
+const SKN=['Grønt','Gult','Oransje','Rødt'];
+const fgB=v=>{const n=v==null?null:+v;return n==null?'<span class="fg fg0">–</span>':`<span class="fg fg${n}" title="${n?'Faregrad '+n:'Ikke vurdert'}">${n||'–'}</span>`};
+const skB=s=>s==null?'<span class="sk skx" title="Ingen data">–</span>':`<span class="sk sk${s.maks}" title="${SKN[s.maks]}">&nbsp;</span>`;
+const hl=(v,g)=>v!=null&&g!=null&&v>=g?'hi':'';
+const ok_=v=>v!=null&&v!==''&&isFinite(+v);
+const nb=v=>{if(!ok_(v))return f(v);v=+v;const k=v<0.5?0:v<5?1:v<10?2:v<20?3:v<30?4:5;return`<span class="vv vrr${k}">${f(v)}</span>`};
+const ns=(v,g)=>{if(!ok_(v))return f(v);v=+v;g=g||20;const k=v>=2*g?3:v>=g?2:v>=g/2?1:0;return`<span class="vv vsn${k}">${f(v)}</span>`};
+const wv=v=>{if(!ok_(v))return f(v);v=+v;const k=v>=24.5?3:v>=17.2?2:v>=10.8?1:0;return k?`<span class="vv vw${k}">${f(v)}</span>`:f(v)};
+const rC=t=>!t?'':/^(NV|N|NØ)$/.test(t)?`<span class="vv vdn">${t}</span>`:/^(S|SØ)$/.test(t)?`<span class="vv vds">${t}</span>`:`<span class="note">${esc(t)}</span>`;
+const pilN=(a,b)=>a==null||b==null||+a===+b?'':+a>+b?'<span class="vopp" title="øker fra i dag">▲</span>':'<span class="vned" title="avtar fra i dag">▼</span>';
+const txt=t=>esc(t).replace(/^\s*Observert siste døgn:/gm,'<span class="tag o">OBS</span><b>Observert siste døgn:</b>').replace(/^\s*Prognose i dag og i morgen:/gm,'<span class="tag p">PROGNOSE</span><b>Prognose i dag og i morgen:</b>').replace(/^\s*Varsler:/gm,'<span class="tag p">VARSEL</span><b>Varsler:</b>');
+const maks=xs=>{const v=xs.filter(x=>x!=null&&!isNaN(x));return v.length?Math.max(...v):null};
+const fvTxt=x=>`${esc(x.type||'')}, ${esc(x.omrade||'')}, ${tid(x.fra)} – ${tid(x.til)}`;
+let B=null,PID='';
+function rad(id){
+  const p=B.prosjekt[id],d=p.deler,M=B.merk;
+  const ob=k=>maks(d.map(x=>x.obs?.[k])),pr=(per,k)=>maks(d.map(x=>x[per]?.[k]));
+  const retn=per=>{let b=null;d.forEach(x=>{const v=x[per];if(v&&v.fg!=null&&(!b||v.fg>b.fg))b=v});return b?.retn||''};
+  const regnLos=per=>d.some(x=>x[per]&&x[per].iso1!=null&&x[per].iso1>x.bunn&&(x[per].rr||0)>=M.regn_pa_sno_rr);
+  const kastSt=maks(p.stasjoner.map(s=>s.FGmax));
+  const kast=(per)=>{const v=pr(per,'fg'),r=retn(per);return `<td>${wv(v)}${r?' '+rC(r):''}</td>`};
+  const over=per=>d.some(x=>x[per]&&x[per].iso1!=null&&x[per].iso1>x.bunn);
+  const iso=per=>{const v=pr(per,'iso1');return `<td class="${regnLos(per)?'hi':''}" title="${regnLos(per)?'Regn i løsneområdet (0-iso over bunnen og RR ≥ '+M.regn_pa_sno_rr+' mm)':over(per)?'0-iso over bunnen av løsneområdet i minst ett delområde':''}">${v==null?f(v):`<span class="${over(per)?'tpos':'tneg'}">${f(v)}</span>`}</td>`};
+  return `<tr data-id="${id}" class="${PID===id?'laast':''}"><td class="l"><b>${esc(p.navn)}</b></td>
+    <td>${nb(ob('rr'))}</td><td>${ns(ob('nysno'),M.nysno)}</td><td class="${hl(ob('dhs3'),M.dHS3)}">${f(ob('dhs3'))}</td><td>${wv(kastSt)}</td>
+    <td>${nb(pr('p1','rr'))}</td>${kast('p1')}${iso('p1')}
+    <td>${nb(pr('p2','rr'))}</td>${kast('p2')}${iso('p2')}
+    <td>${skB(p.skygge?.i_dag)} ${skB(p.skygge?.i_morgen)}${pilN(p.skygge?.i_morgen?.maks,p.skygge?.i_dag?.maks)}</td></tr>`}
+function tegn(){
+  const T=B.tekst||{},M=B.merk;
+  briefDato.textContent=dag(B.i_dag);
+  const alder=(Date.now()-new Date(B.laget))/36e5;
+  briefChips.innerHTML=[`<span class="chip ${alder>20?'adv':'ok'}">Laget ${tid(B.laget)}</span>`,`<span class="chip">Obs til ${tid(B.obs_siste)}</span>`,
+    `<span class="chip">MEPS ${esc(B.meps||'–')}</span>`,`<span class="chip ${B.feil.length?'adv':'ok'}">${B.feil.length?B.feil.length+' feil ved henting':'Alle kilder hentet'}</span>`,
+    B.varsom_utstedt?'':`<span class="chip">Varsom: ingen regionale varsler utstedt</span>`].join('');
+  briefNote.innerHTML=`<b>Automatisk generert, ikke kvalitetssikret.</b> Tall fra MET Frost, NVE seNorge, MET Locationforecast (MEPS), Varsom og MET farevarsler. Utheving etter indikative grenser (nedbør/nysnø ≥ ${M.rr} mm/cm, kast ≥ ${M.kast} m/s, ΔHS ≥ ${M.dHS3} cm på 3 døgn, regn i løsneområdet ≥ ${M.regn_pa_sno_rr} mm) – ikke terskler.`+
+    (alder>20?` <b style="color:#b0302a">Briefen er ${Math.round(alder)} timer gammel.</b>`:'');
+  briefLd.innerHTML=Object.entries(B.landsdeler).map(([k,L])=>{
+    const reg=L.regioner.filter(r=>r.navn);
+    const fv=L.farevarsler.length?L.farevarsler.map(x=>`<div class="fv"><span class="fvn ${esc(x.niva)}"></span>${fvTxt(x)}</div>`).join(''):'<span class="note">Ingen farevarsler for land.</span>';
+    const merk=L.prosj.flatMap(id=>(B.prosjekt[id].merknader||[]).map(m=>`<li><b>${esc(B.prosjekt[id].navn)}:</b> ${esc(m)}</li>`));
+    const tx=T.landsdel?.[k];
+    return `<div class="card"><h3>${esc(L.navn)}</h3>
+      <div class="tekst ${tx?'':'auto2'}">${tx?txt(tx):'Ingen skrevet oppsummering i denne kjøringen – se tallene under.'}</div>
+      <table class="sum"><tr><th class="l" rowspan="2">Strekning</th><th colspan="4" class="go gs" style="text-align:center"><span class="tag o">OBS</span>Siste døgn</th><th colspan="3" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I dag</th><th colspan="3" class="gp gs" style="text-align:center"><span class="tag p">PROGNOSE</span>I morgen</th><th rowspan="2" title="Skyggevarsel i dag / i morgen">Skygge</th></tr>
+      <tr class="h2"><th>RR</th><th>Nysnø</th><th>ΔHS 3d</th><th>Kast</th><th>RR</th><th>Kast</th><th>0-iso</th><th>RR</th><th>Kast</th><th>0-iso</th></tr>
+      ${L.prosj.map(rad).join('')}</table>
+      <p class="note" style="margin:4px 0 8px">Høyeste verdi blant delområdene. Observert: nedbør, nysnø og ΔHS fra seNorge, kast fra stasjonene. Prognose: MEPS i løsneområdet (i dag = 24 t fra 07:00), kast med retning. Enheter: mm, cm, m/s; 0-iso = maks nullgradersgrense i moh., ekstrapolert fra topp og bunn; rød = over bunnen av løsneområdet i minst ett delområde, blå = kuldegrader i hele løsneområdet. Farger: nedbør &lt; 5 / 5–10 / 10–20 / 20–30 / ≥ 30 mm; nysnø blå tekst ≥ halv grense, blå boks ≥ ${M.nysno} cm; kast gul ≥ 10,8, oransje ≥ 17,2, rød ≥ 24,5 m/s; retning blå = NV–N–NØ, oransje = S–SØ (tommelfingerregel fra Nord-Norge). ▲/▼ = endring fra i dag til i morgen.</p>
+      ${merk.length?`<b style="font-size:13px">Merknader</b><ul class="merk">${merk.join('')}</ul>`:''}
+      <div class="to">
+        <div><b style="font-size:13px"><span class="tag p">VARSEL</span>Varsom faregrad</b> <span class="note">i dag / i morgen</span>
+          <div style="columns:2;font-size:12.5px;margin-top:4px">${reg.map(r=>`<div title="${esc(r.i_dag?.tekst||'')}">${fgB(r.i_dag?.fg)} ${fgB(r.i_morgen?.fg)}${+r.i_dag?.fg&&+r.i_morgen?.fg?pilN(r.i_morgen.fg,r.i_dag.fg):''} ${esc(r.navn)}</div>`).join('')}</div></div>
+        <div><b style="font-size:13px"><span class="tag p">VARSEL</span>MET farevarsler</b><div style="margin-top:4px">${fv}</div></div>
+      </div></div>`}).join('');
+  briefFot.innerHTML=`Briefen lages automatisk kl. 07:15 (ferdig ca. 07:25). Detaljer per delområde, grafer og kart: fanen Værpakke.`+
+    (B.feil.length?`<br><b>Feil ved henting:</b> ${B.feil.map(esc).join(' · ')}`:'');
+}
+async function hent(){
+  try{const r=await fetch('morgenbrief.html',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const m=(await r.text()).match(/^const BRIEF=(\{.*\});\s*$/m);if(!m)throw new Error('fant ikke data i morgenbrief.html');
+    B=JSON.parse(m[1]);tegn()}
+  catch(e){if(!B)briefLd.innerHTML=`<div class="card"><span style="color:#b0302a">Kunne ikke laste morgenbriefen: ${esc(e.message)}</span></div>`}}
+hent();setInterval(hent,30*60e3);
+SKRED.on(id=>{PID=id||'';document.querySelectorAll('#brief tr[data-id]').forEach(e=>e.classList.toggle('laast',e.dataset.id===PID))});
+})();
+</script>
+</body>
+</html>

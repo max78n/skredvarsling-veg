@@ -1,0 +1,90 @@
+# Bygger Værpakke og morgenbrief og publiserer sida på GitHub Pages.
+# GitHub bruker UTC. Tidene under gir 05:37, 08:37 … 20:37 norsk vintertid (sommertid: én time senere).
+# Morgenbriefen kjøres 05:15 og 06:15 UTC; kjøringen som ikke faller på kl. 07 norsk tid hoppes over.
+# GitHub kan forsinke planlagte kjøringer 5–30 min.
+name: Oppdater data
+
+on:
+  schedule:
+    - cron: '37 4,7,10,13,16,19 * * *'
+    - cron: '15 5,6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: oppdater
+  cancel-in-progress: false
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Sjekk tidspunkt for morgenbrief
+        id: tid
+        run: |
+          H=$(TZ=Europe/Oslo date +%H)
+          if [ "${{ github.event.schedule }}" = "15 5,6 * * *" ] && [ "$H" != "07" ]; then echo "hopp=1" >> $GITHUB_OUTPUT; else echo "hopp=0" >> $GITHUB_OUTPUT; fi
+
+      - uses: actions/checkout@v4
+        if: steps.tid.outputs.hopp == '0'
+
+      - uses: actions/setup-python@v5
+        if: steps.tid.outputs.hopp == '0'
+        with:
+          python-version: '3.12'
+
+      - name: Installer pakker
+        if: steps.tid.outputs.hopp == '0'
+        run: pip install -q netCDF4 numpy pyproj pillow python-pptx openpyxl
+
+      - name: Hendelsesbilder fra PowerPoint (hvis fila er lastet opp)
+        if: steps.tid.outputs.hopp == '0' && hashFiles('data/*.pptx') != ''
+        run: |
+          python3 kilde/skredbaner/hent_bilder.py data/*.pptx site/bilder/dim "data/Dimensjonerende skredstørrelser_stedsspesifikk skredvarsling.xlsx" || echo "::warning::Hendelsesbildene kunne ikke lages"
+
+      - name: Værpakke
+        if: steps.tid.outputs.hopp == '0'
+        working-directory: site
+        env:
+          FROST_CLIENT_ID: ${{ secrets.FROST_CLIENT_ID }}
+          SKREDAS_TOKEN: ${{ secrets.SKREDAS_TOKEN }}
+          WYSSEN_KEY: ${{ secrets.WYSSEN_KEY }}
+        run: |
+          python3 ../kilde/vaerpakke/bygg.py ../kilde/vaerpakke/config.json ../kilde/vaerpakke/mal.html vaerpakke.html --json ../data.json
+          rm -f kart_filer.txt
+
+      - name: Morgenbrief
+        if: steps.tid.outputs.hopp == '0' && (github.event.schedule == '15 5,6 * * *' || github.event_name == 'workflow_dispatch')
+        run: python3 kilde/morgenbrief/lag_brief.py data.json kilde/morgenbrief/mal_brief.html site/morgenbrief.html
+
+      - name: Lagre morgenbriefen i repoet (holder også de planlagte kjøringene aktive)
+        if: steps.tid.outputs.hopp == '0' && (github.event.schedule == '15 5,6 * * *' || github.event_name == 'workflow_dispatch')
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ morgenbrief ok" > sist_kjort.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add sist_kjort.txt site/morgenbrief.html
+          git commit -m "Morgenbrief $(date -u +%F)" || true
+          git push || true
+
+      - uses: actions/configure-pages@v5
+        if: steps.tid.outputs.hopp == '0'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.tid.outputs.hopp == '0'
+        with:
+          path: site
+
+      - id: deploy
+        if: steps.tid.outputs.hopp == '0'
+        uses: actions/deploy-pages@v4

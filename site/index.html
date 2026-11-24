@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skredvarsling veg – verktøy</title>
+<link rel="icon" type="image/png" href="logo_ikon.png">
+<style>
+html,body{margin:0;height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#f4f5f6}
+#meny{height:40px;background:#2f383d;display:flex;align-items:stretch;padding:0 12px;gap:2px}
+#meny b{color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;margin-right:18px;white-space:nowrap}
+#meny a{color:#c9d1d5;text-decoration:none;font-size:14px;display:flex;align-items:center;padding:0 14px;border-bottom:3px solid transparent;white-space:nowrap}
+#meny a:hover{color:#fff}
+#meny{position:relative;z-index:10}
+#underMeny{display:none;height:34px;background:#e3e7e9;border-bottom:1px solid #cfd5d8;align-items:stretch;padding:0 12px;gap:2px;overflow-x:auto}
+body.harUnder #underMeny{display:flex}
+#underMeny a{color:#3d4a50;text-decoration:none;font-size:13px;display:flex;align-items:center;padding:0 12px;border-bottom:3px solid transparent;white-space:nowrap}
+#underMeny a:hover{color:#000;background:#d7dcdf}
+#underMeny a.on{color:#000;border-bottom-color:#ed9300;font-weight:600}
+#underMeny .steg{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#c4ccd0;color:#2f383d;font-size:10.5px;font-weight:700;margin-right:6px}
+#underMeny a.on .steg{background:#ed9300;color:#000}
+#underMeny .til{display:flex;align-items:center;color:#9aa4a9;font-size:15px;padding:0 2px}
+#meny a.on{color:#fff;border-bottom-color:#ed9300;font-weight:600}
+#prosj{margin-left:auto;display:flex;align-items:center;gap:8px;color:#c9d1d5;font-size:13px;white-space:nowrap;padding-left:12px}
+#prosj select{font:inherit;font-size:13px;padding:3px 6px;border-radius:3px;border:1px solid #6b777d;background:#fff}
+#prosj.laast select{background:#ed9300;border-color:#ed9300;font-weight:600;color:#000}
+#prosjStripe{height:4px;background:#ed9300;display:none;flex:none}
+body{display:flex;flex-direction:column}#meny,#underMeny{flex:none}
+#sider{position:relative;flex:1;min-height:0}
+body.laast #prosjStripe{display:block}
+#sider iframe{position:absolute;inset:0;border:0;width:100%;height:100%;display:none;background:#f4f5f6}
+#sider iframe.on{display:block}
+/* delt visning: varsling til venstre, data til høyre */
+#deltKnapp{font:inherit;font-size:12.5px;padding:3px 10px;border-radius:3px;border:1px solid #6b777d;background:transparent;color:#c9d1d5;cursor:pointer;margin-left:auto;align-self:center;min-height:28px;white-space:nowrap}
+#deltKnapp:hover{color:#fff;border-color:#c9d1d5}
+body.delt #deltKnapp{background:#ed9300;border-color:#ed9300;color:#000;font-weight:600}
+#prosj{margin-left:12px}
+body.delt #sider iframe.venstre{right:auto;width:var(--v,55%)}
+body.delt #sider iframe.hoyre{left:calc(var(--v,55%) + 8px);width:calc(100% - var(--v,55%) - 8px);right:auto}
+#deler{display:none;position:absolute;top:0;bottom:0;left:var(--v,55%);width:8px;background:#cfd5d8;cursor:col-resize;z-index:2;touch-action:none}
+#deler:hover,body.drar #deler{background:#ed9300}
+#deler::after{content:'⋮';position:absolute;top:50%;left:0;right:0;text-align:center;color:#3d4a50;font-size:13px;transform:translateY(-50%)}
+body.delt #deler{display:block}
+body.drar #sider iframe{pointer-events:none}body.drar{cursor:col-resize;user-select:none}
+.panelmerke{display:none;position:absolute;top:4px;z-index:3;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:3px;color:#fff;pointer-events:none;opacity:.85}
+body.delt .panelmerke{display:block}
+#merkeV{left:6px;background:#5d7a52}#merkeH{left:calc(var(--v,55%) + 14px);background:#2b6cb0}
+#melding{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1f2a30;color:#fff;padding:8px 16px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;font-size:14px;z-index:9}
+#melding.on{opacity:1}
+@media(max-width:700px){#meny b{display:none}#meny{overflow-x:auto}}
+</style>
+</head>
+<body>
+<nav id="meny"><b><img src="logo_ikon.png" alt="" style="width:28px;height:28px;margin-right:9px">Skredvarsling veg – verktøy</b></nav>
+<div id="prosjStripe"></div>
+<nav id="underMeny"></nav>
+<div id="sider"><div id="deler" role="separator" aria-orientation="vertical" aria-label="Dra for å endre bredden på panelene" tabindex="0"></div></div>
+<div id="melding"></div>
+<script>
+// Ny side: legg fila i artefakten og føy til én linje her. under:'<id>' legger siden som underfane til den fanen (vises i en egen rad når fanen er åpen).
+const SIDER=[
+  {id:'start',navn:'Start + Morgenbrief',fil:'start.html'},
+  {id:'vaerpakke',navn:'Værpakke',fil:'vaerpakke.html'},
+  {id:'varsel',navn:'Varselskriver',fil:'varsel.html',steg:true},
+  // underfaner i arbeidsrekkefølge; steg:true = nummererte trinn der hovedfanen selv kommer sist i raden
+  {id:'utlosbarhet',navn:'Stabilitetssolver',fil:'utlosbarhet.html',under:'varsel'},
+  {id:'solver',navn:'SP-solver',fil:'solver.html',under:'varsel'},
+  {id:'setninger',navn:'Setningskatalog',fil:'setninger.html',under:'varsel'},
+  {id:'prosjektinfo',navn:'Prosjektinfo',fil:'info.html'},
+];
+// Sider som ligger inne i en annen fane (Dimensjonerende skredstørrelser og Prosedyre er siste faner i prosjektlista i Prosjektinfo).
+const INNI={skredbaner:'prosjektinfo',prosedyre:'prosjektinfo'};
+// Arbeidsprosjekt: velges her og låser strekningsvalget i alle faner.
+const PROSJ=[
+  {id:'e134',navn:'E134 Haukelifjell',kode:'E134'},{id:'rv13',navn:'Rv13 Vikafjellet',kode:'Rv13'},{id:'rv15',navn:'Rv15 Strynefjellet',kode:'Rv15'},
+  {id:'tyin',navn:'Fv53 Tyin',kode:'Fv53'},{id:'rv85',navn:'Rv85 Gullesfjord',kode:'Rv85'},{id:'beisfjord',navn:'Fv7570 Beisfjorden',kode:'Fv7570'},
+  {id:'rv94',navn:'Rv94 Hammerfest',kode:'Rv94'},{id:'e69',navn:'E69 Nordkapp',kode:'E69'}];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const ram={},vent={};
+let PID=store.get('skred.prosjekt','');if(!PROSJ.some(p=>p.id===PID))PID='';
+const lenkeA=s=>{const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.navn;a.dataset.id=s.id;return a};
+SIDER.filter(s=>!s.under).forEach(s=>meny.appendChild(lenkeA(s)));
+const ps=document.createElement('label');ps.id='prosj';
+ps.innerHTML=`Arbeidsprosjekt <select id="prosjSel" title="Låser strekningsvalget i alle faner"><option value="">– ingen (fritt valg) –</option>${PROSJ.map(p=>`<option value="${p.id}">🔒 ${p.navn}</option>`).join('')}</select>`;
+const dk=document.createElement('button');dk.id='deltKnapp';dk.type='button';dk.title='Vis varsling (Stabilitetssolver … Varselskriver) til venstre og data (Start, Værpakke, Prosjektinfo) til høyre samtidig';dk.textContent='⇆ Delt visning';meny.appendChild(dk);
+meny.appendChild(ps);prosjSel.value=PID;
+const melding=t=>{const m=document.getElementById('melding');m.textContent=t;m.classList.add('on');clearTimeout(melding.t);melding.t=setTimeout(()=>m.classList.remove('on'),2200)};
+function sendProsj(w){try{w.postMessage({type:'skred-prosjekt',id:PID,liste:PROSJ},'*')}catch(e){}}
+function settProsj(id){PID=id;store.set('skred.prosjekt',id);prosjSel.value=id;ps.classList.toggle('laast',!!id);document.body.classList.toggle('laast',!!id);
+  Object.values(ram).forEach(f=>sendProsj(f.contentWindow));
+  document.title=(id?PROSJ.find(p=>p.id===id).navn+' · ':'')+(SIDER.find(s=>ram[s.id]?.classList.contains('on'))?.navn||'')+' – Skredvarsling veg'}
+prosjSel.onchange=()=>{settProsj(prosjSel.value);melding(PID?`Alle faner er låst til ${PROSJ.find(p=>p.id===PID).navn}`:'Fritt strekningsvalg')};
+function lagRamme(s){const f=document.createElement('iframe');f.src=s.fil;f.title=s.navn;sider.appendChild(f);ram[s.id]=f;return f}
+/* delt visning: varslingsfaner (Varselskriver og trinnene) til venstre, data-faner til høyre */
+let DELT=store.get('skred.delt','0')==='1';
+const DEL={v:store.get('skred.delt.v','vaerpakke'),h:store.get('skred.delt.h','solver')};
+const gruppe=s=>(s.under||s.id)==='varsel'?'h':'v';
+const deltNaa=()=>DELT&&innerWidth>=900;
+function settBredde(pst){pst=Math.max(25,Math.min(75,pst));sider.style.setProperty('--v',pst+'%');store.set('skred.delt.bredde',String(pst))}
+settBredde(+store.get('skred.delt.bredde','55'));
+dk.onclick=()=>{DELT=!DELT;store.set('skred.delt',DELT?'1':'0');
+  if(DELT){const id=(location.hash||'').slice(1),s=SIDER.find(x=>x.id===(INNI[id]||id));if(s)DEL[gruppe(s)]=s.id}
+  vis();melding(DELT?(innerWidth<900?'Delt visning krever et bredere vindu':'Delt visning: varsling til venstre, data til høyre'):'Én fane om gangen')};
+addEventListener('resize',()=>{clearTimeout(vis.t);vis.t=setTimeout(vis,150)});
+deler.addEventListener('pointerdown',e=>{e.preventDefault();deler.setPointerCapture(e.pointerId);document.body.classList.add('drar')});
+deler.addEventListener('pointermove',e=>{if(!document.body.classList.contains('drar'))return;const r=sider.getBoundingClientRect();settBredde((e.clientX-r.left)/r.width*100)});
+const slipp=()=>{if(!document.body.classList.contains('drar'))return;document.body.classList.remove('drar');Object.values(ram).forEach(f=>{try{f.contentWindow.dispatchEvent(new Event('resize'))}catch(x){}})};
+deler.addEventListener('pointerup',slipp);deler.addEventListener('pointercancel',slipp);
+deler.addEventListener('keydown',e=>{const v=parseFloat(sider.style.getPropertyValue('--v'))||55;if(e.key==='ArrowLeft')settBredde(v-5);else if(e.key==='ArrowRight')settBredde(v+5);else return;e.preventDefault();slipp()});
+function tegnUnder(topp,aktiv){const barn=SIDER.filter(x=>x.under===topp);
+  document.body.classList.toggle('harUnder',barn.length>0);
+  if(underMeny.dataset.topp!==topp){underMeny.dataset.topp=topp;const far=SIDER.find(x=>x.id===topp);
+    if(!barn.length)underMeny.replaceChildren();
+    else if(!far.steg)underMeny.replaceChildren(...[far,...barn].map(lenkeA));
+    else underMeny.replaceChildren(...(barn.length?[...barn,SIDER.find(x=>x.id===topp)]:[]).map((x,i,l)=>{const a=lenkeA(x);a.innerHTML=`<span class="steg">${i+1}</span>${a.innerHTML}`;return a}).flatMap((a,i,l)=>i<l.length-1?[a,Object.assign(document.createElement('span'),{className:'til',textContent:'›'})]:[a]))}
+  [...underMeny.querySelectorAll('a')].forEach(a=>a.classList.toggle('on',a.dataset.id===aktiv))}
+function vis(){
+  const id=(location.hash||'').slice(1),inni=INNI[id],s=SIDER.find(x=>x.id===(inni||id))||SIDER[0];
+  if(!ram[s.id]){const f=lagRamme(s);if(inni)f.src=s.fil+'#'+id}
+  else if(inni)try{ram[s.id].contentWindow.postMessage({type:'skred-vis-'+id},'*')}catch(e){}
+  const delt=deltNaa();document.body.classList.toggle('delt',delt);
+  let synlig;
+  if(delt){DEL[gruppe(s)]=s.id;store.set('skred.delt.v',DEL.v);store.set('skred.delt.h',DEL.h);
+    ['v','h'].forEach(g=>{const x=SIDER.find(y=>y.id===DEL[g]);if(x&&!ram[x.id])lagRamme(x)});
+    synlig={[DEL.h]:'venstre',[DEL.v]:'hoyre'};
+    Object.entries(ram).forEach(([k,f])=>{f.classList.toggle('on',!!synlig[k]);f.classList.toggle('venstre',synlig[k]==='venstre');f.classList.toggle('hoyre',synlig[k]==='hoyre')});
+    const toppV=SIDER.find(x=>x.id===DEL.v),topper=[toppV.under||toppV.id,'varsel'];
+    [...meny.querySelectorAll('a')].forEach(a=>a.classList.toggle('on',topper.includes(a.dataset.id)));
+    tegnUnder('varsel',DEL.h);
+    document.title=(PID?PROSJ.find(p=>p.id===PID).navn+' · ':'')+SIDER.find(x=>x.id===DEL.h).navn+' | '+toppV.navn+' – Skredvarsling veg';
+  }else{
+    Object.entries(ram).forEach(([k,f])=>{f.classList.toggle('on',k===s.id);f.classList.remove('venstre','hoyre')});
+    const topp=s.under||s.id;
+    [...meny.querySelectorAll('a')].forEach(a=>a.classList.toggle('on',a.dataset.id===topp));
+    tegnUnder(topp,s.id);
+    document.title=(PID?PROSJ.find(p=>p.id===PID).navn+' · ':'')+s.navn+' – Skredvarsling veg';
+  }
+  Object.values(ram).filter(f=>f.classList.contains('on')).forEach(f=>{try{f.contentWindow.dispatchEvent(new Event('resize'))}catch(e){}});
+}
+// meldinger fra undersidene
+/* nedlasting for undersidene (downloads-kapabiliteten finnes bare i toppsida) */
+let DL=null;try{window.claude&&claude.use&&claude.use('downloads').then(x=>DL=x).catch(()=>{})}catch(x){}
+addEventListener('message',async e=>{const d=e.data||{};if(d.type!=='skred-last-ned')return;
+  const svar=(ok,msg)=>{try{e.source.postMessage({type:'skred-last-ned-svar',ok,msg},'*')}catch(x){}};
+  try{if(!DL&&window.claude&&claude.use)DL=await claude.use('downloads');if(!DL){const x=document.createElement('a');x.href=URL.createObjectURL(new Blob([d.data],{type:/\.json$/i.test(d.filename)?'application/json':'text/html'}));x.download=d.filename;document.body.appendChild(x);x.click();setTimeout(()=>{URL.revokeObjectURL(x.href);x.remove()},500);svar(true,'Lagret');return}
+    await DL.save({filename:d.filename,data:d.data});svar(true,'Lagret')}
+  catch(x){svar(false,x&&x.code==='declined'?'Nedlasting avbrutt.':'Nedlasting feilet ('+((x&&x.code)||x)+').')}});
+addEventListener('message',e=>{const d=e.data||{},kilde=Object.keys(ram).find(k=>ram[k].contentWindow===e.source);
+  if(d.type==='skred-klar'&&kilde){sendProsj(e.source);if(vent[kilde]){e.source.postMessage({type:'skred-overfor',til:kilde,data:vent[kilde]},'*');delete vent[kilde]}}
+  if(d.type==='skred-gaa'&&(SIDER.some(s=>s.id===d.tab)||INNI[d.tab]))location.hash=d.tab;
+  if(d.type==='skred-overfor'&&SIDER.some(s=>s.id===d.til)){
+    if(d.data?.prosjekt&&d.data.prosjekt!==PID&&PID){melding(`Overføringen gjelder et annet prosjekt enn det låste – ikke overført`);return}
+    const s=SIDER.find(x=>x.id===d.til);
+    if(ram[d.til]&&ram[d.til].dataset.klar)ram[d.til].contentWindow.postMessage({type:'skred-overfor',til:d.til,data:d.data},'*');
+    else{vent[d.til]=d.data;if(!ram[d.til])lagRamme(s)}
+    location.hash=d.til;melding(`Overført til ${s.navn}`)}
+  if(d.type==='skred-klar'&&kilde)ram[kilde].dataset.klar='1';
+});
+addEventListener('hashchange',vis);settProsj(PID);vis();
+</script>
+</body>
+</html>
+
