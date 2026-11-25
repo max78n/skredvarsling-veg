@@ -716,10 +716,10 @@ details summary{cursor:pointer;font-weight:600}
 .dlab{background:rgba(255,255,255,.92);border:1px solid #6b777d;border-radius:3px;font-weight:600;font-size:12px;padding:1px 6px;box-shadow:none}
 .dlab:before{display:none}
 .skjul{display:none!important}
-.stripe{display:flex;height:22px;gap:1px;border-radius:4px;overflow:hidden;background:#e3e7e9}
+.stripe{display:flex;height:22px;gap:0;border-radius:4px;overflow:hidden;background:#e3e7e9}
 .stripe span{flex:1 1 0;min-width:1px;cursor:pointer;position:relative}
 .stripe span.on{outline:3px solid var(--t);outline-offset:-3px;z-index:1}
-.stripe span.aar{margin-left:3px}
+.stripe span.aar{margin-left:6px}
 .taRad{display:flex;gap:8px;align-items:center;margin-top:8px}
 .taRad input{flex:1;accent-color:var(--t);height:28px}
 .taEnde{display:flex;justify-content:space-between;margin-top:2px}
@@ -735,7 +735,7 @@ details summary{cursor:pointer;font-weight:600}
     <div class="velg"><select id="strek" title="Vegstrekning"></select></div>
   </section>
   <section class="kort skjul" id="tidsakse">
-    <div class="kh"><h2 style="margin:0">Utsendte varsel</h2><span class="mu" id="taTekst"></span></div>
+    <div class="kh"><h2 style="margin:0">Varsel bakover i tid</h2><span class="mu" id="taTekst"></span></div>
     <div class="stripe" id="stripe"></div>
     <div class="taRad"><button id="taF" title="Forrige varsel">◀</button><input type="range" id="taS" min="0" max="0" step="1" aria-label="Velg varsel bakover i tid"><button id="taN" title="Neste varsel">▶</button><button id="taSiste">Siste</button></div>
     <div class="taEnde mu"><span id="taFra"></span><span id="taTil"></span></div>
@@ -762,10 +762,10 @@ details summary{cursor:pointer;font-weight:600}
   <section class="kort"><div class="kh"><h2 style="margin:0">Aktsomhet per delområde</h2><span class="mu">Velg et tidspunkt for å se kart og tiltak</span></div><div class="grid" id="grid"></div><p class="mu" id="umatchet" style="margin-top:6px"></p></section>
 
   <section class="tekst">
-    <div class="kort"><h2>Skredfare</h2><p id="t-fare"></p><h3>Forebyggende skredkontroll</h3><p id="t-kontroll"></p></div>
-    <div class="kort"><h2>Værprognose</h2><div id="meteo" style="margin-bottom:10px"></div><p id="t-vaer"></p></div>
+    <div class="kort"><h2>Skredfare</h2><p id="t-fare"></p><div id="spBlokk"><h3>Skredproblem</h3><p id="t-sp"></p></div><div id="kontrollBlokk"><h3>Forebyggende skredkontroll</h3><p id="t-kontroll"></p></div></div>
+    <div class="kort" id="vaerKort"><h2>Værprognose</h2><div id="meteo" style="margin-bottom:10px"></div><p id="t-vaer"></p></div>
   </section>
-  <section class="kort"><h2>Observasjoner</h2><div class="tekst" style="gap:12px"><div><h3 style="margin-top:0">Snødekke</h3><p id="t-sno"></p></div><div><h3 style="margin-top:0">Skredaktivitet</h3><p id="t-skred"></p></div><div><h3 style="margin-top:0">Været fram til nå</h3><p id="t-vaerna"></p></div></div></section>
+  <section class="kort" id="obsKort"><h2>Observasjoner</h2><div class="tekst" style="gap:12px"><div><h3 style="margin-top:0">Snødekke</h3><p id="t-sno"></p></div><div><h3 style="margin-top:0">Skredaktivitet</h3><p id="t-skred"></p></div><div><h3 style="margin-top:0">Været fram til nå</h3><p id="t-vaerna"></p></div></div></section>
 
   <section class="kort akt"><details><summary>Tiltak for alle nivå</summary><div id="alleTab"></div><div id="alleStd" class="skjul">
   <table><colgroup><col style="width:36%"><col><col><col><col></colgroup>
@@ -836,6 +836,7 @@ const V=D.varsler.map(v=>{v.t0=v.gyldig_fra?Date.parse(v.gyldig_fra):0;v.tt=(v.t
   const ks=KS(v.prosjekt);v.dmap={};v.umatchet=[];(v.soner||[]).forEach((z,i)=>{const d=finnDel(z,ks?ks.del:[]);if(d)v.dmap[d]=i;else v.umatchet.push(z)});return v});
 
 let P=null,v=null,k=0,laast=false;
+const TSTD=(V.filter(x=>x.tiltak&&Object.keys(x.tiltak).length).sort((a,b)=>b.t0-a.t0)[0]||{}).tiltak;
 
 /* ---------- kart ---------- */
 let map=null,lag,sistP=null;
@@ -873,7 +874,7 @@ const rader=l=>l.map(a=>`<div class="rad"><span class="tag ${KIND[a[0]]}">${a[0]
 function tegnTid(){const s=KS(P),dels=s?s.del:[];
   const col=dels.map(d=>nivDel(d)),ok=col.filter(x=>x!=null),top=ok.length?Math.max(...ok):(v.nivaa.length?Math.max(...v.nivaa.map(r=>r[k])):0);
   const topD=dels.filter((d,i)=>col[i]===top),rest=dels.filter((d,i)=>col[i]!=null&&col[i]!==top).map(d=>d+': '+NIV[nivDel(d)][0].toLowerCase());
-  const T=(v.tiltak||{})[top];
+  const TT=(v.tiltak&&Object.keys(v.tiltak).length)?v.tiltak:(TSTD||{}),T=TT[top];
   $('toppMerk').className='merk '+NIV[top][1];$('toppMerk').textContent=NIV[top][0]+' · '+(T?T['Typisk tiltaksnivå']:NIV[top][3]);
   $('toppHvor').textContent=(topD.length?'Gjelder '+topD.join(', ')+'.':'')+(rest.length?' Øvrige – '+rest.join(', ')+'.':'');
   if(T){$('trafikk').innerHTML=`<p>${esc(T['Trafikkavvikling']||'–')}</p>`;$('drift').innerHTML=`<p>${esc(T['Drift']||'–')}</p>`}
@@ -886,14 +887,14 @@ function tegnGrid(){const s=KS(P),dels=s?s.del:[];const dager=[];v.slots.forEach
   let h='<table><tr><th class="dz"></th>'+dager.map(d=>`<th colspan="${d[1]}">${esc(d[0])}</th>`).join('')+'</tr><tr><th class="dz"></th>'+v.slots.map((x,i)=>`<td><button class="tid" data-k="${i}">${esc(x[1])}</button></td>`).join('')+'</tr>';
   dels.forEach(d=>{const i=v.dmap[d];h+=`<tr><th class="dz">${esc(d)}</th>`+v.slots.map((x,j)=>{const n=i==null?null:v.nivaa[i][j];
     return `<td><button class="${n==null?'x':NIV[n][1]}" data-k="${j}" aria-label="${esc(d)}, ${esc(tidTekst(j))}: ${n==null?'ikke varslet':NIV[n][0]}">${n==null?'–':NIV[n][0]}</button></td>`}).join('')+'</tr>'});
-  $('grid').innerHTML=h+'</table>';
+  $('grid').innerHTML=h+'</table>';$('grid').querySelector('table').style.width=v.slots.length<=4?'auto':'100%';
   $('umatchet').textContent=v.umatchet.length?`Delområde i varselet som ikke finnes i skredvarslingsplanen: ${v.umatchet.join(', ')}.`:''}
 
 /* ---------- side ---------- */
 let L_=[];
 function tegnAkse(){const n=L_.length;$('tidsakse').classList.toggle('skjul',n<1);if(!n)return;
   const i=L_.indexOf(v);$('taS').max=n-1;$('taS').value=i;
-  $('stripe').innerHTML=L_.map((x,j)=>{const ny=j>0&&new Date(x.t0).getFullYear()!==new Date(L_[j-1].t0).getFullYear();
+  $('stripe').innerHTML=L_.map((x,j)=>{const ny=j>0&&x.t0-L_[j-1].t0>30*864e5;
     return `<span class="${x.maks==null?'x':NIV[x.maks][1]}${j===i?' on':''}${ny?' aar':''}" data-j="${j}" title="${esc(fmt(x.gyldig_fra))}: maks ${x.maks==null?'–':NIV[x.maks][0]}"></span>`}).join('');
   $('taTekst').textContent=`Varsel ${i+1} av ${n}${i===n-1?' (siste)':''} · gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}`;
   const dY=x=>new Date(x.t0).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
@@ -907,17 +908,23 @@ function visVarsel(){L_=V.filter(x=>x.prosjekt===P).sort((a,b)=>a.t0-b.t0||(a.mo
   $('ingen').classList.toggle('skjul',!!v);$('innhold').classList.toggle('skjul',!v);tegnAkse();
   if(!v){$('meta').textContent='';$('utlopt').classList.add('skjul');$('ingen').innerHTML=`<h2>Ingen utsendte varsel</h2><p>Det finnes ingen utsendte skredvarsel for ${esc(navn(P))} i arkivet ennå.</p>`;return}
   const liste=L_.slice().reverse();
-  $('meta').innerHTML=`Gyldig fra ${esc(fmt(v.gyldig_fra))} · Neste varsel innen ${esc(fmt(v.neste))}${v.utarbeidet?` · Utarbeidet av ${esc(v.utarbeidet)}`:''}${v.kontrollert?` · Kontrollert av ${esc(v.kontrollert)}`:''} · <a href="varsler/v/${esc(v.id)}.html" target="_blank" rel="noopener" style="color:inherit">originalt varsel</a>`;
+  $('meta').innerHTML=`Gyldig fra ${esc(fmt(v.gyldig_fra))} · Neste varsel innen ${esc(fmt(v.neste))}${v.utarbeidet?` · Utarbeidet av ${esc(v.utarbeidet)}`:''}${v.kontrollert?` · Kontrollert av ${esc(v.kontrollert)}`:''} ${v.hist?'':` · <a href="varsler/v/${esc(v.id)}.html" target="_blank" rel="noopener" style="color:inherit">originalt varsel</a>`}`;
   const naa=Date.now(),siste=liste[0]===v,utl=siste&&v.neste&&Date.parse(v.neste)<naa;
-  $('utlopt').classList.toggle('skjul',!utl&&siste&&!v.test);
-  $('utlopt').textContent=v.test?'EKSEMPEL: utkast lagt inn for test. Dette er ikke et gjeldende skredvarsel.':!siste?`Du ser på et tidligere varsel (gyldig fra ${fmt(v.gyldig_fra)}). Trykk «Siste» for gjeldende varsel.`:utl?`Tidspunktet for neste varsel (${fmt(v.neste)}) er passert. Kontakt skredvarsler hvis nytt varsel ikke er mottatt.`:'';
+  $('utlopt').classList.toggle('skjul',!utl&&siste&&!v.test&&!v.hist);
+  $('utlopt').textContent=v.hist?`Historisk aktsomhetsnivå fra sesongoversikt (gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}). Fullstendig varseltekst finnes ikke i arkivet.`:v.test?'EKSEMPEL: utkast lagt inn for test. Dette er ikke et gjeldende skredvarsel.':!siste?`Du ser på et tidligere varsel (gyldig fra ${fmt(v.gyldig_fra)}). Trykk «Siste» for gjeldende varsel.`:utl?`Tidspunktet for neste varsel (${fmt(v.neste)}) er passert. Kontakt skredvarsler hvis nytt varsel ikke er mottatt.`:'';
   const T=v.tekst||{},sett=(id,x)=>{$(id).textContent=x||'–'};
   sett('t-fare',T['Vurdering']||T['Skredfare']);sett('t-kontroll',T['Forebyggende skredkontroll']);sett('t-vaer',T['Kommentar til værprognose']||T['Værprognose']);
   const mg=v.meteogram;$('meteo').innerHTML=mg&&mg.img?`<a href="${esc(mg.href||mg.img)}" target="_blank" rel="noopener"><img src="${esc(mg.img)}" alt="Meteogram fra yr.no" style="width:100%;max-width:560px;display:block" onerror="this.replaceWith(document.createTextNode('Meteogram på yr.no ↗'))"></a>`:'';
   /* tiltakstabell fra varselet */
-  if(v.tiltak&&Object.keys(v.tiltak).length){const h=Object.keys(v.tiltak[Object.keys(v.tiltak)[0]]);
-    $('alleTab').innerHTML=`<table class="vt"><thead><tr><th>Nivå</th>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${[0,1,2,3].filter(i=>v.tiltak[i]).map(i=>`<tr><td class="${NIV[i][1]}" data-lv="${i}"><b>${NIV[i][0]}</b></td>${h.map(x=>`<td>${esc(v.tiltak[i][x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="mu" style="margin-top:6px">Oversikt over aktsomhetsnivå og tiltak definert av vegeier (fra varselet).</p>`}
+  const TV=(v.tiltak&&Object.keys(v.tiltak).length)?v.tiltak:TSTD;
+  if(TV&&Object.keys(TV).length){const h=Object.keys(TV[Object.keys(TV)[0]]);
+    $('alleTab').innerHTML=`<table class="vt"><thead><tr><th>Nivå</th>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${[0,1,2,3].filter(i=>TV[i]).map(i=>`<tr><td class="${NIV[i][1]}" data-lv="${i}"><b>${NIV[i][0]}</b></td>${h.map(x=>`<td>${esc(TV[i][x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="mu" style="margin-top:6px">Oversikt over aktsomhetsnivå og tiltak definert av vegeier (fra varselet).</p>`}
   else $('alleTab').innerHTML=$('alleStd').innerHTML;
+  $('t-sp').textContent=T['Skredproblem']||'';$('spBlokk').classList.toggle('skjul',!T['Skredproblem']);
+  $('t-fare').classList.toggle('skjul',!!(v.hist&&!T['Vurdering']&&!T['Skredfare']));
+  $('vaerKort').classList.toggle('skjul',!!v.hist);$('kontrollBlokk').classList.toggle('skjul',!!v.hist);
+  document.querySelectorAll('.tekst').forEach(e=>e.classList.toggle('skjul',v.hist&&!T['Skredproblem']));
+  $('obsKort').classList.toggle('skjul',!!v.hist);
   sett('t-sno',T['Snødekke']);sett('t-skred',T['Skredaktivitet']);sett('t-vaerna',T['Været fram til nå']);
   /* tidspunkt nå hvis det ligger i varselet, ellers første */
   k=0;if(siste)v.tt.forEach((t,i)=>{if(t!=null&&t<=naa)k=i});tegnGrid();tegnTid()}
