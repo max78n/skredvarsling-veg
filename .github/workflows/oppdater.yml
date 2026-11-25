@@ -62,14 +62,23 @@ jobs:
           GMAIL_APP_PASSORD: ${{ secrets.GMAIL_APP_PASSORD }}
           VARSEL_AVSENDER: ${{ secrets.VARSEL_AVSENDER }}
         run: |
+          # 1) eldre varsel lagt i data/varsler_import/ (.html eller .eml) importeres og fjernes
+          shopt -s nullglob; IMP=(data/varsler_import/*.html data/varsler_import/*.htm data/varsler_import/*.eml)
+          if [ ${#IMP[@]} -gt 0 ]; then
+            python3 kilde/varslinger/hent_varsler.py --ut site/varsler --fil "${IMP[@]}" || echo "::warning::Import feilet"
+            git rm -q -r data/varsler_import || true
+          fi
+          # 2) nye varsel fra Gmail
           if [ -z "$GMAIL_BRUKER" ] || [ -z "$GMAIL_APP_PASSORD" ] || [ -z "$VARSEL_AVSENDER" ]; then
-            echo "::notice::Gmail-hemmeligheter mangler – henter ikke varsel"; echo "ny=0" >> $GITHUB_OUTPUT; exit 0; fi
-          python3 kilde/varslinger/hent_varsler.py --ut site/varsler || { echo "::warning::Henting av varsel feilet"; echo "ny=0" >> $GITHUB_OUTPUT; exit 0; }
-          if git status --porcelain site/varsler/v | grep -q .; then
+            echo "::notice::Gmail-hemmeligheter mangler – henter ikke fra Gmail"
+          else
+            python3 kilde/varslinger/hent_varsler.py --ut site/varsler || echo "::warning::Henting fra Gmail feilet"
+          fi
+          if git status --porcelain site/varsler/v data/varsler_import | grep -q .; then
             echo "ny=1" >> $GITHUB_OUTPUT
             git config user.name "github-actions[bot]"
             git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-            git add site/varsler
+            git add -A site/varsler data/varsler_import 2>/dev/null || git add -A site/varsler
             git commit -q -m "Nye utsendte skredvarsel"
             git pull --rebase -q origin main || true
             git push || true

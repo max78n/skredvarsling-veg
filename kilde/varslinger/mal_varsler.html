@@ -57,6 +57,13 @@ details summary{cursor:pointer;font-weight:600}
 .dlab{background:rgba(255,255,255,.92);border:1px solid #6b777d;border-radius:3px;font-weight:600;font-size:12px;padding:1px 6px;box-shadow:none}
 .dlab:before{display:none}
 .skjul{display:none!important}
+.stripe{display:flex;height:22px;gap:1px;border-radius:4px;overflow:hidden;background:#e3e7e9}
+.stripe span{flex:1 1 0;min-width:1px;cursor:pointer;position:relative}
+.stripe span.on{outline:3px solid var(--t);outline-offset:-3px;z-index:1}
+.stripe span.aar{margin-left:3px}
+.taRad{display:flex;gap:8px;align-items:center;margin-top:8px}
+.taRad input{flex:1;accent-color:var(--t);height:28px}
+.taEnde{display:flex;justify-content:space-between;margin-top:2px}
 </style>
 </head>
 <body>
@@ -66,7 +73,13 @@ details summary{cursor:pointer;font-weight:600}
   <div id="side" class="skjul" style="display:contents">
   <section class="hode">
     <div><h1 id="tittel"></h1><p class="meta" id="meta"></p></div>
-    <div class="velg"><select id="strek" title="Vegstrekning"></select><select id="varselvalg" title="Utsendte varsel"></select></div>
+    <div class="velg"><select id="strek" title="Vegstrekning"></select></div>
+  </section>
+  <section class="kort skjul" id="tidsakse">
+    <div class="kh"><h2 style="margin:0">Utsendte varsel</h2><span class="mu" id="taTekst"></span></div>
+    <div class="stripe" id="stripe"></div>
+    <div class="taRad"><button id="taF" title="Forrige varsel">◀</button><input type="range" id="taS" min="0" max="0" step="1" aria-label="Velg varsel bakover i tid"><button id="taN" title="Neste varsel">▶</button><button id="taSiste">Siste</button></div>
+    <div class="taEnde mu"><span id="taFra"></span><span id="taTil"></span></div>
   </section>
   <div id="utlopt" class="utl skjul"></div>
   <div id="ingen" class="kort skjul"></div>
@@ -201,17 +214,27 @@ function tegnGrid(){const s=KS(P),dels=s?s.del:[];const dager=[];v.slots.forEach
   $('umatchet').textContent=v.umatchet.length?`Delområde i varselet som ikke finnes i skredvarslingsplanen: ${v.umatchet.join(', ')}.`:''}
 
 /* ---------- side ---------- */
-function visVarsel(){const liste=V.filter(x=>x.prosjekt===P).sort((a,b)=>b.t0-a.t0||(b.mottatt||'').localeCompare(a.mottatt||''));
+let L_=[];
+function tegnAkse(){const n=L_.length;$('tidsakse').classList.toggle('skjul',n<1);if(!n)return;
+  const i=L_.indexOf(v);$('taS').max=n-1;$('taS').value=i;
+  $('stripe').innerHTML=L_.map((x,j)=>{const ny=j>0&&new Date(x.t0).getFullYear()!==new Date(L_[j-1].t0).getFullYear();
+    return `<span class="${x.maks==null?'x':NIV[x.maks][1]}${j===i?' on':''}${ny?' aar':''}" data-j="${j}" title="${esc(fmt(x.gyldig_fra))}: maks ${x.maks==null?'–':NIV[x.maks][0]}"></span>`}).join('');
+  $('taTekst').textContent=`Varsel ${i+1} av ${n}${i===n-1?' (siste)':''} · gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}`;
+  const dY=x=>new Date(x.t0).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
+  $('taFra').textContent=dY(L_[0]);$('taTil').textContent=dY(L_[n-1]);
+  $('taF').disabled=i<=0;$('taN').disabled=i>=n-1;$('taSiste').disabled=i>=n-1}
+function visVarsel(){L_=V.filter(x=>x.prosjekt===P).sort((a,b)=>a.t0-b.t0||(a.mottatt||'').localeCompare(b.mottatt||''));
+  /* samme gyldig fra: behold siste utsending */
+  L_=L_.filter((x,j)=>!(L_[j+1]&&L_[j+1].t0===x.t0));
   $('tittel').textContent='Skredvarsel for '+navn(P);
-  $('varselvalg').classList.toggle('skjul',liste.length<2);
-  $('varselvalg').innerHTML=liste.map((x,i)=>`<option value="${esc(x.id)}">${i?'Tidligere: ':'Siste: '}gyldig fra ${esc(fmt(x.gyldig_fra))}</option>`).join('');
-  if(!v||v.prosjekt!==P)v=liste[0]||null;if(v)$('varselvalg').value=v.id;
-  $('ingen').classList.toggle('skjul',!!v);$('innhold').classList.toggle('skjul',!v);
+  if(!v||v.prosjekt!==P||!L_.includes(v))v=L_[L_.length-1]||null;
+  $('ingen').classList.toggle('skjul',!!v);$('innhold').classList.toggle('skjul',!v);tegnAkse();
   if(!v){$('meta').textContent='';$('utlopt').classList.add('skjul');$('ingen').innerHTML=`<h2>Ingen utsendte varsel</h2><p>Det finnes ingen utsendte skredvarsel for ${esc(navn(P))} i arkivet ennå.</p>`;return}
+  const liste=L_.slice().reverse();
   $('meta').innerHTML=`Gyldig fra ${esc(fmt(v.gyldig_fra))} · Neste varsel innen ${esc(fmt(v.neste))}${v.utarbeidet?` · Utarbeidet av ${esc(v.utarbeidet)}`:''}${v.kontrollert?` · Kontrollert av ${esc(v.kontrollert)}`:''} · <a href="varsler/v/${esc(v.id)}.html" target="_blank" rel="noopener" style="color:inherit">originalt varsel</a>`;
   const naa=Date.now(),siste=liste[0]===v,utl=siste&&v.neste&&Date.parse(v.neste)<naa;
   $('utlopt').classList.toggle('skjul',!utl&&siste&&!v.test);
-  $('utlopt').textContent=v.test?'EKSEMPEL: utkast lagt inn for test. Dette er ikke et gjeldende skredvarsel.':!siste?'Du ser på et tidligere varsel. Velg «Siste» øverst for gjeldende varsel.':utl?`Tidspunktet for neste varsel (${fmt(v.neste)}) er passert. Kontakt skredvarsler hvis nytt varsel ikke er mottatt.`:'';
+  $('utlopt').textContent=v.test?'EKSEMPEL: utkast lagt inn for test. Dette er ikke et gjeldende skredvarsel.':!siste?`Du ser på et tidligere varsel (gyldig fra ${fmt(v.gyldig_fra)}). Trykk «Siste» for gjeldende varsel.`:utl?`Tidspunktet for neste varsel (${fmt(v.neste)}) er passert. Kontakt skredvarsler hvis nytt varsel ikke er mottatt.`:'';
   const T=v.tekst||{},sett=(id,x)=>{$(id).textContent=x||'–'};
   sett('t-fare',T['Vurdering']||T['Skredfare']);sett('t-kontroll',T['Forebyggende skredkontroll']);sett('t-vaer',T['Kommentar til værprognose']||T['Værprognose']);
   const mg=v.meteogram;$('meteo').innerHTML=mg&&mg.img?`<a href="${esc(mg.href||mg.img)}" target="_blank" rel="noopener"><img src="${esc(mg.img)}" alt="Meteogram fra yr.no" style="width:100%;max-width:560px;display:block" onerror="this.replaceWith(document.createTextNode('Meteogram på yr.no ↗'))"></a>`:'';
@@ -221,7 +244,7 @@ function visVarsel(){const liste=V.filter(x=>x.prosjekt===P).sort((a,b)=>b.t0-a.
   else $('alleTab').innerHTML=$('alleStd').innerHTML;
   sett('t-sno',T['Snødekke']);sett('t-skred',T['Skredaktivitet']);sett('t-vaerna',T['Været fram til nå']);
   /* tidspunkt nå hvis det ligger i varselet, ellers første */
-  k=0;v.tt.forEach((t,i)=>{if(t!=null&&t<=naa)k=i});tegnGrid();tegnTid()}
+  k=0;if(siste)v.tt.forEach((t,i)=>{if(t!=null&&t<=naa)k=i});tegnGrid();tegnTid()}
 function velg(id,fra){if(!PRO.some(p=>p[0]===id))return;P=id;v=null;store.set('skred.varsel.prosjekt',id);
   if(fra!=='hash'&&location.hash!=='#'+id)history.replaceState(null,'','#'+id);
   $('startside').classList.add('skjul');$('side').classList.remove('skjul');$('strek').value=id;
@@ -230,8 +253,11 @@ $('strek').innerHTML=PRO.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join
 $('valg').innerHTML=PRO.map(p=>`<button data-p="${p[0]}">${p[1]}</button>`).join('');
 $('kilde').textContent=(D.test?'TESTDATA, ikke ekte varsel. ':'')+'Kart: '+(K.kilde||'');
 $('strek').onchange=()=>velg($('strek').value);
-$('varselvalg').onchange=()=>{v=V.find(x=>x.id===$('varselvalg').value);visVarsel()};
+const tilJ=j=>{j=Math.max(0,Math.min(L_.length-1,j));if(L_[j]&&L_[j]!==v){v=L_[j];visVarsel()}};
+$('taS').oninput=()=>tilJ(+$('taS').value);$('taF').onclick=()=>tilJ(L_.indexOf(v)-1);$('taN').onclick=()=>tilJ(L_.indexOf(v)+1);$('taSiste').onclick=()=>tilJ(L_.length-1);
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft')tilJ(L_.indexOf(v)-1);if(e.key==='ArrowRight')tilJ(L_.indexOf(v)+1)});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){velg(b.dataset.p);return}
+  const s=e.target.closest('#stripe [data-j]');if(s){tilJ(+s.dataset.j);return}
   const t=e.target.closest('#grid [data-k]');if(t){k=+t.dataset.k;tegnTid()}});
 addEventListener('hashchange',()=>{if(!laast)velg(location.hash.slice(1),'hash')});
 if(window.SKRED)SKRED.on((id,l)=>{laast=l;$('strek').disabled=l;if(l)velg(id)});

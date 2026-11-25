@@ -38,9 +38,11 @@ Statisk nettside for stedsspesifikk skredvarsling (Statens vegvesen). GitHub Act
 - **Statiske faner** (Start, Prosjektinfo, SP-solver, Setningskatalog, Varselskriver, Prosedyre) er vanlige filer i `site/`. Erstatt fila for å oppdatere fanen.
 - **Ny geometri** (løsneområder, veglinje): kjør `kilde/engangs/lag_kartbilder.py` og last opp `site/fliser`, `site/bakgrunn` og `site/detalj` på nytt.
 
-## Fanen Varslinger (skredvarsel for entreprenør)
+## Fanen Skredvarsel (for entreprenør)
 - Lenke per strekning: `varsler.html#e134`, `#rv13`, `#rv15`, `#tyin`, `#rv85`, `#beisfjord`, `#rv94`, `#e69`.
 - Varslene lagres i `site/varsler/` (`varsler.json` er arkivet, `v/` er originalene). Et varsel fjernes ved å slette det fra `varsler.json` og `v/`, og så lage `varsler_data.js` på nytt (`python3 kilde/varslinger/hent_varsler.py --ut site/varsler --fil` uten filer).
+- **Eldre varsel**: legg HTML- eller .eml-filene i `data/varsler_import/` (last opp via GitHub). De importeres ved neste kjøring og fjernes fra mappa. Varsel som allerede ligger i Gmail-kontoen hentes automatisk første gang.
+- Tidsslider øverst: bla bakover gjennom alle varsel for strekningen (piltaster ◀ ▶ fungerer også). Fargestripa viser høyeste nivå per varsel.
 - Eksempelet for rv. 15 (utkast 25.11.2026, merket «test») kan slettes når ekte varsel kommer.
 - Ny geometri: `python3 kilde/varslinger/lag_kartdata.py <prosjektinfo data.json> kilde/vaerpakke/config.json site/varsler/kart_data.js`.
 
