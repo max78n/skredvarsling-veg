@@ -742,6 +742,29 @@ details summary{cursor:pointer;font-weight:600}
 .taRad{display:flex;gap:8px;align-items:center;margin-top:8px}
 .taRad input{flex:1;accent-color:var(--t);height:28px}
 .taEnde{display:flex;justify-content:space-between;margin-top:2px}
+/* tidslinje-varianter */
+.intro{margin:4px 0 0;font-size:.85rem}
+body.tl-a #tidsakse,body.tl-c #tidsakse{padding:10px 12px}
+body.tl-a #tidsakse h2,body.tl-c #tidsakse h2{font-size:.95rem}
+body.tl-a .hjelp,body.tl-b .hjelp,body.tl-c .hjelp{display:none}
+body.tl-a .tl,body.tl-c .tl{height:18px;margin-top:12px}
+body.tl-a .tk,body.tl-c .tk,body.tl-b .tk{font-size:.62rem;height:13px}
+body.tl-a .sesonger,body.tl-c .sesonger{flex-wrap:wrap;gap:6px 8px}
+body.tl-a .mange .tk,body.tl-c .mange .tk{display:none}
+body.tl-a .ses,body.tl-c .ses{min-width:72px}
+body.tl-a .sesLab,body.tl-c .sesLab,body.tl-b .sesLab{font-size:.66rem}
+body.tl-a #taTekst,body.tl-c #taTekst{flex-basis:100%;font-size:.75rem}
+body.tl-a .taRad,body.tl-c .taRad{margin-top:4px}
+body.tl-a .taRad button,body.tl-c .taRad button,body.tl-b .taRad button{padding:2px 8px;font-size:.8rem;min-height:0}
+.hoyre{display:flex;flex-direction:column;gap:16px;min-width:0}
+body.tl-c #tidsakse{border:0;box-shadow:none;padding:0 0 10px;margin:0 0 10px;border-bottom:1px solid var(--b);border-radius:0;background:none}
+body.tl-b #tidsakse{padding:8px 12px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 14px;align-items:center}
+body.tl-b #tidsakse .kh{display:flex;flex-direction:column;align-items:flex-start;gap:2px;grid-column:1}
+body.tl-b #tidsakse h2{font-size:.9rem}
+body.tl-b #taTekst{font-size:.72rem;max-width:210px}
+body.tl-b #stripe{grid-column:2;max-width:640px}
+body.tl-b .tl{height:16px;margin-top:12px}
+body.tl-b .taRad{grid-column:3;margin:0}
 </style>
 </head>
 <body>
@@ -750,13 +773,13 @@ details summary{cursor:pointer;font-weight:600}
 
   <div id="side" class="skjul" style="display:contents">
   <section class="hode">
-    <div><h1 id="tittel"></h1><p class="meta" id="meta"></p></div>
+    <div><h1 id="tittel"></h1><p class="meta" id="meta"></p><p class="mu intro">Viser skredvarslene Statens vegvesen sender ut på e-post til mailinglista for strekningen. Siden oppdateres automatisk når et nytt varsel er sendt ut.</p></div>
     <div class="velg"><select id="strek" title="Vegstrekning"></select></div>
   </section>
   <section class="kort skjul" id="tidsakse">
     <div class="kh"><h2 style="margin:0">Varsel bakover i tid</h2><label class="mu">Vis <select id="taPer"></select></label><span class="mu" id="taTekst"></span></div>
     <div class="sesonger" id="stripe"></div>
-    <div class="taRad"><button id="taF" title="Forrige varsel">◀</button><input type="range" class="skjul" id="taS" min="0" max="0" step="1" aria-label="Velg varsel bakover i tid"><button id="taN" title="Neste varsel">▶</button><button id="taSiste">Siste</button><span class="mu" style="margin-left:auto;font-size:.8rem">Klikk i stripa eller bruk ◀ ▶ / piltastene</span></div>
+    <div class="taRad" id="taRad"><button id="taF" title="Forrige varsel">◀</button><input type="range" class="skjul" id="taS" min="0" max="0" step="1" aria-label="Velg varsel bakover i tid"><button id="taN" title="Neste varsel">▶</button><button id="taSiste">Siste</button><span class="mu hjelp" style="margin-left:auto;font-size:.8rem">Klikk i stripa eller bruk ◀ ▶ / piltastene</span></div>
     <div class="taEnde mu skjul"><span id="taFra"></span><span id="taTil"></span></div>
   </section>
   <div id="utlopt" class="utl skjul"></div>
@@ -806,6 +829,13 @@ details summary{cursor:pointer;font-weight:600}
   </div>
   </div>
 </div>
+<script>
+(function(){const tl=(new URLSearchParams(location.search).get('tl')||'a').toLowerCase();document.body.classList.add('tl-'+tl);
+  const ta=document.getElementById('tidsakse'),to=document.querySelector('section.to'),tiltak=to&&to.children[1];
+  if(tl==='a'&&tiltak){const h=document.createElement('div');h.className='hoyre';to.insertBefore(h,tiltak);h.appendChild(ta);h.appendChild(tiltak);ta.querySelector('h2').textContent='Varsel i tid'}
+  if(tl==='c'&&tiltak){tiltak.insertBefore(ta,tiltak.children[1]);ta.querySelector('h2').textContent='Varsel i tid'}
+  if(tl==='b')ta.querySelector('h2').textContent='Varsel i tid'})();
+</script>
 <script src="lib/leaflet.js"></script>
 <script>window.L||document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
 <script>
@@ -961,6 +991,7 @@ function tegnAkse(){$('tidsakse').classList.toggle('skjul',L_.length<1);if(!L_.l
   lagSlutt();lagPer();let G=grupper();W=G.flatMap(g=>g.el);
   if(v&&!W.includes(v)){PER='v'+vinter(v);lagPer();G=grupper();W=G.flatMap(g=>g.el)}
   $('stripe').innerHTML=G.map(tegnGruppe).join('');
+  $('stripe').classList.toggle('mange',G.length>2);
   const i=W.indexOf(v),n=W.length;
   $('taTekst').textContent=v?`Varsel ${i+1} av ${n}${v===L_[L_.length-1]?' (siste)':''} · gyldig ${dK(v.t0)} ${new Date(v.t0).toLocaleTimeString('nb-NO',{timeZone:'Europe/Oslo',hour:'2-digit',minute:'2-digit'})} – ${dY(v.t1)}`:'';
   $('taF').disabled=i<=0;$('taN').disabled=i>=n-1||i<0;$('taSiste').disabled=v===L_[L_.length-1];markAkse()}
