@@ -30,7 +30,7 @@ body{display:flex;flex-direction:column}#meny,#underMeny{flex:none}
 body.laast #prosjStripe{display:block}
 #sider iframe{position:absolute;inset:0;border:0;width:100%;height:100%;display:none;background:#f4f5f6}
 #sider iframe.on{display:block}
-/* delt visning: varsling til venstre, data til høyre */
+/* delt visning: valgt fane til venstre, Notat til høyre */
 #deltKnapp{font:inherit;font-size:12.5px;padding:3px 10px;border-radius:3px;border:1px solid #6b777d;background:transparent;color:#c9d1d5;cursor:pointer;margin-left:auto;align-self:center;min-height:28px;white-space:nowrap}
 #deltKnapp:hover{color:#fff;border-color:#c9d1d5}
 body.delt #deltKnapp{background:#ed9300;border-color:#ed9300;color:#000;font-weight:600}
@@ -61,11 +61,9 @@ body.delt .panelmerke{display:block}
 const SIDER=[
   {id:'start',navn:'Start + Morgenbrief',fil:'start.html'},
   {id:'vaerpakke',navn:'Værpakke',fil:'vaerpakke.html'},
-  {id:'varsel',navn:'Varselskriver',fil:'varsel.html',steg:true},
-  // underfaner i arbeidsrekkefølge; steg:true = nummererte trinn der hovedfanen selv kommer sist i raden
-  {id:'utlosbarhet',navn:'Stabilitetssolver',fil:'utlosbarhet.html',under:'varsel'},
-  {id:'solver',navn:'SP-solver',fil:'solver.html',under:'varsel'},
-  {id:'setninger',navn:'Setningskatalog',fil:'setninger.html',under:'varsel'},
+  {id:'utlosbarhet',navn:'Stabilitetssolver',fil:'utlosbarhet.html'},
+  {id:'setninger',navn:'Setningskatalog',fil:'setninger.html'},
+  {id:'notat',navn:'Notat',fil:'notat.html'},
   {id:'prosjektinfo',navn:'Prosjektinfo',fil:'info.html'},
   {id:'skredvarsel',navn:'Skredvarsel',fil:'varsler.html'},
 ];
@@ -83,7 +81,7 @@ const lenkeA=s=>{const a=document.createElement('a');a.href='#'+s.id;a.textConte
 SIDER.filter(s=>!s.under).forEach(s=>meny.appendChild(lenkeA(s)));
 const ps=document.createElement('label');ps.id='prosj';
 ps.innerHTML=`Arbeidsprosjekt <select id="prosjSel" title="Låser strekningsvalget i alle faner"><option value="">– ingen (fritt valg) –</option>${PROSJ.map(p=>`<option value="${p.id}">🔒 ${p.navn}</option>`).join('')}</select>`;
-const dk=document.createElement('button');dk.id='deltKnapp';dk.type='button';dk.title='Vis varsling (Stabilitetssolver … Varselskriver) til venstre og data (Start, Værpakke, Prosjektinfo) til høyre samtidig';dk.textContent='⇆ Delt visning';meny.appendChild(dk);
+const dk=document.createElement('button');dk.id='deltKnapp';dk.type='button';dk.title='Vis valgt fane til venstre og Notat til høyre samtidig';dk.textContent='⇆ Delt visning';meny.appendChild(dk);
 meny.appendChild(ps);prosjSel.value=PID;
 const melding=t=>{const m=document.getElementById('melding');m.textContent=t;m.classList.add('on');clearTimeout(melding.t);melding.t=setTimeout(()=>m.classList.remove('on'),2200)};
 function sendProsj(w){try{w.postMessage({type:'skred-prosjekt',id:PID,liste:PROSJ},'*')}catch(e){}}
@@ -92,16 +90,15 @@ function settProsj(id){PID=id;store.set('skred.prosjekt',id);prosjSel.value=id;p
   document.title=(id?PROSJ.find(p=>p.id===id).navn+' · ':'')+(SIDER.find(s=>ram[s.id]?.classList.contains('on'))?.navn||'')+' – Skredvarsling veg'}
 prosjSel.onchange=()=>{settProsj(prosjSel.value);melding(PID?`Alle faner er låst til ${PROSJ.find(p=>p.id===PID).navn}`:'Fritt strekningsvalg')};
 function lagRamme(s){const f=document.createElement('iframe');f.src=s.fil;f.title=s.navn;sider.appendChild(f);ram[s.id]=f;return f}
-/* delt visning: varslingsfaner (Varselskriver og trinnene) til venstre, data-faner til høyre */
+/* delt visning: valgt fane til venstre (DEL.v), Notat alltid til høyre */
 let DELT=store.get('skred.delt','0')==='1';
-const DEL={v:store.get('skred.delt.v','vaerpakke'),h:store.get('skred.delt.h','solver')};
-const gruppe=s=>(s.under||s.id)==='varsel'?'h':'v';
+const DEL={v:store.get('skred.delt.v','vaerpakke')};if(!SIDER.some(s=>s.id===DEL.v&&s.id!=='notat'))DEL.v='vaerpakke';
 const deltNaa=()=>DELT&&innerWidth>=900;
 function settBredde(pst){pst=Math.max(25,Math.min(75,pst));sider.style.setProperty('--v',pst+'%');store.set('skred.delt.bredde',String(pst))}
 settBredde(+store.get('skred.delt.bredde','55'));
 dk.onclick=()=>{DELT=!DELT;store.set('skred.delt',DELT?'1':'0');
-  if(DELT){const id=(location.hash||'').slice(1),s=SIDER.find(x=>x.id===(INNI[id]||id));if(s)DEL[gruppe(s)]=s.id}
-  vis();melding(DELT?(innerWidth<900?'Delt visning krever et bredere vindu':'Delt visning: varsling til venstre, data til høyre'):'Én fane om gangen')};
+  if(DELT){const id=(location.hash||'').slice(1),s=SIDER.find(x=>x.id===(INNI[id]||id));if(s&&s.id!=='notat')DEL.v=s.id}
+  vis();melding(DELT?(innerWidth<900?'Delt visning krever et bredere vindu':'Delt visning: valgt fane til venstre, Notat til høyre'):'Én fane om gangen')};
 addEventListener('resize',()=>{clearTimeout(vis.t);vis.t=setTimeout(vis,150)});
 deler.addEventListener('pointerdown',e=>{e.preventDefault();deler.setPointerCapture(e.pointerId);document.body.classList.add('drar')});
 deler.addEventListener('pointermove',e=>{if(!document.body.classList.contains('drar'))return;const r=sider.getBoundingClientRect();settBredde((e.clientX-r.left)/r.width*100)});
@@ -121,14 +118,14 @@ function vis(){
   else if(inni)try{ram[s.id].contentWindow.postMessage({type:'skred-vis-'+id},'*')}catch(e){}
   const delt=deltNaa();document.body.classList.toggle('delt',delt);
   let synlig;
-  if(delt){DEL[gruppe(s)]=s.id;store.set('skred.delt.v',DEL.v);store.set('skred.delt.h',DEL.h);
-    ['v','h'].forEach(g=>{const x=SIDER.find(y=>y.id===DEL[g]);if(x&&!ram[x.id])lagRamme(x)});
-    synlig={[DEL.h]:'venstre',[DEL.v]:'hoyre'};
+  if(delt){if(s.id!=='notat')DEL.v=s.id;store.set('skred.delt.v',DEL.v);
+    [DEL.v,'notat'].forEach(i=>{const x=SIDER.find(y=>y.id===i);if(x&&!ram[x.id])lagRamme(x)});
+    synlig={[DEL.v]:'venstre',notat:'hoyre'};
     Object.entries(ram).forEach(([k,f])=>{f.classList.toggle('on',!!synlig[k]);f.classList.toggle('venstre',synlig[k]==='venstre');f.classList.toggle('hoyre',synlig[k]==='hoyre')});
-    const toppV=SIDER.find(x=>x.id===DEL.v),topper=[toppV.under||toppV.id,'varsel'];
+    const toppV=SIDER.find(x=>x.id===DEL.v),topper=[toppV.under||toppV.id,'notat'];
     [...meny.querySelectorAll('a')].forEach(a=>a.classList.toggle('on',topper.includes(a.dataset.id)));
-    tegnUnder('varsel',DEL.h);
-    document.title=(PID?PROSJ.find(p=>p.id===PID).navn+' · ':'')+SIDER.find(x=>x.id===DEL.h).navn+' | '+toppV.navn+' – Skredvarsling veg';
+    tegnUnder(toppV.under||toppV.id,DEL.v);
+    document.title=(PID?PROSJ.find(p=>p.id===PID).navn+' · ':'')+toppV.navn+' | Notat – Skredvarsling veg';
   }else{
     Object.entries(ram).forEach(([k,f])=>{f.classList.toggle('on',k===s.id);f.classList.remove('venstre','hoyre')});
     const topp=s.under||s.id;
@@ -147,14 +144,14 @@ addEventListener('message',async e=>{const d=e.data||{};if(d.type!=='skred-last-
     await DL.save({filename:d.filename,data:d.data});svar(true,'Lagret')}
   catch(x){svar(false,x&&x.code==='declined'?'Nedlasting avbrutt.':'Nedlasting feilet ('+((x&&x.code)||x)+').')}});
 addEventListener('message',e=>{const d=e.data||{},kilde=Object.keys(ram).find(k=>ram[k].contentWindow===e.source);
-  if(d.type==='skred-klar'&&kilde){sendProsj(e.source);if(vent[kilde]){e.source.postMessage({type:'skred-overfor',til:kilde,data:vent[kilde]},'*');delete vent[kilde]}}
+  if(d.type==='skred-klar'&&kilde){sendProsj(e.source);(vent[kilde]||[]).forEach(x=>e.source.postMessage({type:'skred-overfor',til:kilde,data:x},'*'));delete vent[kilde]}
   if(d.type==='skred-gaa'&&(SIDER.some(s=>s.id===d.tab)||INNI[d.tab]))location.hash=d.tab;
   if(d.type==='skred-overfor'&&SIDER.some(s=>s.id===d.til)){
     if(d.data?.prosjekt&&d.data.prosjekt!==PID&&PID){melding(`Overføringen gjelder et annet prosjekt enn det låste – ikke overført`);return}
     const s=SIDER.find(x=>x.id===d.til);
     if(ram[d.til]&&ram[d.til].dataset.klar)ram[d.til].contentWindow.postMessage({type:'skred-overfor',til:d.til,data:d.data},'*');
-    else{vent[d.til]=d.data;if(!ram[d.til])lagRamme(s)}
-    location.hash=d.til;melding(`Overført til ${s.navn}`)}
+    else{(vent[d.til]=vent[d.til]||[]).push(d.data);if(!ram[d.til])lagRamme(s)}
+    if(d.til!=='notat')location.hash=d.til;melding(`Overført til ${s.navn}`)}
   if(d.type==='skred-klar'&&kilde)ram[kilde].dataset.klar='1';
 });
 addEventListener('hashchange',vis);settProsj(PID);vis();

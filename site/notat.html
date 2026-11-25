@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notat – stedsspesifikk skredvarsling</title>
+<style>
+:root{--ink:#1f2a30;--mut:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--acc:#ed9300}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:10px 16px;background:#444f55;color:#fff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}
+header select{font:inherit;font-size:13px;padding:3px 6px;border-radius:3px;border:1px solid #6b777d}
+header .sp{flex:1}
+button{font:inherit;font-size:13px;padding:4px 10px;border-radius:3px;border:1px solid #b9c1c5;background:#fff;cursor:pointer}
+button:hover{border-color:#6b777d}
+header button{background:transparent;color:#fff;border-color:#8a969c}
+header button.hoved{background:var(--acc);border-color:var(--acc);color:#000;font-weight:600}
+main{padding:12px;display:grid;gap:12px;max-width:1100px}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.card h2{font-size:14px;margin:0;display:flex;align-items:center;gap:8px}
+.card h2 .n{font-size:11px;font-weight:600;background:#e3e7e9;color:#3d4a50;border-radius:8px;padding:0 6px}
+.card h2 .sp{flex:1}
+.card h2 button{font-size:12px;padding:2px 8px;font-weight:400}
+.kilde{font-size:12px;color:var(--mut);margin:2px 0 6px}
+.post{border-top:1px solid #eef0f1;padding:6px 0}
+.post:first-of-type{border-top:0}
+.meta{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--mut)}
+.meta .sp{flex:1}
+.meta button{font-size:11.5px;padding:0 7px;border:0;background:none;color:#a33;cursor:pointer}
+textarea{width:100%;min-height:52px;font:inherit;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:3px;resize:vertical;margin-top:3px}
+.tom{font-size:12.5px;color:#9aa4a9;margin:6px 0}
+.note{font-size:12px;color:var(--mut)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1f2a30;color:#fff;padding:7px 14px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;font-size:13px}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Notat</h1>
+  <label>Strekning <select id="strSel"></select></label>
+  <span class="note" style="color:#d5dbde">Samler overføringer fra Værpakke, Stabilitetssolver og Setningskatalog. Lagres i denne nettleseren per strekning.</span>
+  <span class="sp"></span>
+  <button class="hoved" id="kopierAlt">Kopier alt</button>
+  <button id="tomAlt">Tøm strekning</button>
+</header>
+<main id="main"></main>
+<div id="toast"></div>
+<script>
+/* SKRED – felles klient for arbeidsprosjekt og overføring mellom faner (snakker med menysiden) */
+(function(){
+  const R=window.SKRED={id:null,laas:false,liste:[],cb:[],mottak:{},vent:{}};
+  R.on=f=>{R.cb.push(f);if(R.id!==null)try{f(R.id,R.laas)}catch(e){console.error(e)}};
+  R.paMottak=(k,f)=>{R.mottak[k]=f;if(R.vent[k]){const d=R.vent[k];delete R.vent[k];f(d)}};
+  R.send=(til,data)=>{try{parent.postMessage({type:'skred-overfor',til,data},'*')}catch(e){}};
+  R.gaa=tab=>{try{parent.postMessage({type:'skred-gaa',tab},'*')}catch(e){}};
+  R.prosj=id=>R.liste.find(p=>p.id===id)||null;
+  addEventListener('message',e=>{const d=e.data||{};
+    if(d.type==='skred-prosjekt'){R.id=d.id||'';R.laas=!!d.id;R.liste=d.liste||R.liste;R.cb.forEach(f=>{try{f(R.id,R.laas)}catch(x){console.error(x)}})}
+    if(d.type==='skred-overfor'){if(R.mottak[d.til])R.mottak[d.til](d.data);else R.vent[d.til]=d.data}});
+  try{if(parent!==window)parent.postMessage({type:'skred-klar'},'*')}catch(e){}
+})();
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const PROSJ=[['e134','E134 Haukelifjell'],['rv13','Rv13 Vikafjellet'],['rv15','Rv15 Strynefjellet'],['tyin','Fv53 Tyin'],['rv85','Rv85 Gullesfjord'],
+  ['beisfjord','Fv7570 Beisfjorden'],['rv94','Rv94 Hammerfest'],['e69','E69 Nordkapp']];
+const DELER=[
+  {k:'obs',navn:'Været fram til nå',kilde:'Fra Værpakke › Observasjoner'},
+  {k:'prog',navn:'Kommentar til værprognose',kilde:'Fra Værpakke › Prognose og Varsom'},
+  {k:'stab',navn:'Stabilitet',kilde:'Fra Stabilitetssolver'},
+  {k:'setn',navn:'Skredfarevurdering',kilde:'Fra Setningskatalog'}];
+const KILDE_DEL={setninger:'setn',stab:'stab'};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2000)};
+const nokkel=id=>'skred.notat.'+id;
+const les=id=>{try{const v=JSON.parse(localStorage.getItem(nokkel(id))||'{}');DELER.forEach(d=>{if(!Array.isArray(v[d.k]))v[d.k]=[]});return v}catch(e){return Object.fromEntries(DELER.map(d=>[d.k,[]]))}};
+const skriv=(id,v)=>{try{localStorage.setItem(nokkel(id),JSON.stringify(v))}catch(e){}};
+const navn=id=>(PROSJ.find(p=>p[0]===id)||[id,id])[1];
+const tid=ms=>{const d=new Date(ms);return d.toLocaleDateString('no-NO',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('no-NO',{hour:'2-digit',minute:'2-digit'})};
+let PID=(()=>{try{return localStorage.getItem('skred.notat.valgt')||'e134'}catch(e){return 'e134'}})();if(!PROSJ.some(p=>p[0]===PID))PID='e134';
+$('strSel').innerHTML=PROSJ.map(([id,n])=>`<option value="${id}">${n}</option>`).join('');
+function velg(id){PID=id;$('strSel').value=id;try{localStorage.setItem('skred.notat.valgt',id)}catch(e){}tegn()}
+$('strSel').onchange=()=>velg($('strSel').value);
+
+const tilpass=ta=>{if(!ta.offsetParent)return;ta.style.height='auto';ta.style.height=Math.max(52,ta.scrollHeight+2)+'px'};
+addEventListener('resize',()=>document.querySelectorAll('textarea').forEach(tilpass));
+document.addEventListener('visibilitychange',()=>document.querySelectorAll('textarea').forEach(tilpass));
+function tegn(){const N=les(PID);
+  $('main').innerHTML=DELER.map(d=>{const L=N[d.k];
+    return `<section class="card" data-k="${d.k}"><h2>${d.navn} <span class="n">${L.length}</span><span class="sp"></span>
+      <button data-a="kopier">Kopier</button><button data-a="ny">+ Eget notat</button></h2>
+      <div class="kilde">${d.kilde}</div>
+      ${L.length?L.map((p,i)=>`<div class="post"><div class="meta"><span>${esc(p.merk||'')}</span><span class="sp"></span><span>${tid(p.t)}</span><button data-a="slett" data-i="${i}" title="Slett">✕ slett</button></div>
+        <textarea data-i="${i}">${esc(p.tekst)}</textarea></div>`).join(''):'<p class="tom">Ingen notater ennå.</p>'}</section>`}).join('');
+  document.querySelectorAll('textarea').forEach(ta=>{const fit=()=>tilpass(ta);fit();
+    ta.oninput=()=>{fit();const k=ta.closest('section').dataset.k,N=les(PID);if(N[k][+ta.dataset.i]){N[k][+ta.dataset.i].tekst=ta.value;skriv(PID,N)}}});
+}
+const delTekst=(N,k)=>N[k].map(p=>p.tekst.trim()).filter(Boolean).join('\n\n');
+async function kopier(t){if(!t){toast('Ingenting å kopiere');return}
+  try{await navigator.clipboard.writeText(t);toast('Kopiert')}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Kopiert')}catch(x){toast('Kopiering feilet')}a.remove()}}
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-a]');if(!b)return;const k=b.closest('section').dataset.k,N=les(PID);
+  if(b.dataset.a==='kopier')kopier(delTekst(N,k));
+  if(b.dataset.a==='ny'){N[k].push({t:Date.now(),tekst:'',merk:'Eget notat'});skriv(PID,N);tegn();const t=[...document.querySelectorAll(`section[data-k="${k}"] textarea`)].pop();t&&t.focus()}
+  if(b.dataset.a==='slett'){const p=N[k][+b.dataset.i];if(p&&p.tekst.trim()&&!confirm('Slette dette notatet?'))return;N[k].splice(+b.dataset.i,1);skriv(PID,N);tegn()}});
+$('kopierAlt').onclick=()=>{const N=les(PID);kopier([navn(PID),...DELER.map(d=>{const t=delTekst(N,d.k);return t?d.navn.toUpperCase()+'\n'+t:''}).filter(Boolean)].join('\n\n'))};
+$('tomAlt').onclick=()=>{if(!confirm(`Slette alle notater for ${navn(PID)}?`))return;skriv(PID,{});tegn();toast('Tømt')};
+addEventListener('storage',e=>{if(e.key===nokkel(PID))tegn()});
+
+/* arbeidsprosjekt fra menysiden */
+SKRED.on((id,laas)=>{const s=$('strSel');s.disabled=laas;s.title=laas?'Låst til arbeidsprosjektet (velges i menyen øverst)':'';if(laas&&PROSJ.some(p=>p[0]===id)&&id!==PID)velg(id)});
+/* overføringer: {kilde, del?, prosjekt?, tekst, merk?} */
+SKRED.paMottak('notat',d=>{const k=d.del||KILDE_DEL[d.kilde];const t=String(d.tekst||'').trim();if(!k||!t)return;
+  let id=d.prosjekt&&PROSJ.some(p=>p[0]===d.prosjekt)?d.prosjekt:PID;
+  if(SKRED.laas&&id!==SKRED.id){toast('Overføringen gjelder en annen strekning enn arbeidsprosjektet – ikke lagt inn');return}
+  const N=les(id);
+  if(N[k].some(p=>p.tekst.trim()===t)){if(id!==PID)velg(id);toast('Samme tekst finnes allerede i «'+DELER.find(x=>x.k===k).navn+'»');return}
+  N[k].push({t:Date.now(),tekst:t,merk:d.merk||''});skriv(id,N);
+  if(id!==PID)velg(id);else tegn();
+  toast(`Lagt inn i «${DELER.find(x=>x.k===k).navn}» for ${navn(id)}`)});
+velg(PID);
+</script>
+</body>
+</html>

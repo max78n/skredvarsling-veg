@@ -120,7 +120,7 @@ mark{background:#fff0a8;padding:0 1px}
   <div id="out" class="card" style="background:#fafbfb"></div>
   <div class="row">
     <button class="btn" id="bCopy">Kopier tekst</button>
-    <button class="btn" id="bVarsel" style="background:#ed9300;border-color:#ed9300;color:#000" title="Legg hele teksten inn i «Vurdering» (skredfare) i Varselskriver">Overfør til Varselskriver →</button>
+    <button class="btn" id="bVarsel" style="background:#ed9300;border-color:#ed9300;color:#000" title="Legg hele teksten inn i «Skredfarevurdering» i Notat">Overfør til Notat →</button>
     <button class="btn sec2" id="bClear">Tøm utkast</button>
     <button class="btn sec2" id="bEgen">+ Egen setning</button>
   </div>
@@ -387,10 +387,10 @@ $("#bAuto").onclick=autoDraft;
 $("#bClear").onclick=()=>{draft=[];save();renderDraft();renderSugs()};
 $("#bReset").onclick=()=>{st={niv:null,prob:[],utv:null,rek:null,us:false,all:false,free:"",search:""};auto={};$("#free").value="";$("#search").value="";draft=[];phv={};save();render();renderDraft()};
 $("#bVarsel").onclick=()=>{if(!draft.length){toast("Utkastet er tomt");return}
-  /* setningskatalogen er for skredfarevurderingen: all tekst går til «Vurdering» i Varselskriver */
+  /* setningskatalogen er for skredfarevurderingen: all tekst går til «Skredfarevurdering» i Notat */
   const felt={vurdering:draft.map(d=>cap(fill(d.t).trim())).filter(Boolean).join(" ")};
   const ap=Object.values(felt).join(" ").match(/\[[^\]]+\]/g);if(ap&&!confirm("Teksten har ufylte plassholdere ("+[...new Set(ap)].slice(0,4).join(", ")+"). Overføre likevel?"))return;
-  SKRED.send("varsel",{kilde:"setninger",felt,prosjekt:SKRED.id||undefined});registrerBruk&&registrerBruk()};
+  SKRED.send("notat",{kilde:"setninger",del:"setn",tekst:felt.vurdering,prosjekt:SKRED.id||undefined,merk:"Setningskatalog"});registrerBruk&&registrerBruk()};
 $("#bCopy").onclick=async()=>{const t=text();if(!t){toast("Utkastet er tomt");return}
   registrerBruk();
   try{await navigator.clipboard.writeText(t);toast("Kopiert")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();

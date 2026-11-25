@@ -167,7 +167,11 @@ const LADN=[['ukjent',null],['én håndladning',[0,1,0,0]],['flere/store detonas
 const valg={prob:null,ladning:0};let LAST=null;
 const PTYPE={ns:'Nysnø (flakskred)',fs:'Fokksnø (flakskred)',vsl:'Vedvarende svakt lag (flakskred)',vls:'Våt snø (løssnøskred)',vfs:'Våt snø (flakskred)',gl:'Glideskred'};
 document.addEventListener('click',e=>{if(e.target.id!=='ovfBtn'||!LAST)return;
-  SKRED.send('solver',{kilde:'stab',sp:+$('ovfSp').value,type:PTYPE[valg.prob],utl:[1,2,3,4][LAST.best],utb:LAST.u,prosjekt:SKRED.id||undefined})});
+  const sp='SP'+(+$('ovfSp').value+1),str=$('dStr'),del=$('dDel'),strN=str.selectedOptions[0]?.text||'',delN=del.value?del.selectedOptions[0]?.text:'';
+  const ren=h=>h.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+  const tekst=`${sp} ${PTYPE[valg.prob]}${delN?', '+delN:''}: utløsbarhet ${ST[LAST.best].toLowerCase()} (sikkerhet ${LAST.sik}), utbredelse ${UTB[LAST.u].toLowerCase()} → S${LAST.S+1} ${SANN[LAST.S].toLowerCase()}.`
+    +(LAST.spor.length?`\nGrunnlag: ${LAST.spor.map(ren).join('; ')}.`:'')+(LAST.mot.length?`\nSjekk: ${LAST.mot.map(ren).join(' ')}`:'');
+  SKRED.send('notat',{kilde:'stab',del:'stab',prosjekt:str.value||SKRED.id||undefined,tekst,merk:sp+' · '+strN})});
 /* strekning/delområde -> antall løsneområder (fra tabell 4 i skredvarslingsplanene) */
 const DELO=[{"id":"e134","navn":"E134 Haukelifjell","del":{"Austmannalia":4,"Bergsstølen – Midtlæger":10,"Pepparstein":2}},{"id":"rv13","navn":"Rv13 Vikafjellet","del":{"Kvassdalen":14,"Skjelingavatnet – Ygnisdalshamrane":9,"Skredene":4}},{"id":"rv15","navn":"Rv15 Strynefjellet","del":{"Skoresvingane":6,"Skjeringsdalen":2,"Grasdalen":19,"Breidalen":2}},{"id":"tyin","navn":"Fv53 Tyin","del":{"Mellvike–Gamle Varden":3,"Ved Langøddin–Sør for Tyinsstølen":4}},{"id":"rv85","navn":"Rv85 Gullesfjord","del":{"Gullesfjord":4}},{"id":"beisfjord","navn":"Fv7570 Beisfjorden","del":{"Beisfjord I–II":2,"Blomlia":4}},{"id":"rv94","navn":"Rv94 Hammerfest","del":{"Klinkastupet":1,"Leirvikfloget":3,"Stallogargo":4}},{"id":"e69","navn":"E69 Nordkapp","del":{"Bibelberget – Cielkavárri":2,"Nova":6,"Vesterpollen":4,"Skipsfjorden – Seibukta":7}}]||[];
 DELO.forEach(x=>$('dStr').add(new Option(x.navn,x.id)));
@@ -250,12 +254,12 @@ function beregn(){
    <h3>Utbredelse</h3>
    ${u!=null?`<div class="res">Utbredelse: <span class="b b-ub${u}">${UTB[u]}</span> <span class="note">(skår ${uScore.toFixed(1)} av 2)</span></div>${skisse(uScore)}<ul class="spor">${uSpor.map(x=>`<li>${x}</li>`).join('')}</ul>`:`<p class="note">${valg.prob==='vls'?'Velg hvor snøoverflaten er våt og ubunden.':'Velg hvor flaket over svakt lag ligger i løsneområdet.'}</p>`}
    ${harA?`<p class="note">Kontroll: ${kS} av ${kN} sprengninger ga skred${natN?` og ${natN} naturlige`:''} i ${N} løsneområder (${Math.round(fA*100)} %${uA!=null?', tilsvarer '+UTB[uA].toLowerCase():''}).${u!=null&&uA!=null&&Math.abs(u-uA)>=2?' <span class="warn">Stor forskjell mot fordelingsvurderingen – vurder på nytt.</span>':''}</p>`:''}
-   ${u!=null?`<div class="ovf"><b>Overfør</b> utløsbarhet og utbredelse til <select id="ovfSp"><option value="0">SP1</option><option value="1">SP2</option><option value="2">SP3</option></select> i SP-solver${SKRED.laas?` for <b>${(SKRED.prosj(SKRED.id)||{}).navn}</b>`:''} <button id="ovfBtn">Overfør →</button></div>`:'<p class="note">Velg utbredelse for å kunne overføre til SP-solver.</p>'}
+   ${u!=null?`<div class="ovf"><b>Overfør</b> vurderingen som <select id="ovfSp"><option value="0">SP1</option><option value="1">SP2</option><option value="2">SP3</option></select> til Notat${SKRED.laas?` for <b>${(SKRED.prosj(SKRED.id)||{}).navn}</b>`:''} <button id="ovfBtn">Overfør til Notat →</button></div>`:'<p class="note">Velg utbredelse for å kunne overføre til Notat.</p>'}
    ${mot.length?`<div class="warn" style="font-size:12.5px;margin:6px 0"><b>Sjekk:</b><ul style="margin:2px 0 0 18px;padding:0">${mot.map(m=>`<li>${m}</li>`).join('')}</ul></div>`:''}
    <h3>Grunnlag</h3><ul class="spor">${spor.map(s=>`<li>${s}</li>`).join('')}</ul>
    ${VAAT(valg.prob)&&kN>0&&kS===0?'<p class="warn" style="font-size:12.5px">Negativt sprengningsresultat i våt snø er svakt bevis for god stabilitet.</p>':''}`;
   $('utRes').innerHTML=html;
-  LAST=u!=null?{best,u}:null;
+  LAST=u!=null?{best,u,S,sik:sikT,spor:spor.slice(),mot:mot.slice()}:null;
 }
 function skisse(sc){ // løsneområde med potensielle utløsningspunkter
   let x=7;const pts=[];const n=sc>=1.5?26:sc>=1?14:sc>=0.5?7:2;

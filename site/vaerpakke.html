@@ -6,7 +6,9 @@
 <title>Værpakke veg – stedsspesifikk skredvarsling</title>
 <script src="lib/leaflet.js"></script>
 <script src="lib/chart.umd.js"></script>
-<style>/* leaflet 1.9.4 css (inline) */
+<style>
+#mgTilVarsel,#mgVarselInfo,.mgvalg{display:none!important} /* Varselskriver er fjernet */
+/* leaflet 1.9.4 css (inline) */
 /* required styles */
 
 .leaflet-pane,
@@ -824,7 +826,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}details.fold>summary:
     <select id="obsStation" style="display:none"></select><span class="note" id="obsNote"></span></div>
   <div class="card notat"><b>Notat – været fram til nå</b> <span class="note">(lagres i nettleseren per strekning)</span>
     <textarea id="obsNotat" placeholder="Beskriv været de siste 48 t som påvirket snødekket og skredfaren. Inkluder måleverdier."></textarea>
-    <div class="nrad"><button class="b til" id="obsTilVarsel">Overfør til Varselskriver («Været fram til nå») →</button><span class="note" id="obsNotatInfo"></span></div></div>
+    <div class="nrad"><button class="b til" id="obsTilVarsel">Overfør til Notat («Været fram til nå») →</button><span class="note" id="obsNotatInfo"></span></div></div>
   <table id="obsTbl"></table>
   <div class="charts charts3" style="margin-top:14px"><div class="chartbox"><canvas id="cObsT"></canvas></div><div class="chartbox"><canvas id="cObsW"></canvas></div><div class="chartbox rosebox" id="rObs"></div></div>
   <h2>seNorge ved løsneområdene (døgnverdier 06–06 UTC)</h2>
@@ -836,7 +838,7 @@ details.fold[open]>summary::before{transform:rotate(90deg)}details.fold>summary:
   <div class="ctrl"><label>Strekning <select id="progRoad"></select></label><label>Nedbør i grafer <select class="nbMod" id="nbPr"><option value="t">per time/periode</option><option value="d">døgnsum (06–06 UTC)</option><option value="a">akkumulert per døgn</option></select></label><span class="note" id="progMeta"></span></div>
   <div class="card notat"><b>Notat – kommentar til værprognose</b> <span class="note">(lagres i nettleseren per strekning)</span>
     <textarea id="progNotat" placeholder="Referer til prognoseverdier. Spesifiser for hvilket delområde beskrivelsen gjelder."></textarea>
-    <div class="nrad"><button class="b til" id="progTilVarsel">Overfør til Varselskriver («Kommentar til værprognose») →</button><span class="note" id="progNotatInfo"></span></div></div>
+    <div class="nrad"><button class="b til" id="progTilVarsel">Overfør til Notat («Kommentar til værprognose») →</button><span class="note" id="progNotatInfo"></span></div></div>
   <div class="card" id="varsomBox"></div>
   <h2>Prognose for løsneområdene</h2>
   <table id="delTbl"></table>
@@ -1515,7 +1517,7 @@ function MGW(){const w=mgBody.clientWidth||1400,en=getComputedStyle(mgBody).grid
 let mgRT;addEventListener('resize',()=>{clearTimeout(mgRT);mgRT=setTimeout(()=>{if(document.getElementById('mgram').classList.contains('active'))renderMgram()},250)});
 document.querySelectorAll('.mgv').forEach(b=>b.onclick=()=>{MGV=b.dataset.v;renderMgram()});
 
-/* ---------- notater -> Varselskriver ---------- */
+/* ---------- notater -> Notat-fanen ---------- */
 const NOT={obs:{ta:'obsNotat',sel:()=>obsRoad.value,felt:'vaerhittil',navn:'Været fram til nå',btn:'obsTilVarsel',info:'obsNotatInfo'},
            prog:{ta:'progNotat',sel:()=>progRoad.value,felt:'vaerkomm',navn:'Kommentar til værprognose',btn:'progTilVarsel',info:'progNotatInfo'}};
 const notKey=(k,id)=>`vp_notat_${k}_${id}`;
@@ -1526,7 +1528,7 @@ Object.entries(NOT).forEach(([k,n])=>{const ta=document.getElementById(n.ta);
   ta.oninput=()=>notSet(k,n.sel(),ta.value);
   document.getElementById(n.btn).onclick=()=>{const t=ta.value.trim(),id=n.sel(),r=DATA.find(x=>x.id===id);
     if(!t){document.getElementById(n.info).textContent='Notatet er tomt.';return}
-    SKRED.send('varsel',{kilde:'vaerpakke',prosjekt:id,navn:r?.navn,felt:{[n.felt]:t}});
+    SKRED.send('notat',{kilde:'vaerpakke',del:k,prosjekt:id,navn:r?.navn,tekst:t,merk:(k==='obs'?'Observasjoner':'Prognose')+' · '+(r?.navn||id)});
     document.getElementById(n.info).textContent=`Sendt til «${n.navn}» for ${r?.navn||id}.`}});
 
 /* ---------- arbeidsprosjekt (låst fra menysiden) ---------- */
