@@ -720,16 +720,24 @@ details summary{cursor:pointer;font-weight:600}
 .dlab{background:rgba(255,255,255,.92);border:1px solid #6b777d;border-radius:3px;font-weight:600;font-size:12px;padding:1px 6px;box-shadow:none}
 .dlab:before{display:none}
 .skjul{display:none!important}
-.stripe{display:flex;height:22px;gap:0;border-radius:4px;overflow:hidden;background:#e3e7e9}
-.stripe span{flex:1 1 0;min-width:1px;cursor:pointer;position:relative}
-.stripe span.on{outline:3px solid var(--t);outline-offset:-3px;z-index:1}
-.stripe span.aar{margin-left:6px}
-.sesonger{display:flex;gap:8px;align-items:flex-start}
-.ses{flex:1 1 0;min-width:96px}
-.ses .stripe{margin:0}
-.sesLab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;font-size:.75rem;color:var(--mu);margin-top:3px;border-top:2px solid var(--t);padding-top:2px;line-height:1.3}
-.sesLab b{flex-basis:100%}
-.sesLab b{color:var(--t);font-weight:700}
+.sesonger{display:flex;gap:10px;align-items:flex-start}
+.ses{flex:1 1 0;min-width:110px}
+.tl{position:relative;height:26px;border-radius:4px;background:#e3e7e9;margin-top:14px}
+.tl .seg{position:absolute;top:0;bottom:0;cursor:pointer;box-shadow:inset -1px 0 0 rgba(255,255,255,.55)}
+.tl .seg.g{background:#5cb85c}.tl .seg.y{background:#ffd52e}.tl .seg.o{background:#ff8f1f}.tl .seg.r{background:#c62828}.tl .seg.x{background:#c9cdd2}
+.tl .seg.on{outline:3px solid var(--t);outline-offset:-3px;z-index:2}
+.tl .valgt{position:absolute;top:-4px;bottom:-4px;border:2px solid var(--t);border-radius:4px;pointer-events:none;z-index:1}
+.tk .naaL{color:#b3261e;font-weight:700;background:#fff;z-index:2;padding:0 2px}.tk .naaL:before{display:none}
+.tl .naa{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed #b3261e;z-index:3;pointer-events:none}
+.tl .naa span{position:absolute;top:-1px;left:3px;font-size:.68rem;font-weight:700;color:#b3261e;line-height:1}
+.tl .vm{position:absolute;top:-14px;bottom:-4px;width:0;border-left:3px solid var(--t);z-index:3;pointer-events:none}
+.tl .vm span{position:absolute;top:-1px;left:4px;font-size:.68rem;font-weight:700;white-space:nowrap;line-height:1}
+.tl .vm.slutt span{left:auto;right:4px}
+.tk{position:relative;height:16px;font-size:.7rem;color:var(--mu)}
+.tk span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap}
+.tk span:before{content:'';position:absolute;left:50%;top:-4px;height:4px;border-left:1px solid #9aa4a9}
+.sesLab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;font-size:.75rem;color:var(--mu);margin-top:2px;border-top:2px solid var(--t);padding-top:2px;line-height:1.3}
+.sesLab b{flex-basis:100%;color:var(--t);font-weight:700}
 #taPer{font:inherit;font-size:.85rem;padding:2px 4px;border-radius:4px;border:1px solid var(--b)}
 .taRad{display:flex;gap:8px;align-items:center;margin-top:8px}
 .taRad input{flex:1;accent-color:var(--t);height:28px}
@@ -894,7 +902,7 @@ function tegnTid(){const s=KS(P),dels=s?s.del:[];
   $('toppHvor').textContent=(topD.length?'Gjelder '+topD.join(', ')+'.':'')+(rest.length?' Øvrige – '+rest.join(', ')+'.':'');
   if(T){$('trafikk').innerHTML=`<p>${esc(T['Trafikkavvikling']||'–')}</p>`;$('drift').innerHTML=`<p>${esc(T['Drift']||'–')}</p>`}
   else{$('drift').innerHTML=rader(TILTAK[top].d);$('trafikk').innerHTML=rader(TILTAK[top].t)}
-  $('tiltakTid').textContent=$('kartTid').textContent=tidTekst(k);
+  $('tiltakTid').textContent=$('kartTid').textContent=tidTekst(k);if(typeof markAkse==='function')markAkse();
   document.querySelectorAll('.akt th.lv,.vt td[data-lv]').forEach(th=>th.classList.toggle('cur',+th.dataset.lv===top));
   document.querySelectorAll('#grid [data-k]').forEach(b=>{const on=+b.dataset.k===k;b.classList.toggle(b.classList.contains('tid')?'on':'sel',on);if(!on)b.classList.remove('on','sel')});
   tegnKart()}
@@ -907,32 +915,56 @@ function tegnGrid(){const s=KS(P),dels=s?s.del:[];const dager=[];v.slots.forEach
 
 /* ---------- side ---------- */
 let L_=[];
-/* tidsakse: et utsnitt (standard 7 dager) av varslene for strekningen; vinter = 1.8.–31.7., merket med første og siste varsel */
+/* tidsakse: tidsriktig. Hvert varsel gjelder fra gyldig fra til neste varsel (eller «neste varsel innen»), og går derfor også framover i tid.
+   Standard: 7 dager bakover fra nå til slutten av siste varsel. Vinter = 1.8.–31.7., merket med start (første varsel) og slutt (siste). */
 const DAG=864e5;
 const vinter=x=>{const d=new Date(x.t0),y=d.getFullYear(),m=d.getMonth();return m>=7?y:y-1};
 const vNavn=y=>`Vinter ${y}/${String(y+1).slice(2)}`;
 let PER=store.get('skred.varsel.periode')||'7',W=[];
+function lagSlutt(){L_.forEach((x,j)=>{const tt=(x.tt||[]).filter(t=>t!=null);let e=x.neste?Date.parse(x.neste):NaN;
+  if(!(e>x.t0))e=(tt.length?Math.max(...tt):x.t0)+DAG;const n=L_[j+1];if(n&&n.t0>x.t0&&n.t0<e)e=n.t0;x.t1=e})}
 function lagPer(){const ys=[...new Set(L_.map(vinter))].sort((a,b)=>b-a);
   const opt=[['7','Siste 7 dager'],['30','Siste 30 dager'],...ys.map(y=>['v'+y,vNavn(y)]),['alle','Alle vintre']];
   if(!opt.some(o=>o[0]===PER))PER='7';
   $('taPer').innerHTML=opt.map(o=>`<option value="${o[0]}"${o[0]===PER?' selected':''}>${o[1]}</option>`).join('')}
-function vindu(){if(!L_.length)return[];const ref=L_[L_.length-1].t0;
-  if(PER==='7'||PER==='30'){const w=L_.filter(x=>x.t0>=ref-(+PER)*DAG);return w.length?w:[L_[L_.length-1]]}
-  if(PER[0]==='v'){const y=+PER.slice(1);return L_.filter(x=>vinter(x)===y)}
-  return L_}
+/* grupper: [{a,b,el:[varsel], lab?}] */
+function grupper(){if(!L_.length)return[];const naa=Date.now(),ny=L_[L_.length-1];
+  const vint=y=>L_.filter(x=>vinter(x)===y),fra=l=>({a:l[0].t0,b:l[l.length-1].t1});
+  if(PER==='7'||PER==='30'){const b=ny.t1,a=(ny.t1<naa?ny.t1:naa)-(+PER)*DAG;
+    return[{a,b,el:L_.filter(x=>x.t1>a&&x.t0<b),merk:true}]}
+  if(PER[0]==='v'){const y=+PER.slice(1),l=vint(y);return l.length?[{...fra(l),el:l,y}]:[]}
+  return[...new Set(L_.map(vinter))].sort((a,b)=>a-b).map(y=>{const l=vint(y);return{...fra(l),el:l,y}})}
+const dK=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric'});
+const dY=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
+function maksSlot(x,j){let m=null;(x.nivaa||[]).forEach(r=>{const n=r[j];if(n!=null&&(m==null||n>m))m=n});return m}
+function tegnGruppe(g){const A=g.a,B=Math.max(g.b,g.a+3600e3),pos=t=>(Math.max(A,Math.min(B,t))-A)/(B-A)*100,naa=Date.now();
+  let h='';
+  g.el.forEach(x=>{const j=W.indexOf(x),tt=x.tt||[];
+    (x.slots||[[]]).forEach((sl,s)=>{const a=Math.max(x.t0,tt[s]??x.t0);let b=x.t1;for(let q=s+1;q<tt.length;q++)if(tt[q]!=null){b=Math.min(b,tt[q]);break}
+      if(b<=A||a>=B||b<=a)return;const n=maksSlot(x,s);
+      h+=`<span class="seg ${n==null?'x':NIV[n][1]}" data-j="${j}" data-s="${s}" style="left:${pos(a)}%;width:${pos(b)-pos(a)}%" title="${esc(fmt(new Date(a).toISOString()))}: ${n==null?'ikke varslet':NIV[n][0]}${x.hist?' (sesongoversikt)':''}"></span>`})});
+  if(v&&g.el.includes(v)&&v.t1>A&&v.t0<B)h+=`<div class="valgt" style="left:${pos(v.t0)}%;width:${pos(v.t1)-pos(v.t0)}%"></div>`;
+  let naaLab='';if(naa>A&&naa<B){h+=`<div class="naa" style="left:${pos(naa)}%"></div>`;naaLab=`<span class="naaL" style="left:${pos(naa)}%">nå</span>`}
+  const vmL=(x,t,kl)=>`<div class="vm${pos(x)>60?' slutt':''}" style="left:${pos(x)}%"><span>${t}</span></div>`;
+  if(g.merk){[...new Set(L_.map(vinter))].forEach(y=>{const l=L_.filter(x=>vinter(x)===y),s0=l[0].t0,s1=l[l.length-1].t1,ferdig=naa-s1>14*DAG||y<vinter(L_[L_.length-1]);
+    if(s0>A&&s0<B)h+=vmL(s0,'Start '+vNavn(y).toLowerCase());
+    if(ferdig&&s1>A&&s1<=B)h+=vmL(s1,'Slutt '+vNavn(y).toLowerCase())})}
+  /* tikk */
+  const dager=(B-A)/DAG,steg=dager<=10?1:dager<=45?7:dager<=200?30:91;let tk='';
+  const d0=new Date(A);d0.setHours(0,0,0,0);let t=d0.getTime()+DAG;
+  if(steg===30||steg===91){const d=new Date(A);t=new Date(d.getFullYear(),d.getMonth()+1,1).getTime()}
+  for(let i=0;t<B&&i<60;i++){if(t>A)tk+=`<span style="left:${pos(t)}%">${steg>=30?new Date(t).toLocaleDateString('nb-NO',{month:'short'}).replace('.',''):dK(t)}</span>`;
+    if(steg>=30){const d=new Date(t);t=new Date(d.getFullYear(),d.getMonth()+(steg===30?1:3),1).getTime()}else t+=steg*DAG}
+  const lab=g.y!=null?`<div class="sesLab"><b>${vNavn(g.y)}</b><span>start ${dK(g.a)}</span><span>${naa<g.b+14*DAG&&g.y===vinter(L_[L_.length-1])?'gyldig til '+dK(g.b):'slutt '+dK(g.b)}</span></div>`:'';
+  return`<div class="ses" style="flex-grow:${Math.max(1,Math.round(dager))}"><div class="tl">${h}</div><div class="tk">${tk}${naaLab}</div>${lab}</div>`}
 function tegnAkse(){$('tidsakse').classList.toggle('skjul',L_.length<1);if(!L_.length)return;
-  lagPer();W=vindu();if(!W.includes(v)){PER=vindu===null?'7':(L_.indexOf(v)>=0&&L_[L_.length-1].t0-v.t0<=30*DAG?'30':'v'+vinter(v));lagPer();W=vindu()}
-  const n=W.length,i=W.indexOf(v);$('taS').max=Math.max(0,n-1);$('taS').value=Math.max(0,i);
-  const dY=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
-  const dK=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric'});
-  /* grupper per vinter; hele vinteren (alle varsel) gir start/slutt */
-  const grp=[];W.forEach((x,j)=>{const y=vinter(x);let g=grp[grp.length-1];if(!g||g.y!==y){g={y,el:[]};grp.push(g)}g.el.push([x,j])});
-  $('stripe').innerHTML=grp.map(g=>{const alle=L_.filter(x=>vinter(x)===g.y),start=alle[0].t0,slutt=alle[alle.length-1].t0,paagaar=g.y===vinter(L_[L_.length-1])&&Date.now()-slutt<60*DAG;
-    return `<div class="ses" style="flex-grow:${g.el.length}"><div class="stripe">${g.el.map(([x,j])=>`<span class="${x.maks==null?'x':NIV[x.maks][1]}${j===i?' on':''}" data-j="${j}" title="${esc(fmt(x.gyldig_fra))} ${new Date(x.t0).getFullYear()}: maks ${x.maks==null?'–':NIV[x.maks][0]}"></span>`).join('')}</div>
-      <div class="sesLab"><b>${vNavn(g.y)}</b><span>start ${dK(start)}</span><span>${paagaar?'siste '+dK(slutt):'slutt '+dK(slutt)}</span></div></div>`}).join('');
-  $('taTekst').textContent=i<0?'Valgt varsel er utenfor utsnittet':`Varsel ${i+1} av ${n}${v===L_[L_.length-1]?' (siste)':''} · gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}`;
-  $('taFra').textContent=dY(W[0].t0);$('taTil').textContent=dY(W[n-1].t0);
-  $('taF').disabled=i<=0;$('taN').disabled=i>=n-1||i<0;$('taSiste').disabled=v===L_[L_.length-1]}
+  lagSlutt();lagPer();let G=grupper();W=G.flatMap(g=>g.el);
+  if(v&&!W.includes(v)){PER='v'+vinter(v);lagPer();G=grupper();W=G.flatMap(g=>g.el)}
+  $('stripe').innerHTML=G.map(tegnGruppe).join('');
+  const i=W.indexOf(v),n=W.length;
+  $('taTekst').textContent=v?`Varsel ${i+1} av ${n}${v===L_[L_.length-1]?' (siste)':''} · gyldig ${dK(v.t0)} ${new Date(v.t0).toLocaleTimeString('nb-NO',{timeZone:'Europe/Oslo',hour:'2-digit',minute:'2-digit'})} – ${dY(v.t1)}`:'';
+  $('taF').disabled=i<=0;$('taN').disabled=i>=n-1||i<0;$('taSiste').disabled=v===L_[L_.length-1];markAkse()}
+function markAkse(){document.querySelectorAll('#stripe .seg').forEach(e=>e.classList.toggle('on',W[+e.dataset.j]===v&&+e.dataset.s===k))}
 function visVarsel(){L_=V.filter(x=>x.prosjekt===P).sort((a,b)=>a.t0-b.t0||(a.mottatt||'').localeCompare(b.mottatt||''));
   /* samme gyldig fra: behold siste utsending */
   L_=L_.filter((x,j)=>!(L_[j+1]&&L_[j+1].t0===x.t0));
@@ -969,12 +1001,12 @@ $('strek').innerHTML=PRO.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join
 $('valg').innerHTML=PRO.map(p=>`<button data-p="${p[0]}">${p[1]}</button>`).join('');
 $('kilde').textContent=(D.test?'TESTDATA, ikke ekte varsel. ':'')+'Kart: '+(K.kilde||'');
 $('strek').onchange=()=>velg($('strek').value);
-const tilJ=j=>{j=Math.max(0,Math.min(W.length-1,j));if(W[j]&&W[j]!==v){v=W[j];visVarsel()}};
-$('taS').oninput=()=>tilJ(+$('taS').value);$('taF').onclick=()=>tilJ(W.indexOf(v)-1);$('taN').onclick=()=>tilJ(W.indexOf(v)+1);$('taSiste').onclick=()=>{if(!W.includes(L_[L_.length-1])){PER='7';store.set('skred.varsel.periode',PER)}v=L_[L_.length-1];visVarsel()};
-$('taPer').onchange=()=>{PER=$('taPer').value;store.set('skred.varsel.periode',PER);const w=vindu();if(w.length&&!w.includes(v))v=w[w.length-1];visVarsel()};
+const tilJ=(j,sl)=>{j=Math.max(0,Math.min(W.length-1,j));if(W[j]&&W[j]!==v){v=W[j];visVarsel()}if(sl!=null&&v.slots&&sl<v.slots.length){k=sl;tegnTid()}};
+$('taS').oninput=()=>tilJ(+$('taS').value);$('taF').onclick=()=>tilJ(W.indexOf(v)-1);$('taN').onclick=()=>tilJ(W.indexOf(v)+1);$('taSiste').onclick=()=>{if(PER[0]==='v'&&+PER.slice(1)!==vinter(L_[L_.length-1])){PER='7';store.set('skred.varsel.periode',PER)}v=L_[L_.length-1];visVarsel()};
+$('taPer').onchange=()=>{PER=$('taPer').value;store.set('skred.varsel.periode',PER);lagSlutt();const w=grupper().flatMap(g=>g.el);if(w.length&&!w.includes(v))v=w[w.length-1];visVarsel()};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft')tilJ(W.indexOf(v)-1);if(e.key==='ArrowRight')tilJ(W.indexOf(v)+1)});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){velg(b.dataset.p);return}
-  const s=e.target.closest('#stripe [data-j]');if(s){tilJ(+s.dataset.j);return}
+  const s=e.target.closest('#stripe [data-j]');if(s){tilJ(+s.dataset.j,+s.dataset.s);return}
   const t=e.target.closest('#grid [data-k]');if(t){k=+t.dataset.k;tegnTid()}});
 addEventListener('hashchange',()=>{if(!laast)velg(location.hash.slice(1),'hash')});
 if(window.SKRED)SKRED.on((id,l)=>{laast=l;$('strek').disabled=l;if(l)velg(id)});
