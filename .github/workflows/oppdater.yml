@@ -1,13 +1,14 @@
 # Bygger Værpakke og morgenbrief og publiserer sida på GitHub Pages.
-# GitHub bruker UTC. Tidene under gir 05:37, 08:37 … 20:37 norsk vintertid (sommertid: én time senere).
-# Morgenbriefen kjøres 05:15 og 06:15 UTC; kjøringen som ikke faller på kl. 07 norsk tid hoppes over.
-# GitHub kan forsinke planlagte kjøringer 5–30 min.
+# GitHub bruker UTC og kan forsinke eller hoppe over planlagte kjøringer. Derfor:
+# - Værpakke kjøres hver time (xx:23 UTC, 05:23–21:23 norsk vintertid).
+# - Morgenbriefen prøves flere ganger (05:13–06:53 UTC). Første forsøk etter kl. 07:00 norsk tid
+#   lager briefen; senere forsøk samme dag hoppes over (sjekkes mot sist_kjort.txt).
 name: Oppdater data
 
 on:
   schedule:
-    - cron: '37 4,7,10,13,16,19 * * *'
-    - cron: '15 5,6 * * *'
+    - cron: '23 4-20 * * *'
+    - cron: '13,33,53 5,6 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -26,33 +27,39 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
-      hopp: ${{ steps.tid.outputs.hopp }}
+      modus: ${{ steps.tid.outputs.modus }}
     steps:
-      - name: Sjekk tidspunkt for morgenbrief
+      - uses: actions/checkout@v4
+
+      - name: Velg hva som skal kjøres
         id: tid
         run: |
-          H=$(TZ=Europe/Oslo date +%H)
-          if [ "${{ github.event.schedule }}" = "15 5,6 * * *" ] && [ "$H" != "07" ]; then echo "hopp=1" >> $GITHUB_OUTPUT; else echo "hopp=0" >> $GITHUB_OUTPUT; fi
-
-      - uses: actions/checkout@v4
-        if: steps.tid.outputs.hopp == '0'
+          H=$(TZ=Europe/Oslo date +%H); I_DAG=$(TZ=Europe/Oslo date +%F)
+          SIST=$(cut -c1-10 sist_kjort.txt 2>/dev/null || true)
+          M=vaerpakke
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M=brief
+          elif [ "${{ github.event.schedule }}" = "13,33,53 5,6 * * *" ]; then
+            if [ "$H" -ge 7 ] && [ "$H" -le 9 ] && [ "$SIST" != "$I_DAG" ]; then M=brief; else M=hopp; fi
+          fi
+          echo "Oslo $H, sist brief $SIST, modus $M"
+          echo "modus=$M" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-python@v5
-        if: steps.tid.outputs.hopp == '0'
+        if: steps.tid.outputs.modus != 'hopp'
         with:
           python-version: '3.12'
 
       - name: Installer pakker
-        if: steps.tid.outputs.hopp == '0'
+        if: steps.tid.outputs.modus != 'hopp'
         run: pip install -q netCDF4 numpy pyproj pillow python-pptx openpyxl
 
       - name: Hendelsesbilder fra PowerPoint (hvis fila er lastet opp)
-        if: steps.tid.outputs.hopp == '0' && hashFiles('data/*.pptx') != ''
+        if: steps.tid.outputs.modus != 'hopp' && hashFiles('data/*.pptx') != ''
         run: |
           python3 kilde/skredbaner/hent_bilder.py data/*.pptx site/bilder/dim "data/Dimensjonerende skredstørrelser_stedsspesifikk skredvarsling.xlsx" || echo "::warning::Hendelsesbildene kunne ikke lages"
 
       - name: Værpakke
-        if: steps.tid.outputs.hopp == '0'
+        if: steps.tid.outputs.modus != 'hopp'
         working-directory: site
         env:
           FROST_CLIENT_ID: ${{ secrets.FROST_CLIENT_ID }}
@@ -63,30 +70,31 @@ jobs:
           rm -f kart_filer.txt
 
       - name: Morgenbrief
-        if: steps.tid.outputs.hopp == '0' && (github.event.schedule == '15 5,6 * * *' || github.event_name == 'workflow_dispatch')
+        if: steps.tid.outputs.modus == 'brief'
         run: python3 kilde/morgenbrief/lag_brief.py data.json kilde/morgenbrief/mal_brief.html site/morgenbrief.html
 
       - name: Lagre morgenbriefen i repoet (holder også de planlagte kjøringene aktive)
-        if: steps.tid.outputs.hopp == '0' && (github.event.schedule == '15 5,6 * * *' || github.event_name == 'workflow_dispatch')
+        if: steps.tid.outputs.modus == 'brief'
         run: |
-          date -u +"%Y-%m-%dT%H:%M:%SZ morgenbrief ok" > sist_kjort.txt
+          echo "$(TZ=Europe/Oslo date +%F) $(date -u +%H:%MZ) morgenbrief ok" > sist_kjort.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add sist_kjort.txt site/morgenbrief.html
-          git commit -m "Morgenbrief $(date -u +%F)" || true
+          git commit -m "Morgenbrief $(TZ=Europe/Oslo date +%F)" || true
+          git pull --rebase -q origin main || true
           git push || true
 
       - uses: actions/configure-pages@v5
-        if: steps.tid.outputs.hopp == '0'
+        if: steps.tid.outputs.modus != 'hopp'
 
       - uses: actions/upload-pages-artifact@v3
-        if: steps.tid.outputs.hopp == '0'
+        if: steps.tid.outputs.modus != 'hopp'
         with:
           path: site
 
   publiser:
     needs: bygg
-    if: needs.bygg.outputs.hopp == '0'
+    if: needs.bygg.outputs.modus != 'hopp'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

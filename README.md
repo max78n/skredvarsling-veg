@@ -14,9 +14,9 @@ Statisk nettside for stedsspesifikk skredvarsling (Statens vegvesen). GitHub Act
 | `.github/workflows/oppdater.yml` | Kjøreplan |
 
 ## Kjøreplan
-- Værpakke: 05:37, 08:37, 11:37, 14:37, 17:37 og 20:37 norsk vintertid. Om sommeren kommer kjøringene én time senere.
-- Morgenbrief: ca. 07:15. Briefen viser tall og merknader, men ikke skrevet tekst.
-- GitHub kan forsinke kjøringene 5–30 min.
+- Værpakke: hver time kl. xx:23, 05:23–21:23 norsk vintertid (sommertid: én time senere).
+- Morgenbrief: første vellykkede forsøk etter kl. 07:00 (forsøk hvert 20. min til ca. 08:00). Briefen viser tall og merknader, men ikke skrevet tekst.
+- GitHub kan forsinke eller hoppe over planlagte kjøringer; derfor kjøres de ofte.
 - Manuell kjøring: **Actions → Oppdater data → Run workflow**. Den lager også en ny morgenbrief.
 
 ## Oppsett (én gang)
