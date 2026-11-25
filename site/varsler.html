@@ -665,7 +665,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 	}
 
-:root{--m:#2f383d;--a:#ed9300;--b:#d5dadd;--t:#1f2a30;--mu:#5b666c;--bg:#f4f5f6;--ok:#f2f3f4;--okT:#4a5056;--lim:#b9bec3;--no:#3a3f45}
+:root{--m:#2f383d;--a:#ed9300;--b:#d5dadd;--t:#1f2a30;--mu:#5b666c;--bg:#f4f5f6;--ok:#fff;--okT:#6b7178;--lim:#d9dce0;--no:#3a3f45}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--t);font-size:15px;line-height:1.4}
 .wrap{max-width:1300px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:16px}
@@ -689,7 +689,8 @@ select,button{font:inherit;font-size:14px;padding:5px 9px;border:1px solid #9aa4
 .rad{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
 .tag{flex:0 0 96px;text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.05em;padding:4px 0;border-radius:4px}
 .tag.no{background:var(--no);color:#fff}.tag.lim{background:var(--lim)}.tag.info{background:var(--lim)}.tag.ok{background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #d5d9dc}
-.sym{display:inline-flex;gap:10px;flex-wrap:wrap;align-items:center}.sym span{display:inline-block;padding:2px 8px;border-radius:3px;font-weight:700;font-size:.78rem}
+.akt .legend{border:0;box-shadow:none;background:none;display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0 8px;font-size:.9rem;padding:0;list-style:none}.akt .legend li{display:flex;align-items:center;gap:8px}
+.akt .chip{width:28px;height:24px;border-radius:4px;border:1px solid #c9cdd2;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
 .ex{color:var(--mu)}
 .grid{overflow-x:auto}
 .grid table{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
@@ -706,7 +707,9 @@ details summary{cursor:pointer;font-weight:600}
 .akt th,.akt td{padding:6px;vertical-align:middle}
 .akt .lab{background:#f2f3f5;text-align:left}.akt .lab small{display:block;font-weight:400;color:var(--mu)}
 .akt .grp{background:#2b3440;color:#fff;text-align:left}
-.akt td{text-align:center;font-weight:700;font-size:.78rem}
+.akt td{text-align:center;font-weight:700;font-size:.78rem;line-height:1.2}
+.akt td.s b{display:block;font-size:1.05rem}.akt td.ok b{font-size:1.2rem}
+.akt td.rule{background:#f7f8f9;font-size:.78rem;line-height:1.25}
 .akt td.ok{background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #e3e6e9}.akt td.lim{background:var(--lim)}.akt td.no{background:var(--no);color:#fff}
 .akt th.cur{box-shadow:inset 0 0 0 3px var(--t)}
 .vt{width:100%;border-collapse:separate;border-spacing:3px;font-size:.88rem;margin-top:10px}.vt th{background:#cacaca;text-align:left;padding:6px}.akt .vt td{background:#f2f3f5;padding:6px;vertical-align:top;text-align:left;font-weight:400;font-size:.88rem}.akt .vt td.g{background:#5cb85c}.akt .vt td.y{background:#ffd52e}.akt .vt td.o{background:#ff8f1f}.akt .vt td.r{background:#c62828;color:#fff}.akt .vt td[data-lv]{text-align:center}.vt th:first-child{width:90px}.vt td.cur{box-shadow:inset 0 0 0 3px var(--t)}
@@ -771,17 +774,17 @@ details summary{cursor:pointer;font-weight:600}
   <section class="kort akt"><details><summary>Tiltak for alle nivå</summary><div id="alleTab"></div><div id="alleStd" class="skjul">
   <table><colgroup><col style="width:36%"><col><col><col><col></colgroup>
   <thead><tr><th class="grp">Eksponering i skredpunkt</th><th class="lv g" data-lv="0">Grønt</th><th class="lv y" data-lv="1">Gult</th><th class="lv o" data-lv="2">Oransje</th><th class="lv r" data-lv="3">Rødt</th></tr>
-  <tr><th class="lab">Hovedregel</th><td class="ok">Normal drift og trafikk&shy;avvikling</td><td class="ok">Økt opp&shy;merksomhet</td><td class="ok">Forbered&shy;elser og fore&shy;bygging</td><td class="ok">Evaku&shy;ering og stenging</td></tr></thead>
+  <tr><th class="lab">Hovedregel</th><td class="rule">Normal drift og trafikk&shy;avvikling</td><td class="rule">Økt opp&shy;merksomhet</td><td class="rule">Forbered&shy;elser og fore&shy;bygging</td><td class="rule">Evaku&shy;ering og stenging</td></tr></thead>
   <tbody><tr><th colspan="5" class="grp">Driftsoppgaver</th></tr>
-  <tr><th class="lab">Arbeid utenfor kjøretøy<small>kosting av skilt, inspeksjon</small></th><td class="ok">✓</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td></tr>
-  <tr><th class="lab">Langvarig arbeid i kjøretøy<small>rydding etter skred</small></th><td class="ok">✓</td><td class="lim">! Begrens</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td></tr>
-  <tr><th class="lab">Kortvarig arbeid i kjøretøy<small>fresing av grøft</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td><td class="no">✕ Unngå</td></tr>
-  <tr><th class="lab">Rask passering i kjøretøy<small>brøyting, nødvendig forflytning</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td></tr></tbody>
+  <tr><th class="lab">Arbeid utenfor kjøretøy<small>kosting av skilt, inspeksjon</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td></tr>
+  <tr><th class="lab">Langvarig arbeid i kjøretøy<small>rydding etter skred</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s lim"><b aria-hidden="true">!</b>Begrens</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td></tr>
+  <tr><th class="lab">Kortvarig arbeid i kjøretøy<small>fresing av grøft</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s lim"><b aria-hidden="true">!</b>Begrens</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td></tr>
+  <tr><th class="lab">Rask passering i kjøretøy<small>brøyting, nødvendig forflytning</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s lim"><b aria-hidden="true">!</b>Begrens</td></tr></tbody>
   <tbody><tr><th colspan="5" class="grp">Trafikkavvikling</th></tr>
-  <tr><th class="lab">Stans av trafikk<small>ved hindringer, lysregulering som danner kø</small></th><td class="ok">✓</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td><td class="no" rowspan="3">✕ Stengt veg<small style="display:block;font-weight:400">gjenåpning etter prosedyre</small></td></tr>
-  <tr><th class="lab">Kolonnekjøring<small>ved uvær og vegarbeid</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td></tr>
-  <tr><th class="lab">Trafikk på veg<small>fri trafikk uten regulering</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Forbered stenging*</td></tr></tbody></table>
-  <p class="sym" style="margin-top:8px"><span style="background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #d5d9dc">✓ Som normalt</span><span style="background:var(--lim)">! Med forbehold</span><span style="background:var(--no);color:#fff">✕ Unngå</span><span class="mu" style="font-weight:400;padding:0">Mørkere rute = strengere. Aktsomhetsmatrise gjeldende fra 25.11.2026.</span></p>
+  <tr><th class="lab">Stans av trafikk<small>ved hindringer, lysregulering som danner kø</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td><td class="s no"><b aria-hidden="true">✕</b>Unngå</td><td class="s no" rowspan="3"><b aria-hidden="true">✕</b>Stengt veg<small style="display:block;font-weight:400;font-size:.72rem;margin-top:2px">gjenåpning etter prosedyre</small></td></tr>
+  <tr><th class="lab">Kolonnekjøring<small>ved uvær og vegarbeid</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s lim"><b aria-hidden="true">!</b>Begrens</td></tr>
+  <tr><th class="lab">Trafikk på veg<small>fri trafikk uten regulering</small></th><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s ok"><b aria-label="Som normalt">✓</b></td><td class="s lim"><b aria-hidden="true">!</b>Forbered stenging*</td></tr></tbody></table>
+  <ul class="legend"><li><span class="chip" style="background:var(--ok);color:var(--okT)">✓</span>Som normalt</li><li><span class="chip" style="background:var(--lim)">!</span>Med forbehold</li><li><span class="chip" style="background:var(--no);color:#fff">✕</span>Unngå</li><li class="mu">Gjeldende fra 25.11.2026</li></ul>
   <p class="mu" style="margin-top:6px">*) Forberedelse til stenging omfatter også varsling via VTS om fare for stengt veg. Flere av oppgavene skal følge prosedyre ID9400a <i>Skredprosedyrer</i>: generelle driftsoppgaver (del A), stenging (del B) og rydding/gjenoppretting/åpning (del C).</p>
   </div></details></section>
   <p class="mu" id="kilde"></p>
