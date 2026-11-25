@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skredvarsel – veg</title>
+<style>
+/*LEAFLET_CSS*/
+:root{--m:#2f383d;--a:#ed9300;--b:#d5dadd;--t:#1f2a30;--mu:#5b666c;--bg:#f4f5f6;--ok:#fff;--okT:#6b7178;--lim:#d9dce0;--no:#3a3f45}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--t);font-size:15px;line-height:1.4}
+.wrap{max-width:1300px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:16px}
+h1{font-size:clamp(1.4rem,3vw,1.9rem);margin:0;line-height:1.15}
+h2{font-size:1.05rem;margin:0 0 10px}h3{font-size:.95rem;margin:14px 0 4px}
+p{margin:0}
+select,button{font:inherit;font-size:14px;padding:5px 9px;border:1px solid #9aa4a9;border-radius:4px;background:#fff;cursor:pointer}
+.mu{color:var(--mu);font-size:.85rem}
+.kort{background:#fff;border:1px solid var(--b);border-radius:8px;padding:16px;min-width:0}
+.hode{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.meta{color:var(--mu);font-size:.9rem;margin-top:6px}
+.velg{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.merk{display:inline-block;font-weight:700;border-radius:5px;padding:4px 11px;white-space:nowrap}
+.g{background:#5cb85c;color:#0f2a10}.y{background:#ffd52e;color:#2e2600}.o{background:#ff8f1f;color:#2e1600}.r{background:#c62828;color:#fff}.x{background:#e3e7e9;color:#5b666c}
+.utl{background:#fdecea;border:1px solid #f1b0aa;border-radius:6px;padding:8px 12px;font-weight:600}
+.to{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.to{grid-template-columns:1fr}}
+#map{height:520px;border-radius:6px;border:1px solid var(--b);background:#dfe6ea}
+.kh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.sek{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mu);margin:14px 0 8px}
+.rad{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
+.tag{flex:0 0 96px;text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.05em;padding:4px 0;border-radius:4px}
+.tag.no{background:var(--no);color:#fff}.tag.lim{background:var(--lim)}.tag.info{box-shadow:inset 0 0 0 1px #9aa1a9}.tag.ok{color:var(--okT);box-shadow:inset 0 0 0 1px #c9cdd2}
+.ex{color:var(--mu)}
+.grid{overflow-x:auto}
+.grid table{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
+.grid th{font-size:.8rem;font-weight:600;padding:4px;background:#eef0f2;border-radius:5px;text-align:center}
+.grid th.dz{background:none;text-align:left;font-size:.9rem;white-space:nowrap}
+.grid button{width:100%;min-height:38px;border:0;border-radius:5px;font-size:.78rem;font-weight:600;padding:0}
+.grid button.tid{background:#eef0f2;min-height:30px}
+.grid button.tid.on{background:var(--t);color:#fff}
+.grid button.sel{box-shadow:inset 0 0 0 3px var(--t)}
+.tekst{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.tekst p{white-space:pre-line;color:#3a4248}
+details summary{cursor:pointer;font-weight:600}
+.akt table{width:100%;max-width:760px;border-collapse:separate;border-spacing:3px;table-layout:fixed;margin-top:10px;font-size:.85rem}
+.akt th,.akt td{padding:6px;vertical-align:middle}
+.akt .lab{background:#f2f3f5;text-align:left}.akt .lab small{display:block;font-weight:400;color:var(--mu)}
+.akt .grp{background:#2b3440;color:#fff;text-align:left}
+.akt td{text-align:center;font-weight:700;font-size:.78rem}
+.akt td.ok{background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #e3e6e9}.akt td.lim{background:var(--lim)}.akt td.no{background:var(--no);color:#fff}
+.akt th.cur{box-shadow:inset 0 0 0 3px var(--t)}
+.vt{width:100%;border-collapse:separate;border-spacing:3px;font-size:.88rem;margin-top:10px}.vt th{background:#cacaca;text-align:left;padding:6px}.akt .vt td{background:#f2f3f5;padding:6px;vertical-align:top;text-align:left;font-weight:400;font-size:.88rem}.akt .vt td.g{background:#5cb85c}.akt .vt td.y{background:#ffd52e}.akt .vt td.o{background:#ff8f1f}.akt .vt td.r{background:#c62828;color:#fff}.akt .vt td[data-lv]{text-align:center}.vt th:first-child{width:90px}.vt td.cur{box-shadow:inset 0 0 0 3px var(--t)}
+.velgside{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.velgside button{padding:14px;font-size:1rem;font-weight:600;text-align:left}
+.legend{background:#fff;padding:6px 9px;border-radius:4px;font-size:12px;line-height:1.6;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.dlab{background:rgba(255,255,255,.92);border:1px solid #6b777d;border-radius:3px;font-weight:600;font-size:12px;padding:1px 6px;box-shadow:none}
+.dlab:before{display:none}
+.skjul{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="startside" class="kort skjul"><h1>Skredvarsel for veg</h1><p class="meta">Velg vegstrekning. Valget huskes i denne nettleseren, og lenken kan bokmerkes.</p><div class="velgside" id="valg"></div></section>
+
+  <div id="side" class="skjul" style="display:contents">
+  <section class="hode">
+    <div><h1 id="tittel"></h1><p class="meta" id="meta"></p></div>
+    <div class="velg"><select id="strek" title="Vegstrekning"></select><select id="varselvalg" title="Utsendte varsel"></select></div>
+  </section>
+  <div id="utlopt" class="utl skjul"></div>
+  <div id="ingen" class="kort skjul"></div>
+
+  <div id="innhold">
+  <section class="to">
+    <div class="kort">
+      <div class="kh"><h2 style="margin:0">Kart</h2><span class="mu" id="kartTid"></span></div>
+      <div id="map"></div>
+    </div>
+    <div class="kort" aria-live="polite">
+      <div class="kh"><h2 style="margin:0">Tiltak</h2><span class="mu" id="tiltakTid"></span></div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px"><span class="merk" id="toppMerk" style="font-size:1.05rem;padding:8px 14px"></span></div>
+      <p id="toppHvor" style="margin-top:8px;font-size:.92rem"></p>
+      <p class="sek">TRAFIKKAVVIKLING</p><div id="trafikk"></div>
+      <p class="sek">DRIFT</p><div id="drift"></div>
+      <p class="mu" style="margin-top:10px">Tiltak definert av vegeier for nivået. Gi beskjed til vegeier ved tegn på høyere skredfare enn varslet.</p>
+    </div>
+  </section>
+
+  <section class="kort"><div class="kh"><h2 style="margin:0">Aktsomhet per delområde</h2><span class="mu">Velg et tidspunkt for å se kart og tiltak</span></div><div class="grid" id="grid"></div><p class="mu" id="umatchet" style="margin-top:6px"></p></section>
+
+  <section class="tekst">
+    <div class="kort"><h2>Skredfare</h2><p id="t-fare"></p><h3>Forebyggende skredkontroll</h3><p id="t-kontroll"></p></div>
+    <div class="kort"><h2>Værprognose</h2><div id="meteo" style="margin-bottom:10px"></div><p id="t-vaer"></p></div>
+  </section>
+  <section class="kort"><h2>Observasjoner</h2><div class="tekst" style="gap:12px"><div><h3 style="margin-top:0">Snødekke</h3><p id="t-sno"></p></div><div><h3 style="margin-top:0">Skredaktivitet</h3><p id="t-skred"></p></div><div><h3 style="margin-top:0">Været fram til nå</h3><p id="t-vaerna"></p></div></div></section>
+
+  <section class="kort akt"><details><summary>Tiltak for alle nivå</summary><div id="alleTab"></div><div id="alleStd" class="skjul">
+  <table><colgroup><col style="width:36%"><col><col><col><col></colgroup>
+  <thead><tr><th class="grp">Eksponering i skredpunkt</th><th class="lv g" data-lv="0">Grønt</th><th class="lv y" data-lv="1">Gult</th><th class="lv o" data-lv="2">Oransje</th><th class="lv r" data-lv="3">Rødt</th></tr>
+  <tr><th class="lab">Hovedregel</th><td class="ok">Normal drift og trafikk&shy;avvikling</td><td class="ok">Økt opp&shy;merksomhet</td><td class="ok">Forbered&shy;elser og fore&shy;bygging</td><td class="ok">Evaku&shy;ering og stenging</td></tr></thead>
+  <tbody><tr><th colspan="5" class="grp">Driftsoppgaver</th></tr>
+  <tr><th class="lab">Arbeid utenfor kjøretøy<small>kosting av skilt, inspeksjon</small></th><td class="ok">✓</td><td class="no">Unngå</td><td class="no">Unngå</td><td class="no">Unngå</td></tr>
+  <tr><th class="lab">Langvarig arbeid i kjøretøy<small>rydding etter skred</small></th><td class="ok">✓</td><td class="lim">Begrens</td><td class="no">Unngå</td><td class="no">Unngå</td></tr>
+  <tr><th class="lab">Kortvarig arbeid i kjøretøy<small>fresing av grøft</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td><td class="no">Unngå</td></tr>
+  <tr><th class="lab">Rask passering i kjøretøy<small>brøyting, nødvendig forflytning</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td></tr></tbody>
+  <tbody><tr><th colspan="5" class="grp">Trafikkavvikling</th></tr>
+  <tr><th class="lab">Stans av trafikk<small>ved hindringer, lysregulering som danner kø</small></th><td class="ok">✓</td><td class="no">Unngå</td><td class="no">Unngå</td><td class="no" rowspan="3">Stengt veg<small style="display:block;font-weight:400">gjenåpning etter prosedyre</small></td></tr>
+  <tr><th class="lab">Kolonnekjøring<small>ved uvær og vegarbeid</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td></tr>
+  <tr><th class="lab">Trafikk på veg<small>fri trafikk uten regulering</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Forbered stenging*</td></tr></tbody></table>
+  <p class="mu" style="margin-top:8px">✓ = som normalt. *) Forberedelse til stenging omfatter også varsling via VTS om fare for stengt veg. Flere av oppgavene skal følge prosedyre ID9400a <i>Skredprosedyrer</i>: generelle driftsoppgaver (del A), stenging (del B) og rydding/gjenoppretting/åpning (del C).</p>
+  </div></details></section>
+  <p class="mu" id="kilde"></p>
+  </div>
+  </div>
+</div>
+<script src="lib/leaflet.js"></script>
+<script>window.L||document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
+<script src="klient.js"></script>
+<script src="varsler/kart_data.js"></script>
+<script src="varsler/varsler_data.js"></script>
+<script>
+(function(){
+const D=window.VARSLER||{varsler:[]},K=window.KART||{strekninger:[],bakgrunn:{},detalj:{}};
+const NIV=[['Grønt','g','#5cb85c','Normal drift og trafikkavvikling'],['Gult','y','#ffd52e','Økt oppmerksomhet'],['Oransje','o','#ff8f1f','Forberedelser og forebygging'],['Rødt','r','#c62828','Evakuering og stenging']],GRA='#9aa4a9';
+const PRO=[['e134','E134 Haukelifjell'],['rv13','Rv13 Vikafjellet'],['rv15','Rv15 Strynefjellet'],['tyin','Fv53 Tyin'],['rv85','Rv85 Gullesfjord'],['beisfjord','Fv7570 Beisfjorden'],['rv94','Rv94 Hammerfest'],['e69','E69 Nordkapp']];
+const KIND={'UNNGÅ':'no','STENG':'no','BEGRENS':'lim','FORBERED':'info','NORMAL':'ok'};
+const TILTAK=[
+ {d:[['NORMAL','Normal drift.']],t:[['NORMAL','Normal trafikkavvikling.']]},
+ {d:[['UNNGÅ','Arbeid utenfor kjøretøy','kosting av skilt, inspeksjon'],['BEGRENS','Langvarig arbeid i kjøretøy','rydding etter skred']],t:[['UNNGÅ','Stans av trafikk','ved hindringer, lysregulering som danner kø']]},
+ {d:[['UNNGÅ','Arbeid utenfor kjøretøy og langvarig arbeid i kjøretøy.'],['BEGRENS','Kortvarig arbeid i kjøretøy','fresing av grøft']],t:[['UNNGÅ','Stans av trafikk.'],['BEGRENS','Kolonnekjøring.'],['FORBERED','Stenging, inkludert varsling via VTS om fare for stengt veg.']]},
+ {d:[['UNNGÅ','Arbeid utenfor kjøretøy og alt arbeid i kjøretøy.'],['BEGRENS','Rask passering i kjøretøy','brøyting, nødvendig forflytning']],t:[['STENG','Vegen er stengt. Gjenåpning etter prosedyre.']]}];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=iso=>iso?new Date(iso).toLocaleString('nb-NO',{timeZone:'Europe/Oslo',weekday:'long',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',' kl.'):'–';
+const navn=id=>(PRO.find(p=>p[0]===id)||[,id])[1];
+const KS=id=>K.strekninger.find(s=>s.id===id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* delområde i varselet -> delområde i skredvarslingsplanen (stavemåte kan avvike) */
+const norm=s=>String(s||'').toLowerCase().normalize('NFC').replace(/[^a-zæøåäöü]/g,'').replace(/(.)\1+/g,'$1');
+function lev(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let p=[...Array(n+1).keys()];for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function finnDel(sone,dels){const z=norm(sone);let best=null,bs=0;
+  dels.forEach(d=>{let s=0;[d,...d.split(/\s*[–-]\s*/)].map(norm).forEach(x=>{if(x)s=Math.max(s,x===z?1:1-lev(x,z)/Math.max(x.length,z.length))});
+    if(norm(d).includes(z)||z.includes(norm(d)))s=Math.max(s,.9);if(s>bs){bs=s;best=d}});return bs>=.75?best:null}
+const V=D.varsler.map(v=>{v.t0=v.gyldig_fra?Date.parse(v.gyldig_fra):0;v.tt=(v.tider||[]).map(t=>t?Date.parse(t):null);
+  const ks=KS(v.prosjekt);v.dmap={};v.umatchet=[];(v.soner||[]).forEach((z,i)=>{const d=finnDel(z,ks?ks.del:[]);if(d)v.dmap[d]=i;else v.umatchet.push(z)});return v});
+
+let P=null,v=null,k=0,laast=false;
+
+/* ---------- kart ---------- */
+let map=null,lag,sistP=null;
+function lagKart(){map=L.map('map',{zoomSnap:.5}).setView([65,14],5);
+  map.createPane('bg');map.getPane('bg').style.zIndex=250;
+  if(location.protocol==='file:')L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png',{maxZoom:18,attribution:'© Kartverket',pane:'bg'}).addTo(map);
+  else{Object.entries(K.bakgrunn||{}).forEach(([id,b])=>{if(id!=='norge')L.imageOverlay('bakgrunn/'+b.fil,b.grenser,{pane:'bg',attribution:'© Kartverket'}).addTo(map)});
+    Object.values(K.detalj||{}).flat().forEach(b=>L.imageOverlay('detalj/'+b.fil,b.grenser,{pane:'bg',attribution:'© Kartverket'}).addTo(map))}
+  lag=L.layerGroup().addTo(map);
+  const lg=L.control({position:'bottomright'});lg.onAdd=()=>{const e=L.DomUtil.create('div','legend');e.innerHTML=
+   `<i style="width:14px;height:10px;background:rgba(255,143,31,.6);border:1px solid #1f2a30"></i>Løsneområde<br><i style="width:14px;border-top:3px solid #ff8f1f"></i>Skredløp<br>
+    <i style="width:12px;height:12px;border-radius:50%;background:#ff8f1f;border:2px solid #1f2a30"></i>Skredpunkt (ved veg)<br>
+    <svg width="14" height="12" style="margin-right:6px;vertical-align:middle"><path d="M7 1 L13 11 L1 11Z" fill="#6a3d9a" stroke="#6a3d9a" stroke-width="2"/></svg>Skredtårn<br>
+    <span style="font-size:11px;color:#5b666c">Farge = aktsomhet i delområdet. Grå = ikke varslet.</span>`;return e};lg.addTo(map)}
+const triIkon=plan=>L.divIcon({className:'',iconSize:[14,12],iconAnchor:[7,8],html:`<svg width="14" height="12"><path d="M7 1 L13 11 L1 11Z" fill="${plan?'#fff':'#6a3d9a'}" stroke="#6a3d9a" stroke-width="2"/></svg>`});
+const spIkon=c=>L.divIcon({className:'',iconSize:[14,14],iconAnchor:[7,7],html:`<div style="width:14px;height:14px;border-radius:50%;background:${c};border:2px solid #1f2a30"></div>`});
+const farge=n=>n==null?GRA:NIV[n][2];
+const nivDel=d=>{if(!v)return null;const i=v.dmap[d];return i==null?null:v.nivaa[i][k]};
+function tegnKart(){if(!map)lagKart();lag.clearLayers();const s=KS(P);if(!s)return;const niv={};s.del.forEach(d=>niv[d]=nivDel(d));
+  s.veg.forEach(l=>{L.polyline(l,{color:'#fff',weight:7,opacity:.9}).addTo(lag);L.polyline(l,{color:'#1f2a30',weight:3.5}).addTo(lag)});
+  s.lop.forEach(l=>L.polyline(l.l,{color:farge(niv[l.del]),weight:3,opacity:.95}).addTo(lag).bindTooltip(`Skredløp · ${esc(l.del)}`));
+  s.rader.forEach(r=>{const n=niv[r.del];L.polygon(r.poly,{color:'#1f2a30',weight:1,fillColor:farge(n),fillOpacity:.65}).addTo(lag)
+    .bindTooltip(`<b>${esc(r.navn)}</b><br>${esc(r.del)}: ${n==null?'ikke varslet':NIV[n][0]}<br>Løsneområde ${r.z[0]}–${r.z[1]} moh.`)});
+  s.sp.forEach(p=>{const ns=p.del.map(d=>niv[d]).filter(x=>x!=null),n=ns.length?Math.max(...ns):null;
+    L.marker(p.ll,{icon:spIkon(farge(n)),zIndexOffset:500}).addTo(lag).bindTooltip(`Skredpunkt ${esc(p.navn)}: ${n==null?'ikke varslet':NIV[n][0]}`)});
+  s.taarn.forEach(t=>L.marker(t.ll,{icon:triIkon(t.plan),zIndexOffset:400}).addTo(lag).bindTooltip(`Skredtårn ${esc(t.navn)}${t.plan?' (planlagt)':''}`));
+  s.del.forEach(d=>{const p=s.rader.filter(r=>r.del===d).flatMap(r=>r.poly[0]||[]);if(!p.length)return;const n=niv[d];
+    L.marker([p.reduce((a,b)=>a+b[0],0)/p.length,p.reduce((a,b)=>a+b[1],0)/p.length],{icon:L.divIcon({className:'',iconSize:[0,0]}),interactive:false}).addTo(lag)
+      .bindTooltip(`${esc(d)} · ${n==null?'–':NIV[n][0]}`,{permanent:true,direction:'top',className:'dlab',offset:[0,-14]})});
+  if(sistP!==P){const b=L.latLngBounds([...s.rader.flatMap(r=>r.poly.flat()),...s.sp.map(p=>p.ll)]);if(b.isValid())map.fitBounds(b,{padding:[30,30]});sistP=P}}
+
+/* ---------- tidspunkt, tiltak, rutenett ---------- */
+const tidTekst=i=>{const s=v.slots[i];return s[0]+' kl. '+s[1]};
+const rader=l=>l.map(a=>`<div class="rad"><span class="tag ${KIND[a[0]]}">${a[0]}</span><span>${esc(a[1])}${a[2]?` <span class="ex">(${esc(a[2])})</span>.`:''}</span></div>`).join('');
+function tegnTid(){const s=KS(P),dels=s?s.del:[];
+  const col=dels.map(d=>nivDel(d)),ok=col.filter(x=>x!=null),top=ok.length?Math.max(...ok):(v.nivaa.length?Math.max(...v.nivaa.map(r=>r[k])):0);
+  const topD=dels.filter((d,i)=>col[i]===top),rest=dels.filter((d,i)=>col[i]!=null&&col[i]!==top).map(d=>d+': '+NIV[nivDel(d)][0].toLowerCase());
+  const T=(v.tiltak||{})[top];
+  $('toppMerk').className='merk '+NIV[top][1];$('toppMerk').textContent=NIV[top][0]+' · '+(T?T['Typisk tiltaksnivå']:NIV[top][3]);
+  $('toppHvor').textContent=(topD.length?'Gjelder '+topD.join(', ')+'.':'')+(rest.length?' Øvrige – '+rest.join(', ')+'.':'');
+  if(T){$('trafikk').innerHTML=`<p>${esc(T['Trafikkavvikling']||'–')}</p>`;$('drift').innerHTML=`<p>${esc(T['Drift']||'–')}</p>`}
+  else{$('drift').innerHTML=rader(TILTAK[top].d);$('trafikk').innerHTML=rader(TILTAK[top].t)}
+  $('tiltakTid').textContent=$('kartTid').textContent=tidTekst(k);
+  document.querySelectorAll('.akt th.lv,.vt td[data-lv]').forEach(th=>th.classList.toggle('cur',+th.dataset.lv===top));
+  document.querySelectorAll('#grid [data-k]').forEach(b=>{const on=+b.dataset.k===k;b.classList.toggle(b.classList.contains('tid')?'on':'sel',on);if(!on)b.classList.remove('on','sel')});
+  tegnKart()}
+function tegnGrid(){const s=KS(P),dels=s?s.del:[];const dager=[];v.slots.forEach(x=>{const d=dager[dager.length-1];if(d&&d[0]===x[0])d[1]++;else dager.push([x[0],1])});
+  let h='<table><tr><th class="dz"></th>'+dager.map(d=>`<th colspan="${d[1]}">${esc(d[0])}</th>`).join('')+'</tr><tr><th class="dz"></th>'+v.slots.map((x,i)=>`<td><button class="tid" data-k="${i}">${esc(x[1])}</button></td>`).join('')+'</tr>';
+  dels.forEach(d=>{const i=v.dmap[d];h+=`<tr><th class="dz">${esc(d)}</th>`+v.slots.map((x,j)=>{const n=i==null?null:v.nivaa[i][j];
+    return `<td><button class="${n==null?'x':NIV[n][1]}" data-k="${j}" aria-label="${esc(d)}, ${esc(tidTekst(j))}: ${n==null?'ikke varslet':NIV[n][0]}">${n==null?'–':NIV[n][0]}</button></td>`}).join('')+'</tr>'});
+  $('grid').innerHTML=h+'</table>';
+  $('umatchet').textContent=v.umatchet.length?`Delområde i varselet som ikke finnes i skredvarslingsplanen: ${v.umatchet.join(', ')}.`:''}
+
+/* ---------- side ---------- */
+function visVarsel(){const liste=V.filter(x=>x.prosjekt===P).sort((a,b)=>b.t0-a.t0||(b.mottatt||'').localeCompare(a.mottatt||''));
+  $('tittel').textContent='Skredvarsel for '+navn(P);
+  $('varselvalg').classList.toggle('skjul',liste.length<2);
+  $('varselvalg').innerHTML=liste.map((x,i)=>`<option value="${esc(x.id)}">${i?'Tidligere: ':'Siste: '}gyldig fra ${esc(fmt(x.gyldig_fra))}</option>`).join('');
+  if(!v||v.prosjekt!==P)v=liste[0]||null;if(v)$('varselvalg').value=v.id;
+  $('ingen').classList.toggle('skjul',!!v);$('innhold').classList.toggle('skjul',!v);
+  if(!v){$('meta').textContent='';$('utlopt').classList.add('skjul');$('ingen').innerHTML=`<h2>Ingen utsendte varsel</h2><p>Det finnes ingen utsendte skredvarsel for ${esc(navn(P))} i arkivet ennå.</p>`;return}
+  $('meta').innerHTML=`Gyldig fra ${esc(fmt(v.gyldig_fra))} · Neste varsel innen ${esc(fmt(v.neste))}${v.utarbeidet?` · Utarbeidet av ${esc(v.utarbeidet)}`:''}${v.kontrollert?` · Kontrollert av ${esc(v.kontrollert)}`:''} · <a href="varsler/v/${esc(v.id)}.html" target="_blank" rel="noopener" style="color:inherit">originalt varsel</a>`;
+  const naa=Date.now(),siste=liste[0]===v,utl=siste&&v.neste&&Date.parse(v.neste)<naa;
+  $('utlopt').classList.toggle('skjul',!utl&&siste&&!v.test);
+  $('utlopt').textContent=v.test?'EKSEMPEL: utkast lagt inn for test. Dette er ikke et gjeldende skredvarsel.':!siste?'Du ser på et tidligere varsel. Velg «Siste» øverst for gjeldende varsel.':utl?`Tidspunktet for neste varsel (${fmt(v.neste)}) er passert. Kontakt skredvarsler hvis nytt varsel ikke er mottatt.`:'';
+  const T=v.tekst||{},sett=(id,x)=>{$(id).textContent=x||'–'};
+  sett('t-fare',T['Vurdering']||T['Skredfare']);sett('t-kontroll',T['Forebyggende skredkontroll']);sett('t-vaer',T['Kommentar til værprognose']||T['Værprognose']);
+  const mg=v.meteogram;$('meteo').innerHTML=mg&&mg.img?`<a href="${esc(mg.href||mg.img)}" target="_blank" rel="noopener"><img src="${esc(mg.img)}" alt="Meteogram fra yr.no" style="width:100%;max-width:560px;display:block" onerror="this.replaceWith(document.createTextNode('Meteogram på yr.no ↗'))"></a>`:'';
+  /* tiltakstabell fra varselet */
+  if(v.tiltak&&Object.keys(v.tiltak).length){const h=Object.keys(v.tiltak[Object.keys(v.tiltak)[0]]);
+    $('alleTab').innerHTML=`<table class="vt"><thead><tr><th>Nivå</th>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${[0,1,2,3].filter(i=>v.tiltak[i]).map(i=>`<tr><td class="${NIV[i][1]}" data-lv="${i}"><b>${NIV[i][0]}</b></td>${h.map(x=>`<td>${esc(v.tiltak[i][x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="mu" style="margin-top:6px">Oversikt over aktsomhetsnivå og tiltak definert av vegeier (fra varselet).</p>`}
+  else $('alleTab').innerHTML=$('alleStd').innerHTML;
+  sett('t-sno',T['Snødekke']);sett('t-skred',T['Skredaktivitet']);sett('t-vaerna',T['Været fram til nå']);
+  /* tidspunkt nå hvis det ligger i varselet, ellers første */
+  k=0;v.tt.forEach((t,i)=>{if(t!=null&&t<=naa)k=i});tegnGrid();tegnTid()}
+function velg(id,fra){if(!PRO.some(p=>p[0]===id))return;P=id;v=null;store.set('skred.varsel.prosjekt',id);
+  if(fra!=='hash'&&location.hash!=='#'+id)history.replaceState(null,'','#'+id);
+  $('startside').classList.add('skjul');$('side').classList.remove('skjul');$('strek').value=id;
+  document.title='Skredvarsel '+navn(id);visVarsel();if(map)setTimeout(()=>map.invalidateSize(),0)}
+$('strek').innerHTML=PRO.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join('');
+$('valg').innerHTML=PRO.map(p=>`<button data-p="${p[0]}">${p[1]}</button>`).join('');
+$('kilde').textContent=(D.test?'TESTDATA, ikke ekte varsel. ':'')+'Kart: '+(K.kilde||'');
+$('strek').onchange=()=>velg($('strek').value);
+$('varselvalg').onchange=()=>{v=V.find(x=>x.id===$('varselvalg').value);visVarsel()};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){velg(b.dataset.p);return}
+  const t=e.target.closest('#grid [data-k]');if(t){k=+t.dataset.k;tegnTid()}});
+addEventListener('hashchange',()=>{if(!laast)velg(location.hash.slice(1),'hash')});
+if(window.SKRED)SKRED.on((id,l)=>{laast=l;$('strek').disabled=l;if(l)velg(id)});
+const start=location.hash.slice(1)||store.get('skred.varsel.prosjekt');
+if(PRO.some(p=>p[0]===start))velg(start,'hash');else $('startside').classList.remove('skjul');
+})();
+</script>
+</body>
+</html>

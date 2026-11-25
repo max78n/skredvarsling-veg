@@ -3,12 +3,15 @@
 # - Værpakke kjøres hver time (xx:23 UTC, 05:23–21:23 norsk vintertid).
 # - Morgenbriefen prøves flere ganger (05:13–06:53 UTC). Første forsøk etter kl. 07:00 norsk tid
 #   lager briefen; senere forsøk samme dag hoppes over (sjekkes mot sist_kjort.txt).
+# - Utsendte skredvarsel hentes fra Gmail ved hver kjøring. I sendevinduet (10–13 UTC = 11–14 vintertid)
+#   sjekkes det i tillegg hvert 15. min; sida bygges og publiseres bare hvis det har kommet nye varsel.
 name: Oppdater data
 
 on:
   schedule:
     - cron: '23 4-20 * * *'
     - cron: '13,33,53 5,6 * * *'
+    - cron: '8,38,53 10-13 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -28,6 +31,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       modus: ${{ steps.tid.outputs.modus }}
+      ok: ${{ steps.videre.outputs.ok }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +44,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M=brief
           elif [ "${{ github.event.schedule }}" = "13,33,53 5,6 * * *" ]; then
             if [ "$H" -ge 7 ] && [ "$H" -le 9 ] && [ "$SIST" != "$I_DAG" ]; then M=brief; else M=hopp; fi
+          elif [ "${{ github.event.schedule }}" = "8,38,53 10-13 * * *" ]; then M=varsler
           fi
           echo "Oslo $H, sist brief $SIST, modus $M"
           echo "modus=$M" >> $GITHUB_OUTPUT
@@ -49,17 +54,46 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Installer pakker
+      - name: Utsendte skredvarsel fra Gmail
+        id: varsler
         if: steps.tid.outputs.modus != 'hopp'
+        env:
+          GMAIL_BRUKER: ${{ secrets.GMAIL_BRUKER }}
+          GMAIL_APP_PASSORD: ${{ secrets.GMAIL_APP_PASSORD }}
+          VARSEL_AVSENDER: ${{ secrets.VARSEL_AVSENDER }}
+        run: |
+          if [ -z "$GMAIL_BRUKER" ] || [ -z "$GMAIL_APP_PASSORD" ] || [ -z "$VARSEL_AVSENDER" ]; then
+            echo "::notice::Gmail-hemmeligheter mangler – henter ikke varsel"; echo "ny=0" >> $GITHUB_OUTPUT; exit 0; fi
+          python3 kilde/varslinger/hent_varsler.py --ut site/varsler || { echo "::warning::Henting av varsel feilet"; echo "ny=0" >> $GITHUB_OUTPUT; exit 0; }
+          if git status --porcelain site/varsler/v | grep -q .; then
+            echo "ny=1" >> $GITHUB_OUTPUT
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git add site/varsler
+            git commit -q -m "Nye utsendte skredvarsel"
+            git pull --rebase -q origin main || true
+            git push || true
+          else
+            echo "ny=0" >> $GITHUB_OUTPUT; git checkout -- site/varsler 2>/dev/null || true
+          fi
+
+      - name: Bygg videre?
+        id: videre
+        if: steps.tid.outputs.modus != 'hopp'
+        run: |
+          if [ "${{ steps.tid.outputs.modus }}" = "varsler" ] && [ "${{ steps.varsler.outputs.ny }}" != "1" ]; then echo "ok=0" >> $GITHUB_OUTPUT; else echo "ok=1" >> $GITHUB_OUTPUT; fi
+
+      - name: Installer pakker
+        if: steps.videre.outputs.ok == '1'
         run: pip install -q netCDF4 numpy pyproj pillow python-pptx openpyxl
 
       - name: Hendelsesbilder fra PowerPoint (hvis fila er lastet opp)
-        if: steps.tid.outputs.modus != 'hopp' && hashFiles('data/*.pptx') != ''
+        if: steps.videre.outputs.ok == '1' && hashFiles('data/*.pptx') != ''
         run: |
           python3 kilde/skredbaner/hent_bilder.py data/*.pptx site/bilder/dim "data/Dimensjonerende skredstørrelser_stedsspesifikk skredvarsling.xlsx" || echo "::warning::Hendelsesbildene kunne ikke lages"
 
       - name: Værpakke
-        if: steps.tid.outputs.modus != 'hopp'
+        if: steps.videre.outputs.ok == '1'
         working-directory: site
         env:
           FROST_CLIENT_ID: ${{ secrets.FROST_CLIENT_ID }}
@@ -85,16 +119,16 @@ jobs:
           git push || true
 
       - uses: actions/configure-pages@v5
-        if: steps.tid.outputs.modus != 'hopp'
+        if: steps.videre.outputs.ok == '1'
 
       - uses: actions/upload-pages-artifact@v3
-        if: steps.tid.outputs.modus != 'hopp'
+        if: steps.videre.outputs.ok == '1'
         with:
           path: site
 
   publiser:
     needs: bygg
-    if: needs.bygg.outputs.modus != 'hopp'
+    if: needs.bygg.outputs.modus != 'hopp' && needs.bygg.outputs.ok == '1'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
