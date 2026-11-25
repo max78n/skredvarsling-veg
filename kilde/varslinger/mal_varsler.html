@@ -6,7 +6,7 @@
 <title>Skredvarsel – veg</title>
 <style>
 /*LEAFLET_CSS*/
-:root{--m:#2f383d;--a:#ed9300;--b:#d5dadd;--t:#1f2a30;--mu:#5b666c;--bg:#f4f5f6;--ok:#fff;--okT:#6b7178;--lim:#d9dce0;--no:#3a3f45}
+:root{--m:#2f383d;--a:#ed9300;--b:#d5dadd;--t:#1f2a30;--mu:#5b666c;--bg:#f4f5f6;--ok:#f2f3f4;--okT:#4a5056;--lim:#b9bec3;--no:#3a3f45}
 *{box-sizing:border-box}
 body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--t);font-size:15px;line-height:1.4}
 .wrap{max-width:1300px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:16px}
@@ -29,7 +29,8 @@ select,button{font:inherit;font-size:14px;padding:5px 9px;border:1px solid #9aa4
 .sek{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mu);margin:14px 0 8px}
 .rad{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
 .tag{flex:0 0 96px;text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.05em;padding:4px 0;border-radius:4px}
-.tag.no{background:var(--no);color:#fff}.tag.lim{background:var(--lim)}.tag.info{box-shadow:inset 0 0 0 1px #9aa1a9}.tag.ok{color:var(--okT);box-shadow:inset 0 0 0 1px #c9cdd2}
+.tag.no{background:var(--no);color:#fff}.tag.lim{background:var(--lim)}.tag.info{background:var(--lim)}.tag.ok{background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #d5d9dc}
+.sym{display:inline-flex;gap:10px;flex-wrap:wrap;align-items:center}.sym span{display:inline-block;padding:2px 8px;border-radius:3px;font-weight:700;font-size:.78rem}
 .ex{color:var(--mu)}
 .grid{overflow-x:auto}
 .grid table{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
@@ -96,7 +97,7 @@ details summary{cursor:pointer;font-weight:600}
       <p id="toppHvor" style="margin-top:8px;font-size:.92rem"></p>
       <p class="sek">TRAFIKKAVVIKLING</p><div id="trafikk"></div>
       <p class="sek">DRIFT</p><div id="drift"></div>
-      <p class="mu" style="margin-top:10px">Tiltak definert av vegeier for nivået. Gi beskjed til vegeier ved tegn på høyere skredfare enn varslet.</p>
+      <p class="mu" style="margin-top:10px" id="tiltakKilde">Tiltak definert av vegeier for nivået. Gi beskjed til vegeier ved tegn på høyere skredfare enn varslet.</p>
     </div>
   </section>
 
@@ -113,15 +114,16 @@ details summary{cursor:pointer;font-weight:600}
   <thead><tr><th class="grp">Eksponering i skredpunkt</th><th class="lv g" data-lv="0">Grønt</th><th class="lv y" data-lv="1">Gult</th><th class="lv o" data-lv="2">Oransje</th><th class="lv r" data-lv="3">Rødt</th></tr>
   <tr><th class="lab">Hovedregel</th><td class="ok">Normal drift og trafikk&shy;avvikling</td><td class="ok">Økt opp&shy;merksomhet</td><td class="ok">Forbered&shy;elser og fore&shy;bygging</td><td class="ok">Evaku&shy;ering og stenging</td></tr></thead>
   <tbody><tr><th colspan="5" class="grp">Driftsoppgaver</th></tr>
-  <tr><th class="lab">Arbeid utenfor kjøretøy<small>kosting av skilt, inspeksjon</small></th><td class="ok">✓</td><td class="no">Unngå</td><td class="no">Unngå</td><td class="no">Unngå</td></tr>
-  <tr><th class="lab">Langvarig arbeid i kjøretøy<small>rydding etter skred</small></th><td class="ok">✓</td><td class="lim">Begrens</td><td class="no">Unngå</td><td class="no">Unngå</td></tr>
-  <tr><th class="lab">Kortvarig arbeid i kjøretøy<small>fresing av grøft</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td><td class="no">Unngå</td></tr>
-  <tr><th class="lab">Rask passering i kjøretøy<small>brøyting, nødvendig forflytning</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td></tr></tbody>
+  <tr><th class="lab">Arbeid utenfor kjøretøy<small>kosting av skilt, inspeksjon</small></th><td class="ok">✓</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td></tr>
+  <tr><th class="lab">Langvarig arbeid i kjøretøy<small>rydding etter skred</small></th><td class="ok">✓</td><td class="lim">! Begrens</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td></tr>
+  <tr><th class="lab">Kortvarig arbeid i kjøretøy<small>fresing av grøft</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td><td class="no">✕ Unngå</td></tr>
+  <tr><th class="lab">Rask passering i kjøretøy<small>brøyting, nødvendig forflytning</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td></tr></tbody>
   <tbody><tr><th colspan="5" class="grp">Trafikkavvikling</th></tr>
-  <tr><th class="lab">Stans av trafikk<small>ved hindringer, lysregulering som danner kø</small></th><td class="ok">✓</td><td class="no">Unngå</td><td class="no">Unngå</td><td class="no" rowspan="3">Stengt veg<small style="display:block;font-weight:400">gjenåpning etter prosedyre</small></td></tr>
-  <tr><th class="lab">Kolonnekjøring<small>ved uvær og vegarbeid</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Begrens</td></tr>
-  <tr><th class="lab">Trafikk på veg<small>fri trafikk uten regulering</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">Forbered stenging*</td></tr></tbody></table>
-  <p class="mu" style="margin-top:8px">✓ = som normalt. *) Forberedelse til stenging omfatter også varsling via VTS om fare for stengt veg. Flere av oppgavene skal følge prosedyre ID9400a <i>Skredprosedyrer</i>: generelle driftsoppgaver (del A), stenging (del B) og rydding/gjenoppretting/åpning (del C).</p>
+  <tr><th class="lab">Stans av trafikk<small>ved hindringer, lysregulering som danner kø</small></th><td class="ok">✓</td><td class="no">✕ Unngå</td><td class="no">✕ Unngå</td><td class="no" rowspan="3">✕ Stengt veg<small style="display:block;font-weight:400">gjenåpning etter prosedyre</small></td></tr>
+  <tr><th class="lab">Kolonnekjøring<small>ved uvær og vegarbeid</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Begrens</td></tr>
+  <tr><th class="lab">Trafikk på veg<small>fri trafikk uten regulering</small></th><td class="ok">✓</td><td class="ok">✓</td><td class="lim">! Forbered stenging*</td></tr></tbody></table>
+  <p class="sym" style="margin-top:8px"><span style="background:var(--ok);color:var(--okT);box-shadow:inset 0 0 0 1px #d5d9dc">✓ Som normalt</span><span style="background:var(--lim)">! Med forbehold</span><span style="background:var(--no);color:#fff">✕ Unngå</span><span class="mu" style="font-weight:400;padding:0">Mørkere rute = strengere. Aktsomhetsmatrise gjeldende fra 25.11.2026.</span></p>
+  <p class="mu" style="margin-top:6px">*) Forberedelse til stenging omfatter også varsling via VTS om fare for stengt veg. Flere av oppgavene skal følge prosedyre ID9400a <i>Skredprosedyrer</i>: generelle driftsoppgaver (del A), stenging (del B) og rydding/gjenoppretting/åpning (del C).</p>
   </div></details></section>
   <p class="mu" id="kilde"></p>
   </div>
@@ -160,7 +162,9 @@ const V=D.varsler.map(v=>{v.t0=v.gyldig_fra?Date.parse(v.gyldig_fra):0;v.tt=(v.t
   const ks=KS(v.prosjekt);v.dmap={};v.umatchet=[];(v.soner||[]).forEach((z,i)=>{const d=finnDel(z,ks?ks.del:[]);if(d)v.dmap[d]=i;else v.umatchet.push(z)});return v});
 
 let P=null,v=null,k=0,laast=false;
-const TSTD=(V.filter(x=>x.tiltak&&Object.keys(x.tiltak).length).sort((a,b)=>b.t0-a.t0)[0]||{}).tiltak;
+/* Ny aktsomhetsmatrise (gråskala) gjelder fra 25.11.2026. Eldre varsel med egen tiltakstabell viser den. */
+const NY_MATRISE=Date.parse('2026-11-25T00:00:00+01:00');
+const egenTiltak=v=>v&&v.tiltak&&Object.keys(v.tiltak).length&&v.t0&&v.t0<NY_MATRISE?v.tiltak:null;
 
 /* ---------- kart ---------- */
 let map=null,lag,sistP=null;
@@ -194,11 +198,12 @@ function tegnKart(){if(!map)lagKart();lag.clearLayers();const s=KS(P);if(!s)retu
 
 /* ---------- tidspunkt, tiltak, rutenett ---------- */
 const tidTekst=i=>{const s=v.slots[i];return s[0]+' kl. '+s[1]};
-const rader=l=>l.map(a=>`<div class="rad"><span class="tag ${KIND[a[0]]}">${a[0]}</span><span>${esc(a[1])}${a[2]?` <span class="ex">(${esc(a[2])})</span>.`:''}</span></div>`).join('');
+const SYM={no:'✕',lim:'!',info:'!',ok:'✓'};
+const rader=l=>l.map(a=>`<div class="rad"><span class="tag ${KIND[a[0]]}">${SYM[KIND[a[0]]]} ${a[0]}</span><span>${esc(a[1])}${a[2]?` <span class="ex">(${esc(a[2])})</span>.`:''}</span></div>`).join('');
 function tegnTid(){const s=KS(P),dels=s?s.del:[];
   const col=dels.map(d=>nivDel(d)),ok=col.filter(x=>x!=null),top=ok.length?Math.max(...ok):(v.nivaa.length?Math.max(...v.nivaa.map(r=>r[k])):0);
   const topD=dels.filter((d,i)=>col[i]===top),rest=dels.filter((d,i)=>col[i]!=null&&col[i]!==top).map(d=>d+': '+NIV[nivDel(d)][0].toLowerCase());
-  const TT=(v.tiltak&&Object.keys(v.tiltak).length)?v.tiltak:(TSTD||{}),T=TT[top];
+  const TT=egenTiltak(v)||{},T=TT[top];
   $('toppMerk').className='merk '+NIV[top][1];$('toppMerk').textContent=NIV[top][0]+' · '+(T?T['Typisk tiltaksnivå']:NIV[top][3]);
   $('toppHvor').textContent=(topD.length?'Gjelder '+topD.join(', ')+'.':'')+(rest.length?' Øvrige – '+rest.join(', ')+'.':'');
   if(T){$('trafikk').innerHTML=`<p>${esc(T['Trafikkavvikling']||'–')}</p>`;$('drift').innerHTML=`<p>${esc(T['Drift']||'–')}</p>`}
@@ -240,7 +245,7 @@ function visVarsel(){L_=V.filter(x=>x.prosjekt===P).sort((a,b)=>a.t0-b.t0||(a.mo
   sett('t-fare',T['Vurdering']||T['Skredfare']);sett('t-kontroll',T['Forebyggende skredkontroll']);sett('t-vaer',T['Kommentar til værprognose']||T['Værprognose']);
   const mg=v.meteogram;$('meteo').innerHTML=mg&&mg.img?`<a href="${esc(mg.href||mg.img)}" target="_blank" rel="noopener"><img src="${esc(mg.img)}" alt="Meteogram fra yr.no" style="width:100%;max-width:560px;display:block" onerror="this.replaceWith(document.createTextNode('Meteogram på yr.no ↗'))"></a>`:'';
   /* tiltakstabell fra varselet */
-  const TV=(v.tiltak&&Object.keys(v.tiltak).length)?v.tiltak:TSTD;
+  const TV=egenTiltak(v);
   if(TV&&Object.keys(TV).length){const h=Object.keys(TV[Object.keys(TV)[0]]);
     $('alleTab').innerHTML=`<table class="vt"><thead><tr><th>Nivå</th>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${[0,1,2,3].filter(i=>TV[i]).map(i=>`<tr><td class="${NIV[i][1]}" data-lv="${i}"><b>${NIV[i][0]}</b></td>${h.map(x=>`<td>${esc(TV[i][x]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="mu" style="margin-top:6px">Oversikt over aktsomhetsnivå og tiltak definert av vegeier (fra varselet).</p>`}
   else $('alleTab').innerHTML=$('alleStd').innerHTML;

@@ -39,14 +39,15 @@ Statisk nettside for stedsspesifikk skredvarsling (Statens vegvesen). GitHub Act
 - **Ny geometri** (løsneområder, veglinje): kjør `kilde/engangs/lag_kartbilder.py` og last opp `site/fliser`, `site/bakgrunn` og `site/detalj` på nytt.
 
 ## Fanen Notat
-- Menyrekkefølge: Morgenbrief, Værpakke, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Skredvarsel. Varselskriver og SP-solver er fjernet (25.11.2026).
+- Menyrekkefølge: Morgenbrief, Værpakke, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Skredvarsel-viser. Varselskriver og SP-solver er fjernet (25.11.2026).
 - Notat samler per strekning det som overføres fra Værpakke (notatene under Observasjoner og Prognose), Stabilitetssolver og Setningskatalog, i hver sin del. Tekstene kan redigeres, slettes og kopieres. Lagres i nettleseren (`skred.notat.<strekning>`).
 - Delt visning: valgt fane til venstre, Notat til høyre.
 - Stabilitet vises med farger som i Stabilitetssolver: utløsbarhet × utbredelse = sannsynlighet, fordeling av utløsbarhet og matrisen med treffet markert.
 - Morgenbrief-fanen (`start.html`) har ikke lenger tidsplan, verktøylenker eller timeføring (25.11.2026).
 - Dimensjonerende skredstørrelser og konsekvensmatriser vises nederst i Prosjektinfo for valgt strekning (`skredbaner.html?inne=1`), ikke som egen fane.
 
-## Fanen Skredvarsel (for entreprenør)
+## Fanen Skredvarsel-viser (for entreprenør)
+- Fra 25.11.2026 brukes den nye aktsomhetsmatrisen i gråtoner (✓ som normalt, ! med forbehold, ✕ unngå; mørkere = strengere) og tilhørende tiltak, uansett tiltakstabell i e-posten. Eldre varsel med egen tiltakstabell viser den (`NY_MATRISE` i `mal_varsler.html`).
 - Lenke per strekning: `varsler.html#e134`, `#rv13`, `#rv15`, `#tyin`, `#rv85`, `#beisfjord`, `#rv94`, `#e69`.
 - Varslene lagres i `site/varsler/` (`varsler.json` er arkivet, `v/` er originalene). Et varsel fjernes ved å slette det fra `varsler.json` og `v/`, og så lage `varsler_data.js` på nytt (`python3 kilde/varslinger/hent_varsler.py --ut site/varsler --fil` uten filer).
 - **Eldre varsel**: legg HTML- eller .eml-filene i `data/varsler_import/` (last opp via GitHub). De importeres ved neste kjøring og fjernes fra mappa. Varsel som allerede ligger i Gmail-kontoen hentes automatisk første gang.
