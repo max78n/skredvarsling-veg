@@ -156,5 +156,11 @@ SKRED.on((id,laas)=>{const o=SKRED.finn($('veg'),id);$('veg').disabled=laas;$('v
   if(!laas){tegn();return}
   if(laas&&o&&o.value!==vSel){vSel=o.value;$('veg').value=vSel;bSel=null;hSel=null;const f=baner().find(b=>b.hend.length);bSel=f?.navn||null;tegn()}});
 </script>
+<script>
+/* innebygd i Prosjektinfo (?inne=1): strekningen velges der */
+if(/[?&]inne=1/.test(location.search)){const st=document.createElement('style');st.textContent='.topp h1,.topp label:first-of-type{display:none}main{padding-top:6px}';document.head.appendChild(st)}
+addEventListener('message',e=>{const d=e.data||{};if(d.type!=='skred-dim-veg'||!DATA[d.veg]||d.veg===vSel)return;
+  vSel=d.veg;$('veg').value=vSel;hSel=null;const f=baner().find(b=>b.hend.length);bSel=f?.navn||null;tegn()});
+</script>
 </body>
 </html>

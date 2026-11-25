@@ -746,6 +746,11 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#fbf3e3}tbody tr.on{background
     <div class="card"><h2>Tabell 4 – topografiske parametere</h2><div style="max-height:520px;overflow:auto"><table id="tab"></table></div></div>
     <div class="card"><h2>Skredtårn (utløsningspunkt)</h2><div style="max-height:520px;overflow:auto"><table id="tTab"></table></div><p class="note" id="tKilde"></p></div>
   </div>
+  <div class="card" style="margin-top:16px" id="dimKort">
+    <h2 id="dimTittel">Dimensjonerende skredstørrelser og konsekvensmatriser</h2>
+    <iframe id="dimFr" title="Dimensjonerende skredstørrelser" style="border:0;width:100%;height:calc(100vh - 40px);min-height:520px;display:block"></iframe>
+    <p class="note" id="dimMangler" style="display:none">Ingen dimensjonerende skredstørrelser eller konsekvensmatriser er lagt inn for denne strekningen ennå.</p>
+  </div>
   <p class="note">Kilder: løsneområder og skredløp (SVV, sammenslått eksport 15.11.2026, EPSG:25833); tabell 4 og tabell 5 i skredvarslingsplanene; Fv7570 Beisfjorden og Fv53 Tyin: eksport 16.11.2026, aspekt og fallhøyde beregnet fra geometrien (ikke fra plan); bakgrunnskart © Kartverket. Skredpunkt er plassert ved nedre ende av skredløpene (nærmest vegen).</p>
 </main>
 <div id="tip"></div>
@@ -789,8 +794,14 @@ function velg(i){
   chips.innerHTML=S.del.map(d=>`<span class="chip" data-d="${esc(d)}"><i style="background:${farge(d)}"></i>${esc(d)}</span>`).join('');
   [...chips.children].forEach(c=>c.onclick=()=>{const d=c.dataset.d;skjult.has(d)?skjult.delete(d):skjult.add(d);c.classList.toggle('off');tegnAlt()});
   tRose.textContent=`${S.navn} – aspekt og høyde`;
-  lagKart();tegnAlt();zoomStrekning();
+  lagKart();tegnAlt();zoomStrekning();settDim();
 }
+/* dimensjonerende skredstørrelser for valgt strekning (skredbaner.html i innebygd modus) */
+const DIMVEG=['Rv15 Strynefjellet','E134 Haukelifjell','Rv13 Vikafjellet','E69 Nordkapp','Rv94 Hammerfest','Rv85 Gullesfjord','Fv7570 Beisfjorden'];
+function settDim(){const fr=document.getElementById('dimFr'),v=DIMVEG.find(x=>x===S.navn||x.split(' ')[0]===S.navn.split(' ')[0]);
+  document.getElementById('dimTittel').textContent=`${S.navn} – dimensjonerende skredstørrelser og konsekvensmatriser`;
+  fr.style.display=v?'block':'none';document.getElementById('dimMangler').style.display=v?'none':'block';if(!v)return;
+  if(!fr.src)fr.src='skredbaner.html?inne=1#'+encodeURIComponent(v);else try{fr.contentWindow.postMessage({type:'skred-dim-veg',veg:v},'*')}catch(e){}}
 function tegnAlt(){tegnRose();tegnProfil();tegnTabell();oppdaterKart();varsel()}
 nullstill.onclick=()=>{valgt=null;skjult=new Set();[...chips.children].forEach(c=>c.classList.remove('off'));
   varDir=new Set();[...dirs.children].forEach(b=>b.classList.remove('on'));hMod=0;h1.value=h2.value='';h1.style.display=h2.style.display=hOg.style.display='none';
@@ -961,7 +972,8 @@ SKRED.on((id,laas)=>{const i=DATA.strekninger.findIndex(s=>s.id===id);if(laas&&i
 <script>
 /* Ekstra faner sist i prosjektlista (Dimensjonerende skredstørrelser, Prosedyre): vises i en ramme her i stedet for egen meny-fane. */
 (function(){
-  const EKSTRA=[{id:'skredbaner',navn:'Dimensjonerende skredstørrelser',fil:'skredbaner.html'},{id:'prosedyre',navn:'Prosedyre',fil:'prosedyre.html'}];
+  const EKSTRA=[{id:'prosedyre',navn:'Prosedyre',fil:'prosedyre.html'}];
+  const tilDim=()=>{if(aktiv)visEkstra(null);setTimeout(()=>document.getElementById('dimKort').scrollIntoView({behavior:'smooth'}),80)};
   const main=document.querySelector('main');let aktiv=null;
   EKSTRA.forEach(x=>{x.kn=document.createElement('button');x.kn.textContent=x.navn;x.kn.id='tab_'+x.id;tabs.appendChild(x.kn);
     x.fr=document.createElement('iframe');x.fr.title=x.navn;x.fr.style.cssText='display:none;border:0;width:100%;background:var(--bg)';
@@ -981,9 +993,9 @@ SKRED.on((id,laas)=>{const i=DATA.strekninger.findIndex(s=>s.id===id);if(laas&&i
     if(x){if(d.type==='skred-klar'&&SKRED.id!==null)x.fr.contentWindow.postMessage({type:'skred-prosjekt',id:SKRED.id,liste:SKRED.liste},'*');
       else if(d.type&&d.type!=='skred-klar')try{parent.postMessage(d,'*')}catch(z){}}
     else if(d.type==='skred-prosjekt')EKSTRA.forEach(y=>{if(y.fr.src)try{y.fr.contentWindow.postMessage(d,'*')}catch(z){}});
-    const m=/^skred-vis-(.+)$/.exec(d.type||'');if(m&&EKSTRA.some(y=>y.id===m[1]))visEkstra(m[1])});
+    const m=/^skred-vis-(.+)$/.exec(d.type||'');if(m&&EKSTRA.some(y=>y.id===m[1]))visEkstra(m[1]);if(m&&m[1]==='skredbaner')tilDim()});
   SKRED.on(()=>EKSTRA.forEach(x=>{x.kn.disabled=false;x.kn.style.opacity='';x.kn.title=''}));
-  const h=location.hash.slice(1);if(EKSTRA.some(x=>x.id===h))visEkstra(h);
+  const h=location.hash.slice(1);if(EKSTRA.some(x=>x.id===h))visEkstra(h);if(h==='skredbaner')tilDim();
 })();
 </script>
 </body>

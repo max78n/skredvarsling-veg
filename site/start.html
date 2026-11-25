@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Start – Skredvarsling veg</title>
+<title>Morgenbrief – Skredvarsling veg</title>
 <style>
 :root{--ink:#1f2a30;--muted:#5d6b73;--line:#d9dee1;--bg:#f4f5f6;--acc:#ed9300;--acct:#fff4e0}
 *{box-sizing:border-box}
@@ -84,17 +84,8 @@ h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px}
 </head>
 <body>
 <main>
-  <div class="topp"><img src="logo.png" alt="Skredvarsling for veg – Statens vegvesen" style="width:88px;height:88px;align-self:center"><h1>Stedsspesifikk skredvarsling – vakt</h1><span class="klokke" id="klokke"></span><span class="note" id="dato"></span></div>
-  <div class="grid">
-    <div class="card"><h2>Tidsplan for vakta</h2><table class="tid" id="tid"></table>
-      <p class="note">Neste oppgave er uthevet ut fra klokka (norsk tid). Grå = ferdig i dag eller ikke aktuelt i dag.</p></div>
-    <div class="card"><h2>Varslingsverktøy og wiki</h2><div class="dok" id="dokVerktoy"></div>
-</div>
-    <div class="card"><h2>Timeføring <span class="note">(merk med skredvarsling)</span></h2><div class="kode" id="koder"></div>
-      <div class="dok" id="dokDfo" style="margin-top:8px"></div></div>
-  </div>
+  <div class="topp"><img src="logo.png" alt="Skredvarsling for veg – Statens vegvesen" style="width:88px;height:88px;align-self:center"><h1>Morgenbrief <span id="briefDato" style="font-size:15px;font-weight:400"></span></h1><span class="klokke" id="klokke"></span><span class="note" id="dato"></span></div>
   <section id="brief">
-    <h2 class="bh">Morgenbrief <span id="briefDato" style="font-size:15px"></span></h2>
     <div class="chips" id="briefChips"></div>
     <div class="auto" id="briefNote"></div>
     <div class="forkl"><span><span class="tag o">OBS</span>Observert (seNorge, værstasjoner) – døgnet som slutter kl. 07:00</span><span><span class="tag p">PROGNOSE</span>MET Locationforecast (MEPS) i løsneområdet</span><span><span class="tag p">VARSEL</span>Varsom og MET farevarsler</span></div>
@@ -138,17 +129,11 @@ const gaaFane=f=>`try{parent.location.hash='${f}'}catch(e){location.hash='${f}'}
 const intern=(fane,tekst,ik='t')=>`<a href="#" onclick="${gaaFane(fane)}"><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</a>`;
 const lenke=(nok,tekst,ik)=>L[nok]?`<a href="${esc(L[nok])}" target="_blank" rel="noopener"${/^https?:/.test(L[nok])?'':' download'}><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</a>`:`<span class="mangler" title="Lenke mangler"><span class="ik ${ik}">${IK[ik]}</span>${esc(tekst)}</span>`;
 const tilBrief=`document.getElementById('brief').scrollIntoView({behavior:'smooth'});return false`;
-dokVerktoy.innerHTML=[lenke('respons','RESPONS – varslingsverktøy','n'),lenke('konsekvens','Konsekvensmatriser','x'),
-  lenke('dim_liste','Dimensjonerende skredstørrelser – liste','x'),lenke('dim_bilder','Dimensjonerende skredstørrelser – bilder','p'),
-  lenke('wiki_aktsomhet','Wiki – 4.1 Stedsspesifikk skredvarsling','n')].join('');
-dokDfo.innerHTML=lenke('dfo','Føring av vakter i DFØ','n');
-koder.innerHTML=KODER.map(([n,k])=>`<span>${esc(n)}</span>${k?`<b>${esc(k)}</b>`:'<span class="tom">mangler</span>'}`).join('');
-
 function oslo(){const f=new Intl.DateTimeFormat('nb-NO',{timeZone:'Europe/Oslo',weekday:'short',hour:'2-digit',minute:'2-digit',day:'numeric',month:'long',year:'numeric',hourCycle:'h23'}).formatToParts(new Date());const g=t=>f.find(p=>p.type===t)?.value;
   const wd=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Oslo'})).getDay();return{h:+g('hour'),m:+g('minute'),wd,tekst:`${g('weekday')} ${g('day')}. ${g('month')} ${g('year')}`}}
 function tegnTid(){const o=oslo(),helg=o.wd===0||o.wd===6,naa=o.h*60+o.m;klokke.textContent=String(o.h).padStart(2,'0')+':'+String(o.m).padStart(2,'0');dato.textContent=o.tekst;
-  let nesteFunnet=false;
-  tid.innerHTML=TID.map(([hv,hg,t,nok,dager,ag])=>{const kl=helg?hg:hv;const idag=dager===null||dager==='siste'||(Array.isArray(dager)&&dager.includes(o.wd))&&kl!==null;
+  let nesteFunnet=false;const tidEl=document.getElementById('tid');if(!tidEl)return;
+  tidEl.innerHTML=TID.map(([hv,hg,t,nok,dager,ag])=>{const kl=helg?hg:hv;const idag=dager===null||dager==='siste'||(Array.isArray(dager)&&dager.includes(o.wd))&&kl!==null;
     let kls='';const min=kl&&/^\d\d:\d\d$/.test(kl)?(+kl.slice(0,2))*60+(+kl.slice(3)):null;
     if(!idag||kl===null)kls='ikkeidag';else if(min!==null&&min<naa-(t.startsWith('Sidemann')?0:20))kls='ferdig';else if(min!==null&&!nesteFunnet){kls='neste';nesteFunnet=true}
     const u=nok&&L[nok];

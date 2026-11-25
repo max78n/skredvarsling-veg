@@ -35,13 +35,16 @@ Statisk nettside for stedsspesifikk skredvarsling (Statens vegvesen). GitHub Act
 ## Endringer
 - **Strekninger, stasjoner, kameraer og meteogrampunkter** endres i `kilde/vaerpakke/config.json`. Gjelder fra neste kjøring.
 - **Hendelsesbilder**: last opp PowerPoint-fila «Dimensjonerende skredstørrelse_bilder …pptx» til `data/`. Bildene lages da ved hver kjøring.
-- **Statiske faner** (Start, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Prosedyre) er vanlige filer i `site/`. Erstatt fila for å oppdatere fanen.
+- **Statiske faner** (Morgenbrief-ramma `start.html`, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Prosedyre) er vanlige filer i `site/`. Erstatt fila for å oppdatere fanen.
 - **Ny geometri** (løsneområder, veglinje): kjør `kilde/engangs/lag_kartbilder.py` og last opp `site/fliser`, `site/bakgrunn` og `site/detalj` på nytt.
 
 ## Fanen Notat
-- Menyrekkefølge: Start + Morgenbrief, Værpakke, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Skredvarsel. Varselskriver og SP-solver er fjernet (25.11.2026).
+- Menyrekkefølge: Morgenbrief, Værpakke, Stabilitetssolver, Setningskatalog, Notat, Prosjektinfo, Skredvarsel. Varselskriver og SP-solver er fjernet (25.11.2026).
 - Notat samler per strekning det som overføres fra Værpakke (notatene under Observasjoner og Prognose), Stabilitetssolver og Setningskatalog, i hver sin del. Tekstene kan redigeres, slettes og kopieres. Lagres i nettleseren (`skred.notat.<strekning>`).
 - Delt visning: valgt fane til venstre, Notat til høyre.
+- Stabilitet vises med farger som i Stabilitetssolver: utløsbarhet × utbredelse = sannsynlighet, fordeling av utløsbarhet og matrisen med treffet markert.
+- Morgenbrief-fanen (`start.html`) har ikke lenger tidsplan, verktøylenker eller timeføring (25.11.2026).
+- Dimensjonerende skredstørrelser og konsekvensmatriser vises nederst i Prosjektinfo for valgt strekning (`skredbaner.html?inne=1`), ikke som egen fane.
 
 ## Fanen Skredvarsel (for entreprenør)
 - Lenke per strekning: `varsler.html#e134`, `#rv13`, `#rv15`, `#tyin`, `#rv85`, `#beisfjord`, `#rv94`, `#e69`.

@@ -31,6 +31,26 @@ main{padding:12px;display:grid;gap:12px;max-width:1100px}
 textarea{width:100%;min-height:52px;font:inherit;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:3px;resize:vertical;margin-top:3px}
 .tom{font-size:12.5px;color:#9aa4a9;margin:6px 0}
 .note{font-size:12px;color:var(--mut)}
+/* stabilitet (samme farger som Stabilitetssolver) */
+.stab{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 18px;align-items:start;margin:6px 0 4px}
+@media(max-width:640px){.stab{grid-template-columns:1fr}}
+.sum{display:grid;grid-template-columns:1fr auto 1fr auto 1.2fr;gap:6px;align-items:stretch}
+.sum .k{border:1px solid var(--line);border-radius:6px;padding:6px;text-align:center}
+.sum .k small{display:block;color:var(--mut);font-size:11px;margin-bottom:3px}
+.sum .k .b{display:block;font-size:14px;padding:5px 4px}
+.sum .op{align-self:center;font-size:17px;color:var(--mut)}
+.b{display:inline-block;font-weight:700;text-align:center;white-space:nowrap;padding:0 6px;border-radius:3px}
+.b-st0{background:#008000;color:#fff}.b-st1{background:#33CC33;color:#000}.b-st2{background:#66FF66;color:#000}.b-st3{background:#99FF99;color:#000}
+.b-ub0{background:#CC9900;color:#000}.b-ub1{background:#996633;color:#fff}.b-ub2{background:#663300;color:#fff}
+.b-S1{background:#FF99FF;color:#000}.b-S2{background:#FF66FF;color:#000}.b-S3{background:#FF00FF;color:#000}.b-S4{background:#CC00CC;color:#fff}.b-S5{background:#7030A0;color:#fff}
+.mmx{border-collapse:separate;border-spacing:2px;font-size:11px}
+.mmx td,.mmx th{padding:3px 6px;text-align:center;border-radius:2px}
+.mmx th{font-weight:600}.mmx td{opacity:.55}.mmx td.hit{opacity:1;outline:3px solid #1f2a30;outline-offset:-2px}
+.stemmer{display:flex;gap:3px;margin-top:6px}.stemmer div{flex:1;font-size:11px;padding:2px 3px;border-radius:3px;text-align:center}
+.stemmer b{display:block;font-size:12px}
+.stab .info{font-size:12px;color:var(--mut);margin-top:4px}
+.stab .sjekk{font-size:12px;background:#fff4e0;border-left:3px solid var(--acc);padding:3px 8px;margin-top:5px}
+.stab ul{margin:4px 0 0 16px;padding:0;font-size:12px;color:var(--mut)}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1f2a30;color:#fff;padding:7px 14px;border-radius:4px;opacity:0;transition:opacity .2s;pointer-events:none;font-size:13px}
 #toast.on{opacity:1}
 </style>
@@ -70,6 +90,18 @@ const DELER=[
   {k:'prog',navn:'Kommentar til værprognose',kilde:'Fra Værpakke › Prognose og Varsom'},
   {k:'stab',navn:'Stabilitet',kilde:'Fra Stabilitetssolver'},
   {k:'setn',navn:'Skredfarevurdering',kilde:'Fra Setningskatalog'}];
+const ST=['Svært dårlig','Dårlig','Moderat','God'],UTB=['Få','Noen','Mange'],SANN=['Høyst usannsynlig','Lite sannsynlig','Mulig','Sannsynlig','Veldig sannsynlig'];
+const SMAT=[[2,3,4],[1,2,3],[0,1,1],[0,0,0]];
+function stabVis(x){if(!x||x.best==null||x.u==null)return '';const S=x.S??SMAT[x.best][x.u];
+  const tile=(t,i)=>`<div class="k"><small>${t}</small>${i}</div>`;
+  return `<div class="stab"><div>
+    <div class="sum">${tile('Utløsbarhet',`<span class="b b-st${x.best}">${ST[x.best]}</span>`)}<div class="op">×</div>${tile('Utbredelse',`<span class="b b-ub${x.u}">${UTB[x.u]}</span>`)}<div class="op">=</div>${tile('Sannsynlighet',`<span class="b b-S${S+1}">S${S+1} ${SANN[S]}</span>`)}</div>
+    ${Array.isArray(x.andel)?`<div class="stemmer">${ST.map((t,i)=>`<div class="b-st${i}" style="opacity:${i===x.best?1:.4}">${t}<b>${x.andel[i]} %</b></div>`).join('')}</div>`:''}
+    <div class="info">${esc(x.sp||'')} · ${esc(x.type||'')}${x.del?' · '+esc(x.del):''} · sikkerhet ${esc(x.sik||'–')}</div>
+    ${x.mot&&x.mot.length?`<div class="sjekk"><b>Sjekk:</b> ${x.mot.map(esc).join(' ')}</div>`:''}
+    ${x.spor&&x.spor.length?`<details><summary class="info" style="cursor:pointer">Grunnlag (${x.spor.length})</summary><ul>${x.spor.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></details>`:''}
+   </div>
+   <table class="mmx"><tr><th></th>${UTB.map((t,j)=>`<th class="b-ub${j}">${t}</th>`).join('')}</tr>${ST.map((t,i)=>`<tr><th class="b-st${i}" style="text-align:left">${t}</th>${SMAT[i].map((v,j)=>`<td class="b-S${v+1}${i===x.best&&j===x.u?' hit':''}">S${v+1}</td>`).join('')}</tr>`).join('')}</table></div>`}
 const KILDE_DEL={setninger:'setn',stab:'stab'};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2000)};
@@ -92,7 +124,7 @@ function tegn(){const N=les(PID);
       <button data-a="kopier">Kopier</button><button data-a="ny">+ Eget notat</button></h2>
       <div class="kilde">${d.kilde}</div>
       ${L.length?L.map((p,i)=>`<div class="post"><div class="meta"><span>${esc(p.merk||'')}</span><span class="sp"></span><span>${tid(p.t)}</span><button data-a="slett" data-i="${i}" title="Slett">✕ slett</button></div>
-        <textarea data-i="${i}">${esc(p.tekst)}</textarea></div>`).join(''):'<p class="tom">Ingen notater ennå.</p>'}</section>`}).join('');
+        ${p.stab?stabVis(p.stab):''}<textarea data-i="${i}"${p.stab?' title="Tekst som kopieres (kan redigeres)"':''}>${esc(p.tekst)}</textarea></div>`).join(''):'<p class="tom">Ingen notater ennå.</p>'}</section>`}).join('');
   document.querySelectorAll('textarea').forEach(ta=>{const fit=()=>tilpass(ta);fit();
     ta.oninput=()=>{fit();const k=ta.closest('section').dataset.k,N=les(PID);if(N[k][+ta.dataset.i]){N[k][+ta.dataset.i].tekst=ta.value;skriv(PID,N)}}});
 }
@@ -115,7 +147,7 @@ SKRED.paMottak('notat',d=>{const k=d.del||KILDE_DEL[d.kilde];const t=String(d.te
   if(SKRED.laas&&id!==SKRED.id){toast('Overføringen gjelder en annen strekning enn arbeidsprosjektet – ikke lagt inn');return}
   const N=les(id);
   if(N[k].some(p=>p.tekst.trim()===t)){if(id!==PID)velg(id);toast('Samme tekst finnes allerede i «'+DELER.find(x=>x.k===k).navn+'»');return}
-  N[k].push({t:Date.now(),tekst:t,merk:d.merk||''});skriv(id,N);
+  N[k].push({t:Date.now(),tekst:t,merk:d.merk||'',...(d.stab?{stab:d.stab}:{})});skriv(id,N);
   if(id!==PID)velg(id);else tegn();
   toast(`Lagt inn i «${DELER.find(x=>x.k===k).navn}» for ${navn(id)}`)});
 velg(PID);
