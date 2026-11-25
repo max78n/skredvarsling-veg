@@ -65,6 +65,13 @@ details summary{cursor:pointer;font-weight:600}
 .stripe span{flex:1 1 0;min-width:1px;cursor:pointer;position:relative}
 .stripe span.on{outline:3px solid var(--t);outline-offset:-3px;z-index:1}
 .stripe span.aar{margin-left:6px}
+.sesonger{display:flex;gap:8px;align-items:flex-start}
+.ses{flex:1 1 0;min-width:96px}
+.ses .stripe{margin:0}
+.sesLab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;font-size:.75rem;color:var(--mu);margin-top:3px;border-top:2px solid var(--t);padding-top:2px;line-height:1.3}
+.sesLab b{flex-basis:100%}
+.sesLab b{color:var(--t);font-weight:700}
+#taPer{font:inherit;font-size:.85rem;padding:2px 4px;border-radius:4px;border:1px solid var(--b)}
 .taRad{display:flex;gap:8px;align-items:center;margin-top:8px}
 .taRad input{flex:1;accent-color:var(--t);height:28px}
 .taEnde{display:flex;justify-content:space-between;margin-top:2px}
@@ -80,8 +87,8 @@ details summary{cursor:pointer;font-weight:600}
     <div class="velg"><select id="strek" title="Vegstrekning"></select></div>
   </section>
   <section class="kort skjul" id="tidsakse">
-    <div class="kh"><h2 style="margin:0">Varsel bakover i tid</h2><span class="mu" id="taTekst"></span></div>
-    <div class="stripe" id="stripe"></div>
+    <div class="kh"><h2 style="margin:0">Varsel bakover i tid</h2><label class="mu">Vis <select id="taPer"></select></label><span class="mu" id="taTekst"></span></div>
+    <div class="sesonger" id="stripe"></div>
     <div class="taRad"><button id="taF" title="Forrige varsel">◀</button><input type="range" id="taS" min="0" max="0" step="1" aria-label="Velg varsel bakover i tid"><button id="taN" title="Neste varsel">▶</button><button id="taSiste">Siste</button></div>
     <div class="taEnde mu"><span id="taFra"></span><span id="taTil"></span></div>
   </section>
@@ -224,14 +231,32 @@ function tegnGrid(){const s=KS(P),dels=s?s.del:[];const dager=[];v.slots.forEach
 
 /* ---------- side ---------- */
 let L_=[];
-function tegnAkse(){const n=L_.length;$('tidsakse').classList.toggle('skjul',n<1);if(!n)return;
-  const i=L_.indexOf(v);$('taS').max=n-1;$('taS').value=i;
-  $('stripe').innerHTML=L_.map((x,j)=>{const ny=j>0&&x.t0-L_[j-1].t0>30*864e5;
-    return `<span class="${x.maks==null?'x':NIV[x.maks][1]}${j===i?' on':''}${ny?' aar':''}" data-j="${j}" title="${esc(fmt(x.gyldig_fra))}: maks ${x.maks==null?'–':NIV[x.maks][0]}"></span>`}).join('');
-  $('taTekst').textContent=`Varsel ${i+1} av ${n}${i===n-1?' (siste)':''} · gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}`;
-  const dY=x=>new Date(x.t0).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
-  $('taFra').textContent=dY(L_[0]);$('taTil').textContent=dY(L_[n-1]);
-  $('taF').disabled=i<=0;$('taN').disabled=i>=n-1;$('taSiste').disabled=i>=n-1}
+/* tidsakse: et utsnitt (standard 7 dager) av varslene for strekningen; vinter = 1.8.–31.7., merket med første og siste varsel */
+const DAG=864e5;
+const vinter=x=>{const d=new Date(x.t0),y=d.getFullYear(),m=d.getMonth();return m>=7?y:y-1};
+const vNavn=y=>`Vinter ${y}/${String(y+1).slice(2)}`;
+let PER=store.get('skred.varsel.periode')||'7',W=[];
+function lagPer(){const ys=[...new Set(L_.map(vinter))].sort((a,b)=>b-a);
+  const opt=[['7','Siste 7 dager'],['30','Siste 30 dager'],...ys.map(y=>['v'+y,vNavn(y)]),['alle','Alle vintre']];
+  if(!opt.some(o=>o[0]===PER))PER='7';
+  $('taPer').innerHTML=opt.map(o=>`<option value="${o[0]}"${o[0]===PER?' selected':''}>${o[1]}</option>`).join('')}
+function vindu(){if(!L_.length)return[];const ref=L_[L_.length-1].t0;
+  if(PER==='7'||PER==='30'){const w=L_.filter(x=>x.t0>=ref-(+PER)*DAG);return w.length?w:[L_[L_.length-1]]}
+  if(PER[0]==='v'){const y=+PER.slice(1);return L_.filter(x=>vinter(x)===y)}
+  return L_}
+function tegnAkse(){$('tidsakse').classList.toggle('skjul',L_.length<1);if(!L_.length)return;
+  lagPer();W=vindu();if(!W.includes(v)){PER=vindu===null?'7':(L_.indexOf(v)>=0&&L_[L_.length-1].t0-v.t0<=30*DAG?'30':'v'+vinter(v));lagPer();W=vindu()}
+  const n=W.length,i=W.indexOf(v);$('taS').max=Math.max(0,n-1);$('taS').value=Math.max(0,i);
+  const dY=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric',year:'numeric'});
+  const dK=t=>new Date(t).toLocaleDateString('nb-NO',{timeZone:'Europe/Oslo',day:'numeric',month:'numeric'});
+  /* grupper per vinter; hele vinteren (alle varsel) gir start/slutt */
+  const grp=[];W.forEach((x,j)=>{const y=vinter(x);let g=grp[grp.length-1];if(!g||g.y!==y){g={y,el:[]};grp.push(g)}g.el.push([x,j])});
+  $('stripe').innerHTML=grp.map(g=>{const alle=L_.filter(x=>vinter(x)===g.y),start=alle[0].t0,slutt=alle[alle.length-1].t0,paagaar=g.y===vinter(L_[L_.length-1])&&Date.now()-slutt<60*DAG;
+    return `<div class="ses" style="flex-grow:${g.el.length}"><div class="stripe">${g.el.map(([x,j])=>`<span class="${x.maks==null?'x':NIV[x.maks][1]}${j===i?' on':''}" data-j="${j}" title="${esc(fmt(x.gyldig_fra))} ${new Date(x.t0).getFullYear()}: maks ${x.maks==null?'–':NIV[x.maks][0]}"></span>`).join('')}</div>
+      <div class="sesLab"><b>${vNavn(g.y)}</b><span>start ${dK(start)}</span><span>${paagaar?'siste '+dK(slutt):'slutt '+dK(slutt)}</span></div></div>`}).join('');
+  $('taTekst').textContent=i<0?'Valgt varsel er utenfor utsnittet':`Varsel ${i+1} av ${n}${v===L_[L_.length-1]?' (siste)':''} · gyldig fra ${fmt(v.gyldig_fra)} ${new Date(v.t0).getFullYear()}`;
+  $('taFra').textContent=dY(W[0].t0);$('taTil').textContent=dY(W[n-1].t0);
+  $('taF').disabled=i<=0;$('taN').disabled=i>=n-1||i<0;$('taSiste').disabled=v===L_[L_.length-1]}
 function visVarsel(){L_=V.filter(x=>x.prosjekt===P).sort((a,b)=>a.t0-b.t0||(a.mottatt||'').localeCompare(b.mottatt||''));
   /* samme gyldig fra: behold siste utsending */
   L_=L_.filter((x,j)=>!(L_[j+1]&&L_[j+1].t0===x.t0));
@@ -268,9 +293,10 @@ $('strek').innerHTML=PRO.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join
 $('valg').innerHTML=PRO.map(p=>`<button data-p="${p[0]}">${p[1]}</button>`).join('');
 $('kilde').textContent=(D.test?'TESTDATA, ikke ekte varsel. ':'')+'Kart: '+(K.kilde||'');
 $('strek').onchange=()=>velg($('strek').value);
-const tilJ=j=>{j=Math.max(0,Math.min(L_.length-1,j));if(L_[j]&&L_[j]!==v){v=L_[j];visVarsel()}};
-$('taS').oninput=()=>tilJ(+$('taS').value);$('taF').onclick=()=>tilJ(L_.indexOf(v)-1);$('taN').onclick=()=>tilJ(L_.indexOf(v)+1);$('taSiste').onclick=()=>tilJ(L_.length-1);
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft')tilJ(L_.indexOf(v)-1);if(e.key==='ArrowRight')tilJ(L_.indexOf(v)+1)});
+const tilJ=j=>{j=Math.max(0,Math.min(W.length-1,j));if(W[j]&&W[j]!==v){v=W[j];visVarsel()}};
+$('taS').oninput=()=>tilJ(+$('taS').value);$('taF').onclick=()=>tilJ(W.indexOf(v)-1);$('taN').onclick=()=>tilJ(W.indexOf(v)+1);$('taSiste').onclick=()=>{if(!W.includes(L_[L_.length-1])){PER='7';store.set('skred.varsel.periode',PER)}v=L_[L_.length-1];visVarsel()};
+$('taPer').onchange=()=>{PER=$('taPer').value;store.set('skred.varsel.periode',PER);const w=vindu();if(w.length&&!w.includes(v))v=w[w.length-1];visVarsel()};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft')tilJ(W.indexOf(v)-1);if(e.key==='ArrowRight')tilJ(W.indexOf(v)+1)});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){velg(b.dataset.p);return}
   const s=e.target.closest('#stripe [data-j]');if(s){tilJ(+s.dataset.j);return}
   const t=e.target.closest('#grid [data-k]');if(t){k=+t.dataset.k;tegnTid()}});
