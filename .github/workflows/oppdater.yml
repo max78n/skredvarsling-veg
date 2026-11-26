@@ -1,6 +1,8 @@
 # Bygger Værpakke og morgenbrief og publiserer sida på GitHub Pages.
 # GitHub bruker UTC og kan forsinke eller hoppe over planlagte kjøringer. Derfor:
-# - Værpakke kjøres hver time (xx:23 UTC, 05:23–21:23 norsk vintertid).
+# - Hovedstyring: planlagt Claude-oppgave starter kjøringen (workflow_dispatch) kl. 07, 10, 13 og 16 norsk tid
+#   (modus brief kl. 07, ellers vaerpakke). Ingen oppdatering om natten.
+# - Reserve i GitHub: Værpakke xx:23 kl. 07–15 norsk vintertid (06–14 UTC).
 # - Morgenbriefen prøves flere ganger (05:13–06:53 UTC). Første forsøk etter kl. 07:00 norsk tid
 #   lager briefen; senere forsøk samme dag hoppes over (sjekkes mot sist_kjort.txt).
 # - Utsendte skredvarsel hentes fra Gmail ved hver kjøring. I sendevinduet (10–13 UTC = 11–14 vintertid)
@@ -9,10 +11,15 @@ name: Oppdater data
 
 on:
   schedule:
-    - cron: '23 4-20 * * *'
+    - cron: '23 6-14 * * *'
     - cron: '13,33,53 5,6 * * *'
     - cron: '8,38,53 10-13 * * *'
   workflow_dispatch:
+    inputs:
+      modus:
+        description: 'brief (morgenbrief + Værpakke) eller vaerpakke'
+        required: false
+        default: 'brief'
   push:
     branches: [main]
 
@@ -41,7 +48,8 @@ jobs:
           H=$(TZ=Europe/Oslo date +%H); I_DAG=$(TZ=Europe/Oslo date +%F)
           SIST=$(cut -c1-10 sist_kjort.txt 2>/dev/null || true)
           M=vaerpakke
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M=brief
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M="${{ github.event.inputs.modus || 'brief' }}"
+            [ "$M" = "brief" ] || [ "$M" = "vaerpakke" ] || M=vaerpakke
           elif [ "${{ github.event.schedule }}" = "13,33,53 5,6 * * *" ]; then
             if [ "$H" -ge 7 ] && [ "$H" -le 9 ] && [ "$SIST" != "$I_DAG" ]; then M=brief; else M=hopp; fi
           elif [ "${{ github.event.schedule }}" = "8,38,53 10-13 * * *" ]; then M=varsler
